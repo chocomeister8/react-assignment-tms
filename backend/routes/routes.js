@@ -3,9 +3,7 @@ const userController = require('../controllers/userController');
 const groupController = require('../controllers/groupController');
 const { isAuthenticatedUser, isAuthorized, logout, login, checkLogin } = require('../controllers/authController');
 
-
 const router = express.Router();
-
 
 router.get('/users', isAuthenticatedUser, isAuthorized(["admin"]),  userController.getAllUsers);
 router.get('/users/:username', isAuthenticatedUser, isAuthorized(["admin"]), userController.getUserByUserName);

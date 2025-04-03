@@ -43,6 +43,7 @@ exports.getUserByUserName = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
+    console.log("📥 Received request body:", req.body);
     const { username, email, password, user_groupName } = req.body;
     let { isActive } = req.body;
 
@@ -55,10 +56,17 @@ exports.createUser = async (req, res) => {
         return res.status(400).json({ error: "Please fill in all fields!" });
     }
 
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+    if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+            error: "Password must be 8-10 characters long and contain at least one letter, one number, and one special character."
+        });
+    }
+
     if (!req.decoded) {
         return res.status(500).json({ error: "Token is missing or invalid." });
     }
-    connection.query('SELECT * FROM user WHERE username = ?', [username], (err, results) => {
+    User.getByUserName(username, (err, results) => {
         if (err) {
             console.log('Error details:', err);
             return res.status(500).json({ error: 'Database error occurred.' });
@@ -68,19 +76,19 @@ exports.createUser = async (req, res) => {
         }
 
         hashPW(password).then(hashedPassword => {
-            // Create the user
-            connection.query(
-                'INSERT INTO user (username, email, password, isActive, user_groupName) VALUES (?, ?, ?, 1, ?)',
-                [username, email, hashedPassword, ',' + user_groupName + ','],
-                (err, results) => {
-                    if (err) {
-                        return res.status(500).json({ error: 'Failed to create user' });
-                    }
+            const groupsArray = `,${user_groupName.split(',').join(',')},`; 
 
-                    res.status(201).json({ message: 'User created successfully!', user: { username, email, user_groupName, isActive }
-                    });
+            // Use the user model's create function
+            User.create(username, email, hashedPassword, isActive, groupsArray, (err, results) => {
+                if (err) {
+                    return res.status(500).json({ error: 'Failed to create user' });
                 }
-            );
+
+                res.status(201).json({ 
+                    message: 'User created successfully!', 
+                    user: { username, email, password, user_groupName, isActive }
+                });
+            });
         }).catch(err => {
             return res.status(500).json({ error: 'Error hashing password' });
         });

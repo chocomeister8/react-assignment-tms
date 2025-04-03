@@ -11,7 +11,7 @@ const sendToken = (user, req, statusCode, res) => {
 
     // Create JWT Token with additional details
     const token = jwt.sign(
-        { username: user.username, ipAddress, browserType }, process.env.JWT_SECRET, // Replace with an environment variable
+        { username: user.username, group: user.group, ipAddress, browserType }, process.env.JWT_SECRET, // Replace with an environment variable
         { expiresIn: "1h" }
     );
 

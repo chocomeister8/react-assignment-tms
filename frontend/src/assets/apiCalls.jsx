@@ -23,14 +23,23 @@ export const fetchUsers = async () => {
 
 export const createGroup = async (groupName) => {
     try {
-        const response = await axios.post(
-            `${API_BASE_URL}/create-group`,
-            { groupName: groupName.trim().toLowerCase() },
-            { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.post(`${API_BASE_URL}/create-group`,{ groupName: groupName.trim().toLowerCase() }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {
         console.error("Error creating group:", error);
         throw new Error(error.response?.data?.error || "Failed to create group.");
+    }
+};
+
+export const createUser = async (username, email, password, user_groupName) => {
+    
+    try {
+        const response = await axios.post(`${API_BASE_URL}/create-user`,{ username, email, password, user_groupName }, {headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error creating user:", error);
+        throw new Error(error.response?.data?.error || 'Failed to create user.');
     }
 };

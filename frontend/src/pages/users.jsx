@@ -1,7 +1,7 @@
 import Layout from '../assets/topnavbar'; 
 import React, { useState, useEffect } from "react";
 import { Badge, Button, Table, Form, Dropdown, Row, Col, Alert } from "react-bootstrap";
-import { fetchGroups, fetchUsers, createGroup } from "../assets/apiCalls";
+import { fetchGroups, fetchUsers, createGroup , createUser} from "../assets/apiCalls";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserManagement = () => {
@@ -10,6 +10,11 @@ const UserManagement = () => {
   const [success, setSuccess] = useState(null); // State for success message
   const [groups, setGroups] = useState([]); // State for groups
   const [users, setUsers] = useState([]);
+
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [user_groupName, setUserGroupName] = useState('');
 
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -28,7 +33,6 @@ const UserManagement = () => {
     loadData();
   }, []);
 
-
   const handleCreateGroup = async () => {
     setError(null);
     setSuccess(null);
@@ -39,6 +43,39 @@ const UserManagement = () => {
         setGroupName(""); // Clear input field
         const updatedGroups = await fetchGroups(); // Fetch updated groups list
         setGroups(updatedGroups);
+    } catch (err) {
+        setError(err.message);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (selectedGroups.length === 0) {
+      setError("Please select at least one group!");
+      return;
+    }
+
+    const user_groupName = selectedGroups.join(',');
+
+    console.log("Sending request with user details:", {
+      username,
+      email,
+      password,
+      user_groupName,
+    });
+    try {
+        const newUser = await createUser(username, email, password, user_groupName);
+        setSuccess("User created successfully!");
+
+        setUsername('');
+        setEmail('');
+        setPassword('');
+        setSelectedGroups([]); 
+        
+        const updatedUser = await fetchUsers(); // Fetch updated groups list
+        setUsers(updatedUser);
     } catch (err) {
         setError(err.message);
     }
@@ -73,20 +110,19 @@ const UserManagement = () => {
     <Row className="mb-3 align-items-end g-2">
         <Col xs={12} md={3}>
             <Form.Label>Username</Form.Label>
-            <Form.Control type="text" placeholder="Enter Username" />
+            <Form.Control type="text" placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         </Col>
         <Col xs={12} md={3}>
             <Form.Label>Email</Form.Label>
-            <Form.Control type="email" placeholder="Enter Email" />
+            <Form.Control type="email" placeholder="Enter Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Col>
         <Col xs={12} md={3}>
             <Form.Label>Password</Form.Label>
-            <Form.Control type="password" placeholder="Enter Password" />
+            <Form.Control type="password" placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </Col>
         <Col xs={12} md={3}>
         <Form.Label>Groups</Form.Label>
         <div className="d-flex align-items-center gap-2">
-
             <Dropdown variant= "secondary" className="w-50" show={isOpen} onClick={handleDropdownToggle}>
               <Dropdown.Toggle variant="light" className="w-100">
                 {selectedGroups.length === 0
@@ -110,11 +146,9 @@ const UserManagement = () => {
                     )}
                 </Dropdown.Menu>
             </Dropdown>
-
-            <Button variant="light" className="px-4">Add User</Button>
+            <Button variant="light" className="px-4" onClick={handleCreateUser}>Add User</Button>
         </div>
     </Col>
-
     </Row>
     </div>
       {/* User Table */}
@@ -133,21 +167,11 @@ const UserManagement = () => {
           {users.map((user, index) => (
             <tr key={index}>
               <td>{user.username}</td>
-              <td>
-              <td>{'•'.repeat(user.password.length).substring(0,10)}</td>
-              </td>
+              <td>{'*'.repeat(user.password.length).substring(0,10)}</td>
               <td>{user.email}</td>
-              <td>
-                <Badge pill bg="warning">
-                  {user.user_groupName}
-                </Badge>
-              </td>
-              <td>
-                {user.isActive === 1 ? 'Active' : 'Disabled'}
-              </td>
-              <td>
-              <Button variant="secondary">Edit</Button>
-              </td>
+              <td><Badge pill bg="warning">{user.user_groupName}</Badge></td>
+              <td>{user.isActive === 1 ? 'Active' : 'Disabled'}</td>
+              <td><Button variant="secondary">Edit</Button></td>
             </tr>
           ))}
         </tbody>
