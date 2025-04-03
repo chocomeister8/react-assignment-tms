@@ -1,0 +1,34 @@
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React from "react";
+import Login from './pages/Login';
+import TmsHome from './pages/tmsHome'; // Import the homepage
+import UserManagment from './pages/users';
+import Axios from 'axios';
+import ProtectedRoute from "../ProtectedRoute";
+
+Axios.defaults.withCredentials = true;
+
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/tmshome" element={
+          <ProtectedRoute>
+            <TmsHome />
+          </ProtectedRoute>
+          }
+        />
+        <Route path="/userManagement" element={
+          <ProtectedRoute>
+            <UserManagment />
+          </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
