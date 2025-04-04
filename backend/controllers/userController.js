@@ -98,9 +98,34 @@ exports.createUser = async (req, res) => {
 exports.updateUser = (req, res) => {
     const { username } = req.params;
     const { email, password, isActive, user_groupName } = req.body;
-    User.update(username, email, password, isActive,user_groupName, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'User updated successfully!' });
+    console.log("Update request received for:", username, req.body);
+    if (isActive === undefined || isActive === null) {
+        isActive = 1;
+    }
+
+    // Validate required fields
+    if (!username || !email || !password || !user_groupName) {
+        return res.status(400).json({ error: "Please fill in all fields!" });
+    }
+
+    // const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+    // if (!passwordRegex.test(password)) {
+    //     return res.status(400).json({
+    //         error: "Password must be 8-10 characters long and contain at least one letter, one number, and one special character."
+    //     });
+    // }
+    if (!req.decoded) {
+        return res.status(500).json({ error: "Token is missing or invalid." });
+    }
+
+    hashPW(password).then(hashedPassword => {
+        const groupsArray = `,${user_groupName.split(',').join(',')},`;
+        User.update(username, email, password, isActive, groupsArray, (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'User updated successfully!' });
+        });
+    }).catch(err => {
+        return res.status(500).json({ error: 'Error hashing password' });
     });
 };
 

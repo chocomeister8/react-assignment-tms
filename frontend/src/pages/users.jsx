@@ -102,17 +102,17 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="container">
+    <div className="p-5 pt-0 ms-auto w-100">
       <Layout>
     </Layout>
-    <div className="d-flex align-items-start gap-3">
+    <div className="d-flex align-items-start gap-1">
     {error && <Alert style={{width: '45%', transition: 'width 0.3s ease' }} variant="danger">{error}</Alert>} {/* Show error message */}
     {success && <Alert style={{width: '45%', transition: 'width 0.3s ease' }} variant="success">{success}</Alert>} {/* Show success message */}
     <div className="border p-3 w-50 ms-auto">
         <Form.Label>Group Name</Form.Label>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-3">
         <Form.Control className="w-75" type="text" placeholder="Enter Group Name" value={groupName} onChange={(e) => setGroupName(e.target.value)}/>
-          <Button variant="light" onClick={handleCreateGroup}>Create Group</Button>
+          <Button variant="light" className="w-25" onClick={handleCreateGroup}>Create Group</Button>
         </div>
     </div>
     </div>
@@ -156,7 +156,7 @@ const UserManagement = () => {
                     )}
                 </Dropdown.Menu>
             </Dropdown>
-            <Button variant="light" className="px-4" onClick={handleCreateUser}>Add User</Button>
+            <Button variant="light" className="px-4 w-50" onClick={handleCreateUser}>Add User</Button>
         </div>
     </Col>
     </Row>
@@ -180,7 +180,7 @@ const UserManagement = () => {
               <td>{'*'.repeat(user.password.length).substring(0,10)}</td>
               <td>{user.email}</td>
               <td>{user.user_groupName.split(',').map((group, index) => (
-                <Badge key={index} pill bg={group.trim() === 'admin' ? 'secondary' : 'warning'}
+                <Badge key={index} pill bg={group.trim() === 'admin' ? 'secondary' : 'success'}
                 className="me-2">{group}</Badge>))}
               </td>
               <td>{user.isActive === 1 ? 'Active' : 'Disabled'}</td>

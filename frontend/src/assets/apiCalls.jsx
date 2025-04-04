@@ -43,3 +43,38 @@ export const createUser = async (username, email, password, user_groupName) => {
         throw new Error(error.response?.data?.error || 'Failed to create user.');
     }
 };
+
+export const handleLogout = async () => {
+    try {
+        // Make a request to logout and send the token in cookies
+        const response = await axios.post(`${API_BASE_URL} /auth/logout`, {}, {});
+
+        // Handle successful logout
+        console.log("Logout Response:", response);
+        return response; 
+    } catch (error) {
+        console.error('Error logging out:', error);
+        if (error.response) {
+            alert('Error: ' + (error.response.data ? error.response.data.message : 'Unknown error'));
+        } else {
+            alert('Error: ' + error.message);
+        }
+    }
+};
+
+// export const updateUser = async (username, email, password, user_groupName, isActive) => {
+//     try {
+//       const response = await axios.put(`${API_BASE_URL}/users/:${username}`,
+//         {email, password, user_groupName,isActive,
+//         },
+//         {withCredentials: true, // include cookies for auth
+//           headers: {
+//             'Content-Type': 'application/json',
+//           },
+//         }
+//       );
+//       return response.data;
+//     } catch (err) {
+//       throw new Error(err.response?.data?.error || 'Failed to update user');
+//     }
+//   };
