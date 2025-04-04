@@ -14,12 +14,20 @@ const UserManagement = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [user_groupName, setUserGroupName] = useState('');
 
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 2000);
+  
+      return () => clearTimeout(timer);
+    }
     const loadData = async () => {
         try {
             const groupsData = await fetchGroups();
@@ -31,7 +39,7 @@ const UserManagement = () => {
         }
     };
     loadData();
-  }, []);
+  }, [error,success]);
 
   const handleCreateGroup = async () => {
     setError(null);
@@ -97,14 +105,16 @@ const UserManagement = () => {
     <div className="container">
       <Layout>
     </Layout>
-    {error && <Alert variant="danger">{error}</Alert>} {/* Show error message */}
-    {success && <Alert variant="success">{success}</Alert>} {/* Show success message */}
+    <div className="d-flex align-items-start gap-3">
+    {error && <Alert style={{width: '45%', transition: 'width 0.3s ease' }} variant="danger">{error}</Alert>} {/* Show error message */}
+    {success && <Alert style={{width: '45%', transition: 'width 0.3s ease' }} variant="success">{success}</Alert>} {/* Show success message */}
     <div className="border p-3 w-50 ms-auto">
         <Form.Label>Group Name</Form.Label>
         <div className="d-flex gap-2">
         <Form.Control className="w-75" type="text" placeholder="Enter Group Name" value={groupName} onChange={(e) => setGroupName(e.target.value)}/>
           <Button variant="light" onClick={handleCreateGroup}>Create Group</Button>
         </div>
+    </div>
     </div>
     <div className="border p-3 w-100 ms-auto">
     <Row className="mb-3 align-items-end g-2">
@@ -169,7 +179,10 @@ const UserManagement = () => {
               <td>{user.username}</td>
               <td>{'*'.repeat(user.password.length).substring(0,10)}</td>
               <td>{user.email}</td>
-              <td><Badge pill bg="warning">{user.user_groupName}</Badge></td>
+              <td>{user.user_groupName.split(',').map((group, index) => (
+                <Badge key={index} pill bg={group.trim() === 'admin' ? 'secondary' : 'warning'}
+                className="me-2">{group}</Badge>))}
+              </td>
               <td>{user.isActive === 1 ? 'Active' : 'Disabled'}</td>
               <td><Button variant="secondary">Edit</Button></td>
             </tr>
@@ -181,4 +194,3 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
-
