@@ -6,9 +6,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserManagement = () => {
   const [groupName, setGroupName] = useState("");
-  const [error, setError] = useState(null); // State for error messages
-  const [success, setSuccess] = useState(null); // State for success message
-  const [groups, setGroups] = useState([]); // State for groups
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null); 
+  const [groups, setGroups] = useState([]); 
   const [users, setUsers] = useState([]);
 
   const [username, setUsername] = useState('');
@@ -17,6 +17,14 @@ const UserManagement = () => {
 
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  const [editUser, setEditUser] = useState(null); 
+  const [editedEmail, setEditedEmail] = useState('');
+  const [editedPassword, setEditedPassword] = useState('');
+  const [editedGroups, setEditedGroups] = useState([]); 
+  const [editedIsActive, setEditedIsActive] = useState(true);
+
+  const [isGroupOpen, setIsGroupOpen] = useState(false); 
 
   useEffect(() => {
 
@@ -92,15 +100,46 @@ const UserManagement = () => {
   const handleSelect = (groupName) => {
     setSelectedGroups((prev) =>
       prev.includes(groupName)
-        ? prev.filter((g) => g !== groupName) // Remove if already selected
-        : [...prev, groupName] // Add if not selected
+        ? prev.filter((g) => g !== groupName) 
+        : [...prev, groupName]
       );
   };
   
   const handleDropdownToggle = () => {
-    setIsOpen((prev) => !prev); // Toggle dropdown visibility
+    setIsOpen((prev) => !prev);
   };
 
+  const editGroupDropDownToggle = () => {
+    setIsGroupOpen((prev) => !prev);
+  };
+
+  const handleEdit = (user) => {
+    setEditUser(user);
+    setEditedEmail(user.email);
+    setEditedPassword(''); // Empty the password field for editing
+    setEditedGroups(user.user_groupName.split(','));
+    setEditedIsActive(user.isActive === 1); // Set the current status
+  };
+
+  const handleSaveEdit = async () => {
+    const updatedUserData = {
+      email: editedEmail,
+      password: editedPassword, // If the password is not empty
+      user_groupName: editedGroups.join(','),
+      isActive: editedIsActive ? 1 : 0,
+    };
+  
+    try {
+      // Call the API to update the user data
+      await updateUser(editUser.username, updatedUserData);
+      setSuccess("User updated successfully!");
+      setEditUser(null); // Reset the edit state
+      const updatedUsers = await fetchUsers(); // Refresh the users list
+      setUsers(updatedUsers);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   return (
     <div className="p-5 pt-0 ms-auto w-100">
       <Layout>
@@ -177,14 +216,77 @@ const UserManagement = () => {
           {users.map((user, index) => (
             <tr key={index}>
               <td>{user.username}</td>
-              <td>{'*'.repeat(user.password.length).substring(0,10)}</td>
-              <td>{user.email}</td>
-              <td>{user.user_groupName.split(',').map((group, index) => (
-                <Badge key={index} pill bg={group.trim() === 'admin' ? 'secondary' : 'success'}
-                className="me-2">{group}</Badge>))}
+              <td>
+                {editUser && editUser.username === user.username ? (
+                  <Form.Control type="password" value={editedPassword} onChange={(e) => setEditedPassword(e.target.value)} placeholder="Enter new password"/>
+                ) : (
+                  // Mask password: show up to the first 10 characters as asterisks
+                  '*'.repeat(Math.min(user.password.length, 10))
+                )}
               </td>
-              <td>{user.isActive === 1 ? 'Active' : 'Disabled'}</td>
-              <td><Button variant="secondary">Edit</Button></td>
+              <td>{editUser && editUser.username === user.username ? (
+                <Form.Control type="email" value={editedEmail} onChange={(e) => setEditedEmail(e.target.value)} placeholder="Enter new email"/>
+                ) : (
+                  user.email
+                )}
+              </td>
+              <td>
+                {editUser && editUser.username === user.username ? (
+                  <Dropdown variant="secondary" show={isGroupOpen} onClick={editGroupDropDownToggle}>
+                    <Dropdown.Toggle variant="light" className="w-100">
+                      {editedGroups.length === 0 ? "Select Group" : editedGroups.join(",")}
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      {groups.length > 0 ? (
+                        groups.map((group, index) => (
+                          <Dropdown.Item key={index} as="div">
+                            <Form.Check type="checkbox" label={group.groupName} checked={editedGroups.includes(group.groupName)} onChange={() => handleSelectEdit(group.groupName)}/>
+                          </Dropdown.Item>
+                        ))
+                      ) : (
+                        <Dropdown.Item disabled>No groups available</Dropdown.Item>
+                      )}
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  user.user_groupName.split(',').map((group, idx) => {
+                    const badgeColor = group.trim() === 'admin' ? 'secondary' : 'success';
+                    return (
+                      <Badge key={idx} pill bg={badgeColor} className="me-2">
+                        {group}
+                      </Badge>
+                    );
+                  })
+                )}
+              </td>
+              <td>
+                {editUser && editUser.username === user.username ? (
+                  <Dropdown>
+                    <Dropdown.Toggle variant="light" className="w-100">
+                      {editedIsActive === 1 ? "Active" : "Disabled"}
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => setEditedIsActive(1)}>Active</Dropdown.Item>
+                      <Dropdown.Item onClick={() => setEditedIsActive(0)}>Disabled</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  user.isActive === 1 ? 'Active' : 'Disabled'
+                )}
+              </td>
+              <td>
+                {editUser && editUser.username === user.username ? (
+                  <>
+                    {/* Save button */}
+                    <Button variant="success" className="w-100" onClick={handleSaveEdit}>Update</Button>
+                  </>
+                ) : (
+                  <>
+                    {/* Edit button */}
+                    <Button variant="secondary" className="w-100" onClick={() => handleEdit(user)}>Edit</Button>
+                  </>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

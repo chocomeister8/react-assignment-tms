@@ -47,7 +47,7 @@ export const createUser = async (username, email, password, user_groupName) => {
 export const handleLogout = async () => {
     try {
         // Make a request to logout and send the token in cookies
-        const response = await axios.post(`${API_BASE_URL} /auth/logout`, {}, {});
+        const response = await axios.post(`${API_BASE_URL}/auth/logout`, {}, {});
 
         // Handle successful logout
         console.log("Logout Response:", response);
