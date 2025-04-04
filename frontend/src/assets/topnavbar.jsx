@@ -1,43 +1,34 @@
 import React from 'react';
-import axios from 'axios';
+import './App.css';
 import { Navbar, Nav, Button } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { handleLogout} from "./apiCalls";
+
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-          try {
-              // Make a request to logout and send the token in cookies
-              const response = await axios.post('http://localhost:3000/auth/logout', {}, { 
-              });
-      
-              // Handle successful logout
-              console.log("Logout Response:", response);
-  
-              navigate('/login');
-          } catch (error) {
-              console.error('Error logging out:', error);
-              if (error.response) {
-                  alert('Error: ' + (error.response.data ? error.response.data.message : 'Unknown error'));
-              } else {
-                  alert('Error: ' + error.message);
-              }
-          }
-      };
+  const logout = async () => {
+    try {
+      await handleLogout();  // Call the logout function
+      navigate('/login');    // Redirect after successful logout
+  } catch (error) {
+      console.error("Logout failed:", error);
+      alert("Logout failed. Please try again.");
+    }
+  }
 
   return (
     <>
       <Navbar bg="dark" variant="dark" className="fixed-top px-3">
         <Nav className="mr-3">
-          <Nav.Link as={Link} to="/tmshome" className="text-light">Task Management</Nav.Link>
+          <NavLink to="/tmshome"  className={({ isActive }) => isActive ? 'nav-link active text-light' : 'nav-link text-light'}>Task Management</NavLink>
         </Nav>
 
         <Nav className="mr-3">
-          <Nav.Link as={Link} to="/userManagement" className="text-light">User Management</Nav.Link>
+          <NavLink to="/userManagement" className={({ isActive }) => isActive ? 'nav-link active text-light' : 'nav-link text-light'}>User Management</NavLink>
         </Nav>
 
-        <Button variant="danger" onClick={handleLogout} className="ms-auto">
+        <Button variant="danger" onClick={logout} className="ms-auto">
           Logout
         </Button>
       </Navbar>
