@@ -73,13 +73,6 @@ const UserManagement = () => {
     }
 
     const user_groupName = selectedGroups.join(',');
-
-    console.log("Sending request with user details:", {
-      username,
-      email,
-      password,
-      user_groupName,
-    });
     try {
         const newUser = await createUser(username, email, password, user_groupName);
         setSuccess("User created successfully!");
@@ -138,7 +131,7 @@ const UserManagement = () => {
     setError(null);
     setSuccess(null);
     const user_groupName = editedGroups.join(',');
-
+    
     try {
       await updateUser(editUser.username,editedEmail,editedPassword,user_groupName, editedIsActive);
       setSuccess("User updated successfully!");
@@ -146,10 +139,11 @@ const UserManagement = () => {
       const updatedUser = await fetchUsers(); // Fetch updated groups list
       setUsers(updatedUser);
     } catch (err) {
+      console.error("Update user error:", err);
       setError("Failed to update user!");
     }
   };
-  
+
   return (
     <div className="p-5 pt-0 ms-auto w-100">
       <Layout>

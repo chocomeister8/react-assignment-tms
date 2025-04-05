@@ -98,22 +98,22 @@ exports.createUser = async (req, res) => {
 exports.updateUser = (req, res) => {
     const { username } = req.params;
     const { email, password, isActive, user_groupName } = req.body;
-    const groupsArray = `,${user_groupName.split(',').join(',')},`; 
+    const groupsArray = `,${user_groupName.split(',').join(',')},`;
+
+    if (isActive === undefined || isActive === null) {
+        isActive = 1;
+    }
+
+    // Validate required fields
+    if (!username || !email || !user_groupName) {
+        return res.status(400).json({ error: "Please fill in all fields!" });
+    }
+
+    if (!req.decoded) {
+        return res.status(500).json({ error: "Token is missing or invalid." });
+    }
 
     if (password && password.trim() === ''){
-
-        if (isActive === undefined || isActive === null) {
-            isActive = 1;
-        }
-    
-        // Validate required fields
-        if (!username || !email || !user_groupName) {
-            return res.status(400).json({ error: "Please fill in all fields!" });
-        }
-    
-        if (!req.decoded) {
-            return res.status(500).json({ error: "Token is missing or invalid." });
-        }
 
         User.update(email, isActive, groupsArray, username, (err, results) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -130,7 +130,6 @@ exports.updateUser = (req, res) => {
             });
         })
     }
-    
 };
 
 

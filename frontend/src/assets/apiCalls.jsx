@@ -67,10 +67,8 @@ export const updateUser = async (username, email, password, user_groupName, isAc
       const response = await axios.put(`${API_BASE_URL}/users/${username}`,
         {email, password, user_groupName,isActive,
         },
-        {withCredentials: true, // include cookies for auth
-          headers: {
-            'Content-Type': 'application/json',
-          },
+        {withCredentials: true,
+            headers: {'Content-Type': 'application/json',},
         }
       );
       return response.data;
