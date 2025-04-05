@@ -1,7 +1,7 @@
 import Layout from '../assets/topnavbar'; 
 import React, { useState, useEffect } from "react";
 import { Badge, Button, Table, Form, Dropdown, Row, Col, Alert } from "react-bootstrap";
-import { fetchGroups, fetchUsers, createGroup , createUser} from "../assets/apiCalls";
+import { fetchGroups, fetchUsers, createGroup , createUser, updateUser} from "../assets/apiCalls";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserManagement = () => {
@@ -27,7 +27,6 @@ const UserManagement = () => {
   const [isGroupOpen, setIsGroupOpen] = useState(false); 
 
   useEffect(() => {
-
     if (error || success) {
       const timer = setTimeout(() => {
         setError('');
@@ -56,7 +55,7 @@ const UserManagement = () => {
     try {
         const newGroup = await createGroup(groupName);
         setSuccess("Group created successfully!");
-        setGroupName(""); // Clear input field
+        setGroupName("");
         const updatedGroups = await fetchGroups(); // Fetch updated groups list
         setGroups(updatedGroups);
     } catch (err) {
@@ -118,28 +117,39 @@ const UserManagement = () => {
     setEditedEmail(user.email);
     setEditedPassword(''); // Empty the password field for editing
     setEditedGroups(user.user_groupName.split(','));
-    setEditedIsActive(user.isActive === 1); // Set the current status
+    setEditedIsActive(user.isActive === true); // Set the current status
   };
 
-  const handleSaveEdit = async () => {
-    const updatedUserData = {
-      email: editedEmail,
-      password: editedPassword, // If the password is not empty
-      user_groupName: editedGroups.join(','),
-      isActive: editedIsActive ? 1 : 0,
-    };
+  const handleSelectEdit = (groupName) => {
+    setEditedGroups(prevGroups => {
+      const cleanGroups = prevGroups.filter(g => g.trim() !== "");
   
+      if (cleanGroups.includes(groupName)) {
+        // Uncheck: remove the group
+        return cleanGroups.filter(g => g !== groupName);
+      } else {
+        // Check: add the group
+        return [...cleanGroups, groupName];
+      }
+    });
+  };
+
+  const update = async () => {
+    setError(null);
+    setSuccess(null);
+    const user_groupName = editedGroups.join(',');
+
     try {
-      // Call the API to update the user data
-      await updateUser(editUser.username, updatedUserData);
+      await updateUser(editUser.username,editedEmail,editedPassword,user_groupName, editedIsActive);
       setSuccess("User updated successfully!");
-      setEditUser(null); // Reset the edit state
-      const updatedUsers = await fetchUsers(); // Refresh the users list
-      setUsers(updatedUsers);
+      setEditUser(null); // exit edit mode
+      const updatedUser = await fetchUsers(); // Fetch updated groups list
+      setUsers(updatedUser);
     } catch (err) {
-      setError(err.message);
+      setError("Failed to update user!");
     }
   };
+  
   return (
     <div className="p-5 pt-0 ms-auto w-100">
       <Layout>
@@ -178,21 +188,14 @@ const UserManagement = () => {
                   ? "Select Group"
                   : selectedGroups.join(",")} 
               </Dropdown.Toggle>
-                <Dropdown.Menu>
-                    {groups.length > 0 ? (
-                        groups.map((group, index) => (
-                          <Dropdown.Item key={index} as="div">
-                              <Form.Check
-                                  type="checkbox"
-                                  label={group.groupName}
-                                  checked={selectedGroups.includes(group.groupName)}
-                                  onChange={(e) => handleSelect(group.groupName, e)}
-                              />
-                          </Dropdown.Item>
-                      ))
-                    ) : (
+                <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (
+                  <Dropdown.Item key={index} as="div">
+                    <Form.Check type="checkbox" label={group.groupName} checked={selectedGroups.includes(group.groupName)} onChange={(e) => handleSelect(group.groupName, e)}/>
+                  </Dropdown.Item>
+                  ))
+                  ) : (
                         <Dropdown.Item disabled>No groups available</Dropdown.Item>
-                    )}
+                  )}
                 </Dropdown.Menu>
             </Dropdown>
             <Button variant="light" className="px-4 w-50" onClick={handleCreateUser}>Add User</Button>
@@ -234,7 +237,7 @@ const UserManagement = () => {
                 {editUser && editUser.username === user.username ? (
                   <Dropdown variant="secondary" show={isGroupOpen} onClick={editGroupDropDownToggle}>
                     <Dropdown.Toggle variant="light" className="w-100">
-                      {editedGroups.length === 0 ? "Select Group" : editedGroups.join(",")}
+                      {editedGroups.length === 0 ? "Select Group" : editedGroups.filter(g => g.trim() !== "").join(",")}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       {groups.length > 0 ? (
@@ -278,7 +281,7 @@ const UserManagement = () => {
                 {editUser && editUser.username === user.username ? (
                   <>
                     {/* Save button */}
-                    <Button variant="success" className="w-100" onClick={handleSaveEdit}>Update</Button>
+                    <Button variant="success" className="w-100" onClick={update}>Update</Button>
                   </>
                 ) : (
                   <>

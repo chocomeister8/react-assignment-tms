@@ -62,19 +62,19 @@ export const handleLogout = async () => {
     }
 };
 
-// export const updateUser = async (username, email, password, user_groupName, isActive) => {
-//     try {
-//       const response = await axios.put(`${API_BASE_URL}/users/:${username}`,
-//         {email, password, user_groupName,isActive,
-//         },
-//         {withCredentials: true, // include cookies for auth
-//           headers: {
-//             'Content-Type': 'application/json',
-//           },
-//         }
-//       );
-//       return response.data;
-//     } catch (err) {
-//       throw new Error(err.response?.data?.error || 'Failed to update user');
-//     }
-//   };
+export const updateUser = async (username, email, password, user_groupName, isActive) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/users/${username}`,
+        {email, password, user_groupName,isActive,
+        },
+        {withCredentials: true, // include cookies for auth
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      throw new Error(err.response?.data?.error || 'Failed to update user');
+    }
+  };

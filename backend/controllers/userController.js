@@ -98,35 +98,39 @@ exports.createUser = async (req, res) => {
 exports.updateUser = (req, res) => {
     const { username } = req.params;
     const { email, password, isActive, user_groupName } = req.body;
-    console.log("Update request received for:", username, req.body);
-    if (isActive === undefined || isActive === null) {
-        isActive = 1;
-    }
+    const groupsArray = `,${user_groupName.split(',').join(',')},`; 
 
-    // Validate required fields
-    if (!username || !email || !password || !user_groupName) {
-        return res.status(400).json({ error: "Please fill in all fields!" });
-    }
+    if (password && password.trim() === ''){
 
-    // const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
-    // if (!passwordRegex.test(password)) {
-    //     return res.status(400).json({
-    //         error: "Password must be 8-10 characters long and contain at least one letter, one number, and one special character."
-    //     });
-    // }
-    if (!req.decoded) {
-        return res.status(500).json({ error: "Token is missing or invalid." });
-    }
+        if (isActive === undefined || isActive === null) {
+            isActive = 1;
+        }
+    
+        // Validate required fields
+        if (!username || !email || !user_groupName) {
+            return res.status(400).json({ error: "Please fill in all fields!" });
+        }
+    
+        if (!req.decoded) {
+            return res.status(500).json({ error: "Token is missing or invalid." });
+        }
 
-    hashPW(password).then(hashedPassword => {
-        const groupsArray = `,${user_groupName.split(',').join(',')},`;
-        User.update(username, email, password, isActive, groupsArray, (err, results) => {
+        User.update(email, isActive, groupsArray, username, (err, results) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'User updated successfully!' });
+            console.log("Update result:", results);
         });
-    }).catch(err => {
-        return res.status(500).json({ error: 'Error hashing password' });
-    });
+    }
+    else {
+        bcrypt.hash(password, 10, (err, hashedPassword) => {
+            User.update(email, hashedPassword, isActive, groupsArray, username, (err, results) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'User updated successfully!' });
+                console.log("Update result:", results);
+            });
+        })
+    }
+    
 };
 
 
