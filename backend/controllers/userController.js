@@ -1,4 +1,3 @@
-const connection = require("../config/database"); // Import MySQL connection
 const bcrypt = require("bcrypt");
 const User = require('../models/users');
 
@@ -113,22 +112,34 @@ exports.updateUser = (req, res) => {
         return res.status(500).json({ error: "Token is missing or invalid." });
     }
 
-    if (password && password.trim() === ''){
+    const trimmedPassword = typeof password === 'string' ? password.trim() : '';
 
+    // Case 1: password is empty or not provided
+    if (!trimmedPassword) {
         User.update(email, isActive, groupsArray, username, (err, results) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'User updated successfully!' });
-            console.log("Update result:", results);
+            console.log("Update result (no password):", results);
         });
-    }
+    } 
+    // Case 2: password is provided – validate and hash
     else {
-        bcrypt.hash(password, 10, (err, hashedPassword) => {
-            User.update(email, hashedPassword, isActive, groupsArray, username, (err, results) => {
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+        if (!passwordRegex.test(trimmedPassword)) {
+            return res.status(400).json({
+                error: "Password must be 8-10 characters long and contain at least one letter, one number, and one special character."
+            });
+        }
+
+        bcrypt.hash(trimmedPassword, 10, (err, hashedPassword) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            User.updateWithPW(email, hashedPassword, isActive, groupsArray, username, (err, results) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ message: 'User updated successfully!' });
-                console.log("Update result:", results);
+                console.log("Update result (with password):", results);
             });
-        })
+        });
     }
 };
 

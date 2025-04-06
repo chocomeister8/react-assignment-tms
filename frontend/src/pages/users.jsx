@@ -133,14 +133,20 @@ const UserManagement = () => {
     const user_groupName = editedGroups.join(',');
     
     try {
+
       await updateUser(editUser.username,editedEmail,editedPassword,user_groupName, editedIsActive);
       setSuccess("User updated successfully!");
       setEditUser(null); // exit edit mode
       const updatedUser = await fetchUsers(); // Fetch updated groups list
       setUsers(updatedUser);
+
     } catch (err) {
+
       console.error("Update user error:", err);
-      setError("Failed to update user!");
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      }
+
     }
   };
 

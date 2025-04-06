@@ -14,11 +14,16 @@ const User = {
             callback
         );
     },
-    update: (email, password, isActive, user_groupName, username, callback) => {
+    update: (email, isActive, user_groupName, username, callback) => {
         connection.query(
-            'UPDATE user SET email = ?, password = ?, isActive = ?, user_groupName = ? WHERE username = ?',
-            [email, password, isActive, user_groupName, username],
-            callback
+            'UPDATE user SET email = ?, isActive = ?, user_groupName = ? WHERE username = ?',
+            [email, isActive, user_groupName, username], callback
+        );
+    },
+    updateWithPW :(email, password, isActive, user_groupName, username, callback) => {
+        connection.query(
+            'UPDATE user SET email = ?, password = ?, isActive = ?, user_groupName = ? WHERE username =?',
+            [email, password, isActive, user_groupName, username], callback
         );
     }
 };
