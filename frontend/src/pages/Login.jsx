@@ -13,8 +13,6 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Logging in with:", username, password);
-
     try {
         // Send login data to the backend
         const response = await axios.post('http://localhost:3000/auth/login', {
@@ -22,24 +20,32 @@ function Login() {
           password,
         });
 
-        setErrorMessage('');
-        setShowSnackbar(false); 
-        navigate('/tmshome'); // This will navigate to the tmshome page
-
+        if (response.data.success === true) {
+          // Navigate to home if login is successful
+          navigate('/tmshome');
+        } else {
+          // If login failed, show the message from the backend (e.g., "Account disabled!")
+          setErrorMessage(response.data.message);
+          setShowSnackbar(true);
+        }
       } catch (error) {
         console.error("Login error:", error);
-        if (error.response && error.response.data) {
-          setErrorMessage(error.response.data.message); // Show error message from backend
+        if (error.response && error.response.data && error.response.data.message) {
+          setErrorMessage(error.response.data.message);  // Set error message from backend
+          setShowSnackbar(true);
         } else {
+          // Handle other errors
           setErrorMessage('An error occurred. Please try again.');
+          setShowSnackbar(true);
         }
-        setShowSnackbar(true);
+      // Show snackbar with error message
+      setShowSnackbar(true);
       }
     };
 
     // This will hide the Snackbar when the user closes it
     const handleSnackbarHide = () => {
-        setShowSnackbar(false);
+      setShowSnackbar(false);
     };
 
   return (

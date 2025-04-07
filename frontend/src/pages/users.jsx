@@ -296,7 +296,7 @@ const UserManagement = () => {
                 </Button>
               </div>
             ) : (
-              <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)}>
+              <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)} disabled={user.isActive === 0}>
                 Edit
               </Button>
             )}

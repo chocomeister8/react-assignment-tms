@@ -7,31 +7,31 @@ import axios from "axios";
 
 
 const Layout = ({ children }) => {
-    const navigate = useNavigate();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+    
+  useEffect(() => {
+    const checkIsAdmin = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/auth/validateAdmin", {
+          withCredentials: true,
+        });
 
-    useEffect(() => {
-      const checkIsAdmin = async () => {
-        try {
-          const response = await axios.get("http://localhost:3000/auth/validateAdmin", {
-            withCredentials: true,
-          });
-
-          if (response.data.success) {
-            setIsAuthenticated(true);
-            setIsAdmin(response.data.isAdmin);  // Set whether the user is an admin
-          } else {
-            setIsAuthenticated(false);
-            setIsAdmin(false);
-          }
-        } catch(error) {
+        if (response.data.success) {
+          setIsAuthenticated(true);
+          setIsAdmin(response.data.isAdmin);  // Set whether the user is an admin
+        } else {
           setIsAuthenticated(false);
           setIsAdmin(false);
         }
-      };
+      } catch(error) {
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+      }
+    };
       checkIsAdmin();
-    }, [])
+  }, [])
 
     const logout = async () => {
       try {

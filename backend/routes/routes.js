@@ -1,7 +1,7 @@
 const express = require('express');
 const userController = require('../controllers/userController');
 const groupController = require('../controllers/groupController');
-const { isAuthenticatedUser, validateAccess, logout, login, isAuthorized, checkLogin } = require('../controllers/authController');
+const { isAuthenticatedUser, validateAccess, logout, login } = require('../controllers/authController');
 
 const router = express.Router();
 

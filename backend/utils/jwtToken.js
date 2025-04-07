@@ -26,7 +26,6 @@ const sendToken = (user, req, statusCode, res) => {
         success: true,
         token
     });
-    console.log("Generated Token:", token);
 };
 
 module.exports = sendToken;
