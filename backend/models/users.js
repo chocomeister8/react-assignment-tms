@@ -5,7 +5,7 @@ const User = {
         connection.query('SELECT username, email, password, isActive, user_groupName FROM user', callback);
     },
     getByUserName: (username, callback) => {
-        connection.query('SELECT * FROM user WHERE username = ?', [username], callback);
+        connection.query('SELECT username FROM user WHERE username = ?', [username], callback);
     },
     create: (username, email, password, isActive, user_groupName, callback) => {
         connection.query(

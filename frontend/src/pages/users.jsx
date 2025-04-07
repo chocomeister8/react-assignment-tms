@@ -160,8 +160,8 @@ const UserManagement = () => {
     <div className="border p-3 w-50 ms-auto">
         <Form.Label>Group Name</Form.Label>
         <div className="d-flex gap-3">
-        <Form.Control className="w-75" type="text" placeholder="Enter Group Name" value={groupName} onChange={(e) => setGroupName(e.target.value)}/>
-          <Button variant="light" className="w-25" onClick={handleCreateGroup}>Create Group</Button>
+        <Form.Control className="w-75 border border-dark" type="text" placeholder="Enter Group Name" value={groupName} onChange={(e) => setGroupName(e.target.value)}/>
+          <Button variant="light" className="w-25 border border-dark" onClick={handleCreateGroup}>Create Group</Button>
         </div>
     </div>
     </div>
@@ -169,28 +169,28 @@ const UserManagement = () => {
     <Row className="mb-3 align-items-end g-2">
         <Col xs={12} md={3}>
             <Form.Label>Username</Form.Label>
-            <Form.Control type="text" placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <Form.Control type="text" className='border-dark' placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         </Col>
         <Col xs={12} md={3}>
             <Form.Label>Email</Form.Label>
-            <Form.Control type="email" placeholder="Enter Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Form.Control type="email" className='border-dark' placeholder="Enter Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Col>
         <Col xs={12} md={3}>
             <Form.Label>Password</Form.Label>
-            <Form.Control type="password" placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Form.Control type="password" className='border-dark' placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </Col>
         <Col xs={12} md={3}>
         <Form.Label>Groups</Form.Label>
         <div className="d-flex align-items-center gap-2">
             <Dropdown variant= "secondary" className="w-50" show={isOpen} onClick={handleDropdownToggle}>
-              <Dropdown.Toggle variant="light" className="w-100">
+              <Dropdown.Toggle variant="light" className="w-100 border-dark">
                 {selectedGroups.length === 0
                   ? "Select Group"
                   : selectedGroups.join(",")} 
               </Dropdown.Toggle>
                 <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (
                   <Dropdown.Item key={index} as="div">
-                    <Form.Check type="checkbox" label={group.groupName} checked={selectedGroups.includes(group.groupName)} onChange={(e) => handleSelect(group.groupName, e)}/>
+                    <Form.Check type="checkbox" label={group.groupName} checked={selectedGroups.includes(group.groupName)} onChange={(e) => handleSelect(group.groupName, e)} onClick={(e) => e.stopPropagation()}/>
                   </Dropdown.Item>
                   ))
                   ) : (
@@ -198,7 +198,7 @@ const UserManagement = () => {
                   )}
                 </Dropdown.Menu>
             </Dropdown>
-            <Button variant="light" className="px-4 w-50" onClick={handleCreateUser}>Add User</Button>
+            <Button variant="light" className="px-4 w-50 border-dark" onClick={handleCreateUser}>Add User</Button>
         </div>
     </Col>
     </Row>
@@ -221,14 +221,14 @@ const UserManagement = () => {
               <td>{user.username}</td>
               <td>
                 {editUser && editUser.username === user.username ? (
-                  <Form.Control type="password" value={editedPassword} onChange={(e) => setEditedPassword(e.target.value)} placeholder="Enter new password"/>
+                  <Form.Control type="password" className='border-dark' value={editedPassword} onChange={(e) => setEditedPassword(e.target.value)} placeholder="Enter new password"/>
                 ) : (
                   // Mask password: show up to the first 10 characters as asterisks
                   '*'.repeat(Math.min(user.password.length, 10))
                 )}
               </td>
               <td>{editUser && editUser.username === user.username ? (
-                <Form.Control type="email" value={editedEmail} onChange={(e) => setEditedEmail(e.target.value)} placeholder="Enter new email"/>
+                <Form.Control type="email" className='border-dark' value={editedEmail} onChange={(e) => setEditedEmail(e.target.value)} placeholder="Enter new email"/>
                 ) : (
                   user.email
                 )}
@@ -236,14 +236,14 @@ const UserManagement = () => {
               <td>
                 {editUser && editUser.username === user.username ? (
                   <Dropdown variant="secondary" show={isGroupOpen} onClick={editGroupDropDownToggle}>
-                    <Dropdown.Toggle variant="light" className="w-100">
+                    <Dropdown.Toggle variant="light" className="w-100 border-dark">
                       {editedGroups.length === 0 ? "Select Group" : editedGroups.filter(g => g.trim() !== "").join(",")}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       {groups.length > 0 ? (
                         groups.map((group, index) => (
                           <Dropdown.Item key={index} as="div">
-                            <Form.Check type="checkbox" label={group.groupName} checked={editedGroups.includes(group.groupName)} onChange={() => handleSelectEdit(group.groupName)}/>
+                            <Form.Check type="checkbox" label={group.groupName} checked={editedGroups.includes(group.groupName)} onChange={() => handleSelectEdit(group.groupName)} onClick={(e) => e.stopPropagation()}/>
                           </Dropdown.Item>
                         ))
                       ) : (
@@ -265,7 +265,7 @@ const UserManagement = () => {
               <td>
                 {editUser && editUser.username === user.username ? (
                   <Dropdown>
-                    <Dropdown.Toggle variant="light" className="w-100">
+                    <Dropdown.Toggle variant="light" className="w-100 border-dark">
                       {editedIsActive === 1 ? "Active" : "Disabled"}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
@@ -278,18 +278,21 @@ const UserManagement = () => {
                 )}
               </td>
               <td>
-                {editUser && editUser.username === user.username ? (
-                  <>
-                    {/* Save button */}
-                    <Button variant="success" className="w-100" onClick={update}>Update</Button>
-                  </>
-                ) : (
-                  <>
-                    {/* Edit button */}
-                    <Button variant="secondary" className="w-100" onClick={() => handleEdit(user)}>Edit</Button>
-                  </>
-                )}
-              </td>
+              {editUser && editUser.username === user.username ? (
+                <div className="d-flex justify-content-between w-100">
+                  <Button variant="success" className="flex-grow-1 me-2" onClick={update}>
+                    Update
+                  </Button>
+                  <Button variant="secondary" className="flex-grow-1 ms-2" onClick={() => setEditUser(null)}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)}>
+                  Edit
+                </Button>
+              )}
+            </td>
             </tr>
           ))}
         </tbody>

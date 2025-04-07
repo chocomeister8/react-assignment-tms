@@ -31,17 +31,15 @@ exports.createGroup = (req, res) => {
         return res.status(400).json({ error: "Group Name can only contain letters, numbers, '_', and '/'." });
     }
 
-    connection.query('SELECT groupName FROM grp WHERE groupName = LOWER(?)', [groupName], (err, results) => {
-        if (err) {
-            console.log('Error details:', err);
-            return res.status(500).json({ error: 'Database error occurred' });
+    Group.selectGroupByName(groupName, (err, results) => {
+        if(err) {
+            return res.status(500).json({ error: 'Database error occurred.' });
         }
-        if (results.length > 0) {
-            // Step 2: If the username exists, send an error message
-            return res.status(400).json({ error: 'Group Name already exists' });
+        if(results.length > 0) {
+            return res.status(400).json({ error: 'Group name already exists!'});
         }
 
-        connection.query('INSERT INTO grp (groupName) VALUES (?)', [groupName], (err, results) =>{
+        Group.createGroup(groupName, (err) => {
             if(err) {
                 return res.status(500).json({ error: 'Failed to create group'})
             }
@@ -49,5 +47,5 @@ exports.createGroup = (req, res) => {
                 res.status(201).json({ message: 'Group created successfully', group : { groupName }})
             }
         })
-    });
+    })
 };

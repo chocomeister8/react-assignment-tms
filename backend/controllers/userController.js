@@ -43,7 +43,8 @@ exports.getUserByUserName = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     console.log("📥 Received request body:", req.body);
-    const { username, email, password, user_groupName } = req.body;
+    let { username, email, password, user_groupName } = req.body;
+    username = username.toLowerCase();
     let { isActive } = req.body;
 
     if (isActive === undefined || isActive === null) {
@@ -53,6 +54,12 @@ exports.createUser = async (req, res) => {
     // Validate required fields
     if (!username || !email || !password || !user_groupName) {
         return res.status(400).json({ error: "Please fill in all fields!" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "Please enter a valid email format!" });
     }
 
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
@@ -137,7 +144,6 @@ exports.updateUser = (req, res) => {
             User.updateWithPW(email, hashedPassword, isActive, groupsArray, username, (err, results) => {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ message: 'User updated successfully!' });
-                console.log("Update result (with password):", results);
             });
         });
     }
