@@ -5,19 +5,22 @@ import axios from "axios";
 const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/auth/checkLogin", {
+        const response = await axios.get("http://localhost:3000/auth/validateAccess", {
           withCredentials: true, // Ensures cookies are sent with the request
         });
 
-        if (response.data.authenticated) {
+        console.log("Auth check response:", response.data);
+        if (response.data.success === true) {
           setIsAuthenticated(true);
-        } else {
+        }
+        else {
           setIsAuthenticated(false);
-          navigate("/login");
+          navigate("/login"); 
         }
       } catch (error) {
         setIsAuthenticated(false);

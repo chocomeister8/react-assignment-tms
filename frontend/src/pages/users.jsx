@@ -53,14 +53,21 @@ const UserManagement = () => {
     setSuccess(null);
 
     try {
-        const newGroup = await createGroup(groupName);
-        setSuccess("Group created successfully!");
-        setGroupName("");
-        const updatedGroups = await fetchGroups(); // Fetch updated groups list
-        setGroups(updatedGroups);
+      const response = await createGroup(groupName);
+
+      if (response.error) {
+          setError(response.error);
+      } else {
+          setSuccess(response.message);
+          setGroupName("");
+          const updatedGroups = await fetchGroups();
+          setGroups(updatedGroups);
+      }
+
     } catch (err) {
-        setError(err.message);
-    }
+      console.error("Unexpected error:", err);
+      setError("Something went wrong. Please try again.");
+  }
   };
 
   const handleCreateUser = async () => {
@@ -75,12 +82,15 @@ const UserManagement = () => {
     const user_groupName = selectedGroups.join(',');
     try {
         const newUser = await createUser(username, email, password, user_groupName);
-        setSuccess("User created successfully!");
-
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        setSelectedGroups([]); 
+        if(newUser.error) {
+          setError(newUser.error);
+        } else{
+          setSuccess(newUser.success);
+          setUsername('');
+          setEmail('');
+          setPassword('');
+          setSelectedGroups([]); 
+        }
         
         const updatedUser = await fetchUsers(); // Fetch updated groups list
         setUsers(updatedUser);
@@ -134,19 +144,17 @@ const UserManagement = () => {
     
     try {
 
-      await updateUser(editUser.username,editedEmail,editedPassword,user_groupName, editedIsActive);
-      setSuccess("User updated successfully!");
-      setEditUser(null); // exit edit mode
-      const updatedUser = await fetchUsers(); // Fetch updated groups list
-      setUsers(updatedUser);
-
-    } catch (err) {
-
-      console.error("Update user error:", err);
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(err.response.data.error);
+      const update = await updateUser(editUser.username,editedEmail,editedPassword,user_groupName, editedIsActive);
+      if(update.error) {
+        setError(update.error);
+      } else {
+        setSuccess(update.success);
+        setEditUser(null); // exit edit mode
       }
-
+      const updatedUser = await fetchUsers(); 
+      setUsers(updatedUser);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -278,21 +286,21 @@ const UserManagement = () => {
                 )}
               </td>
               <td>
-              {editUser && editUser.username === user.username ? (
-                <div className="d-flex justify-content-between w-100">
-                  <Button variant="success" className="flex-grow-1 me-2" onClick={update}>
-                    Update
-                  </Button>
-                  <Button variant="secondary" className="flex-grow-1 ms-2" onClick={() => setEditUser(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)}>
-                  Edit
+            {editUser && editUser.username === user.username ? (
+              <div className="d-flex justify-content-between w-100">
+                <Button variant="success" className="flex-grow-1 me-2" onClick={update}>
+                  Update
                 </Button>
-              )}
-            </td>
+                <Button variant="secondary" className="flex-grow-1 ms-2" onClick={() => setEditUser(null)}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)}>
+                Edit
+              </Button>
+            )}
+          </td>
             </tr>
           ))}
         </tbody>
