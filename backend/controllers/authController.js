@@ -1,12 +1,39 @@
 const connection = require("../config/database"); // Import MySQL connection
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const sendToken = require('../utils/jwtToken');
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
-require("dotenv").config(); 
+require("dotenv").config();
+
+const sendToken = (user, req, statusCode, res) => {
+    // Extract IP address from request
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
+    // Extract browser type from User-Agent header
+    const browserType = req.headers['user-agent'];
+
+    // Create JWT Token with additional details
+    const token = jwt.sign(
+        { username: user.username, group: user.group, ipAddress, browserType }, process.env.JWT_SECRET, // Replace with an environment variable
+        { expiresIn: "1h" }
+    );
+
+    // Options for cookie
+    const options = {
+        expires: new Date(Date.now() + 60 * 60 * 1000),
+        httpOnly: true,
+        secure : false
+    };
+
+    res.status(statusCode).cookie('token', token, options).json({
+        success: true,
+        token
+    });
+    console.log("Token generated with IP: ", ipAddress, "and Browser: ", browserType);
+};
 
 exports.login = async (req, res, next) => {
     const { username, password } = req.body;
+    
 
     // Finding user in database
     const sql = "SELECT username, email, password, isActive, user_groupName FROM user WHERE username = ? LIMIT 1";
@@ -85,7 +112,7 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
                 return res.status(200).json({ success: false, message: "User not found" });
             }
 
-            req.decoded = decoded; 
+            req.decoded = decoded;
 
             next(); // Proceed to the next middleware
         });

@@ -124,9 +124,7 @@ exports.updateUser = (req, res) => {
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
-
     const trimmedPassword = typeof password === 'string' ? password.trim() : '';
-
     // Case 1: password is empty or not provided
     if (!trimmedPassword) {
         db.query('UPDATE user SET email = ?, isActive = ?, user_groupName = ? WHERE username = ?',
