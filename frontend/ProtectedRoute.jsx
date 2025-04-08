@@ -2,34 +2,33 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, adminOnly = false}) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/auth/validateAccess", {
-          withCredentials: true, // Ensures cookies are sent with the request
-        });
+        const url = adminOnly
+          ? "http://localhost:3000/auth/validateAdmin"
+          : "http://localhost:3000/auth/validateAccess";
 
-        console.log("Auth check response:", response.data);
-        if (response.data.success === true) {
+        const res = await axios.get(url, { withCredentials: true });
+
+        if (res.data.success && (!adminOnly || res.data.isAdmin)) {
           setIsAuthenticated(true);
-        }
-        else {
+        } else {
           setIsAuthenticated(false);
-          navigate("/login"); 
+          navigate(adminOnly ? "/tmshome" : "/login");
         }
-      } catch (error) {
+      } catch (err) {
         setIsAuthenticated(false);
-        navigate("/login");
+        navigate(adminOnly ? "/tmshome" : "/login");
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [adminOnly, navigate]);
 
   if (isAuthenticated === null) return <p>Loading...</p>; // Show loading while checking
 

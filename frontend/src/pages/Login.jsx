@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Container, Form, Button, Navbar, Col, Row} from "react-bootstrap";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -11,25 +11,39 @@ function Login() {
   const [showSnackbar, setShowSnackbar] = useState(false);
   const navigate = useNavigate(); 
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/auth/validateAccess", {
+          withCredentials: true
+        });
+
+        if (res.data.success === true) {
+          navigate('/tmshome'); // already logged in
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
+        setLoading(false); // still show login if error (like not logged in)
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
         // Send login data to the backend
-        const response = await axios.post('http://localhost:3000/auth/login', {
-          username,
-          password,
-        });
+        const response = await axios.post('http://localhost:3000/auth/login', {username, password,});
 
         if (response.data.success === true) {
-          // Navigate to home if login is successful
           navigate('/tmshome');
         } else {
-          // If login failed, show the message from the backend (e.g., "Account disabled!")
           setErrorMessage(response.data.message);
           setShowSnackbar(true);
         }
       } catch (error) {
-        console.error("Login error:", error);
         if (error.response && error.response.data && error.response.data.message) {
           setErrorMessage(error.response.data.message);  // Set error message from backend
           setShowSnackbar(true);

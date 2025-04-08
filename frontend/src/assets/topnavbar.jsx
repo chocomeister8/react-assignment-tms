@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+
     
   useEffect(() => {
     const checkIsAdmin = async () => {
@@ -18,7 +19,7 @@ const Layout = ({ children }) => {
           withCredentials: true,
         });
 
-        if (response.data.success) {
+        if (response.data.success === true) {
           setIsAuthenticated(true);
           setIsAdmin(response.data.isAdmin);  // Set whether the user is an admin
         } else {
@@ -28,10 +29,11 @@ const Layout = ({ children }) => {
       } catch(error) {
         setIsAuthenticated(false);
         setIsAdmin(false);
-      }
+      } 
     };
       checkIsAdmin();
   }, [])
+  
 
     const logout = async () => {
       try {
