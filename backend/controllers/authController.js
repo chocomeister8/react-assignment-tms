@@ -2,9 +2,7 @@ const connection = require("../config/database"); // Import MySQL connection
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const sendToken = require('../utils/jwtToken');
-
 const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
-const ErrorHandler = require('../utils/errorHandler');
 require("dotenv").config(); 
 
 exports.login = async (req, res, next) => {
@@ -95,7 +93,6 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
     } catch (err) {
         return res.status(200).json({ success: false, message: "Invalid or expired token." });
     }
-
 });
 
 exports.validateAccess = (groupName) => {

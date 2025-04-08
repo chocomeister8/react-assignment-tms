@@ -21,10 +21,10 @@ function Login() {
         if (res.data.success === true) {
           navigate('/tmshome'); // already logged in
         } else {
-          setLoading(false);
+          navigate('/login');
         }
       } catch (err) {
-        setLoading(false); // still show login if error (like not logged in)
+        navigate('/login');
       }
     };
 

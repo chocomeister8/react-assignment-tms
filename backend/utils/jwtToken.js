@@ -26,6 +26,7 @@ const sendToken = (user, req, statusCode, res) => {
         success: true,
         token
     });
+    console.log("Token generated with IP: ", ipAddress, "and Browser: ", browserType);
 };
 
 module.exports = sendToken;

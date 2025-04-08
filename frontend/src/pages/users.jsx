@@ -120,7 +120,7 @@ const UserManagement = () => {
     setEditedEmail(user.email);
     setEditedPassword(''); // Empty the password field for editing
     setEditedGroups(user.user_groupName.split(','));
-    setEditedIsActive(user.isActive === true); // Set the current status
+    setEditedIsActive(user.isActive === 1); // Set the current status
   };
 
   const handleSelectEdit = (groupName) => {
@@ -274,11 +274,11 @@ const UserManagement = () => {
                 {editUser && editUser.username === user.username ? (
                   <Dropdown>
                     <Dropdown.Toggle variant="light" className="w-100 border-dark">
-                      {editedIsActive === 1 ? "Active" : "Disabled"}
+                      {editedIsActive ? "Active" : "Disabled"}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                      <Dropdown.Item onClick={() => setEditedIsActive(1)}>Active</Dropdown.Item>
-                      <Dropdown.Item onClick={() => setEditedIsActive(0)}>Disabled</Dropdown.Item>
+                      <Dropdown.Item onClick={() => setEditedIsActive(true)}>Active</Dropdown.Item>
+                      <Dropdown.Item onClick={() => setEditedIsActive(false)}>Disabled</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 ) : (

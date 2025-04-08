@@ -9,15 +9,16 @@ const ProtectedRoute = ({ children, adminOnly = false}) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const url = adminOnly
+        const response = adminOnly
           ? "http://localhost:3000/auth/validateAdmin"
           : "http://localhost:3000/auth/validateAccess";
 
-        const res = await axios.get(url, { withCredentials: true });
+        const res = await axios.get(response, { withCredentials: true });
 
         if (res.data.success && (!adminOnly || res.data.isAdmin)) {
           setIsAuthenticated(true);
         } else {
+          // if not admin, redirect to homepage, not a logged in user goes to log in page
           setIsAuthenticated(false);
           navigate(adminOnly ? "/tmshome" : "/login");
         }
