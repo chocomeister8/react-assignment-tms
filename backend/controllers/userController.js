@@ -46,7 +46,7 @@ exports.createUser = async (req, res) => {
     }
 
     // Validate required fields
-    if (!username || !email || !password || !user_groupName) {
+    if (!username || !email || !password) {
         return res.status(200).json({ error: "Please fill in all fields!" });
     }
 
@@ -119,12 +119,23 @@ exports.updateUser = (req, res) => {
     const { email, password, isActive, user_groupName } = req.body;
     const groupsArray = `,${user_groupName.split(',').join(',')},`;
 
+    if(username.toLowerCase() === "admin"){
+        if (user_groupName && !user_groupName.includes("admin")) {
+            return res.status(200).json({ error: "You cannot remove 'admin' group from the admin user." });
+        }
+
+        // Prevent modifying admin's status to inactive
+        if (isActive === 0) {
+            return res.status(200).json({ error: "You cannot deactivate the admin user." });
+        }
+    }
+
     if (isActive === undefined || isActive === null) {
         isActive = 1;
     }
 
     // Validate required fields
-    if (!username || !email || !user_groupName) {
+    if (!username || !email) {
         return res.status(200).json({ error: "Please fill in all fields!" });
     }
 

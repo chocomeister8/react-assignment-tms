@@ -136,12 +136,6 @@ const UserManagement = () => {
       return;
     }
   
-    // Group validation
-    if (selectedGroups.length === 0) {
-      setError("Please select at least one group!");
-      return;
-    }
-  
     const groupRegex = /^[a-z0-9_/]{1,50}$/;
     const cleanedGroups = selectedGroups.map(group => group.trim().toLowerCase());
   
@@ -194,14 +188,15 @@ const UserManagement = () => {
     setEditUser(user);
     setEditedEmail(user.email);
     setEditedPassword(''); // Empty the password field for editing
-    setEditedGroups(user.user_groupName.split(','));
+    const cleanedGroups = user.user_groupName.split(',').map(group => group.trim()).filter(group => group !== "");
+    setEditedGroups(cleanedGroups);
     setEditedIsActive(user.isActive === 1); // Set the current status
   };
 
   const handleSelectEdit = (groupName) => {
     setEditedGroups(prevGroups => {
       const cleanGroups = prevGroups.filter(g => g.trim() !== "");
-  
+
       if (cleanGroups.includes(groupName)) {
         // Uncheck: remove the group
         return cleanGroups.filter(g => g !== groupName);
@@ -267,9 +262,7 @@ const UserManagement = () => {
         <div className="d-flex align-items-center gap-2">
             <Dropdown variant= "secondary" className="w-50" show={isOpen} onClick={handleDropdownToggle}>
               <Dropdown.Toggle variant="light" className="w-100 border-dark">
-                {selectedGroups.length === 0
-                  ? "--Select--"
-                  : selectedGroups.join(",")} 
+                {selectedGroups.length === 0 ? "--Select--" : selectedGroups.filter(g => g.trim() !== "").join(",")} 
               </Dropdown.Toggle>
                 <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (
                   <Dropdown.Item key={index} as="div">
@@ -277,7 +270,7 @@ const UserManagement = () => {
                   </Dropdown.Item>
                   ))
                   ) : (
-                        <Dropdown.Item disabled>No groups available</Dropdown.Item>
+                  <Dropdown.Item disabled>No groups available</Dropdown.Item>
                   )}
                 </Dropdown.Menu>
             </Dropdown>
@@ -320,15 +313,14 @@ const UserManagement = () => {
                 {editUser && editUser.username === user.username ? (
                   <Dropdown variant="secondary" show={isGroupOpen} onClick={editGroupDropDownToggle}>
                     <Dropdown.Toggle variant="light" className="w-100 border-dark">
-                      {editedGroups.length === 0 ? "Select Group" : editedGroups.filter(g => g.trim() !== "").join(",")}
+                      {console.log("editedGroups:", editedGroups)}
+                      {editedGroups.length === 0 ? "--Select--" : editedGroups.filter(g => g.trim() !== "").join(",")}
                     </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      {groups.length > 0 ? (
-                        groups.map((group, index) => (
-                          <Dropdown.Item key={index} as="div">
-                            <Form.Check type="checkbox" label={group.groupName} checked={editedGroups.includes(group.groupName)} onChange={() => handleSelectEdit(group.groupName)} onClick={(e) => e.stopPropagation()}/>
-                          </Dropdown.Item>
-                        ))
+                    <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (
+                      <Dropdown.Item key={index} as="div">
+                        <Form.Check type="checkbox" label={group.groupName} checked={editedGroups.includes(group.groupName)} onChange={() => handleSelectEdit(group.groupName)} onClick={(e) => e.stopPropagation()} disabled={user.username === "admin" && group.groupName === "admin"}/>
+                      </Dropdown.Item>
+                      ))
                       ) : (
                         <Dropdown.Item disabled>No groups available</Dropdown.Item>
                       )}
@@ -348,7 +340,7 @@ const UserManagement = () => {
               <td>
                 {editUser && editUser.username === user.username ? (
                   <Dropdown>
-                    <Dropdown.Toggle variant="light" className="w-100 border-dark">
+                    <Dropdown.Toggle variant="light" className="w-100 border-dark" disabled={user.username === "admin"}>
                       {editedIsActive ? "Active" : "Disabled"}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
@@ -371,7 +363,7 @@ const UserManagement = () => {
                 </Button>
               </div>
             ) : (
-              <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)} disabled={user.isActive === 0}>
+              <Button variant="light" className="border border-dark w-100" onClick={() => handleEdit(user)}>
                 Edit
               </Button>
             )}
