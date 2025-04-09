@@ -268,7 +268,7 @@ const UserManagement = () => {
             <Dropdown variant= "secondary" className="w-50" show={isOpen} onClick={handleDropdownToggle}>
               <Dropdown.Toggle variant="light" className="w-100 border-dark">
                 {selectedGroups.length === 0
-                  ? "Select Group"
+                  ? "--Select--"
                   : selectedGroups.join(",")} 
               </Dropdown.Toggle>
                 <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (

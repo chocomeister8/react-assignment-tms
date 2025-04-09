@@ -1,7 +1,6 @@
 const connection = require("../config/database"); // Import MySQL connection
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const catchAsyncErrors = require('../middlewares/catchAsyncErrors');
 require("dotenv").config();
 
 const sendToken = (user, req, statusCode, res) => {
@@ -83,7 +82,7 @@ exports.logout = (req, res) => {
       }
 };
 
-exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
+exports.isAuthenticatedUser = async (req, res, next) => {
     let token = req.cookies.token;
     if (!token) {
         return res.status(200).json({ success: false, message: "Please log in to access this resource." });
@@ -103,7 +102,8 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
         }
 
         // Fetch user from database
-        connection.query("SELECT username, email, password, isActive, user_groupName FROM user WHERE username = ?", [decoded.username], (err, results) => {
+        connection.query("SELECT username, email, password, isActive, user_groupName FROM user WHERE username = ?", 
+            [decoded.username], (err, results) => {
             if (err) {
                 return res.status(500).json({ success: false, message: "Database error." });
             }
@@ -113,14 +113,13 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
             }
 
             req.decoded = decoded;
-
             next(); // Proceed to the next middleware
         });
                 
     } catch (err) {
         return res.status(200).json({ success: false, message: "Invalid or expired token." });
     }
-});
+};
 
 exports.validateAccess = (groupName) => {
     return (req, res, next) => {
