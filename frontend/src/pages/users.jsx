@@ -51,8 +51,31 @@ const UserManagement = () => {
     setError(null);
     setSuccess(null);
 
+    const GroupName = groupName.trim().toLowerCase();
+
+    // Check if empty
+    if (!GroupName) {
+      setError("Group name cannot be empty.");
+      return;
+    }
+
+    // Regex validation
+    const groupRegex = /^[a-z0-9_/]{1,50}$/;
+    if (!groupRegex.test(GroupName)) {
+      setError("Group name must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_' and '/'.");
+      return;
+    }
+
+    const groupExists = groups.some(
+      (group) => group.groupName.toLowerCase() === GroupName
+    );
+    if (groupExists) {
+      setError("Group name already exists!");
+      return;
+    }
+
     try {
-      const response = await createGroup(groupName);
+      const response = await createGroup(GroupName);
 
       if (response.error) {
           setError(response.error);
@@ -66,35 +89,88 @@ const UserManagement = () => {
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Something went wrong. Please try again.");
-  }
+    }
   };
 
   const handleCreateUser = async () => {
     setError(null);
     setSuccess(null);
-
+  
+    const Username = username.trim().toLowerCase();
+    const Email = email.trim();
+    const Password = password.trim();
+  
+    // Check for empty fields
+    if (!Username || !Email || !Password) {
+      setError("Please fill in all fields!");
+      return;
+    }
+  
+    // Username validation
+    const usernameRegex = /^[a-z0-9_\-/]{1,50}$/;
+    if (!usernameRegex.test(Username)) {
+      setError("Username must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_', '-', and '/'.");
+      return;
+    }
+  
+    // Check if username already exists (case-insensitive)
+    const userExists = users.some(
+      (user) => user.username.toLowerCase() === Username
+    );
+    if (userExists) {
+      setError("Username already exists!");
+      return;
+    }
+  
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(Email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+  
+    // Password validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+    if (!passwordRegex.test(Password)) {
+      setError("Password must be 8–10 characters long, contain at least one letter, one number, and one special character.");
+      return;
+    }
+  
+    // Group validation
     if (selectedGroups.length === 0) {
       setError("Please select at least one group!");
       return;
     }
-
-    const user_groupName = selectedGroups.join(',');
+  
+    const groupRegex = /^[a-z0-9_/]{1,50}$/;
+    const cleanedGroups = selectedGroups.map(group => group.trim().toLowerCase());
+  
+    for (let group of cleanedGroups) {
+      if (!groupRegex.test(group)) {
+        setError("Each group must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_' and '/'.");
+        return;
+      }
+    }
+  
+    const user_groupName = cleanedGroups.join(',');
+  
     try {
-        const newUser = await createUser(username, email, password, user_groupName);
-        if(newUser.error) {
-          setError(newUser.error);
-        } else{
-          setSuccess(newUser.success);
-          setUsername('');
-          setEmail('');
-          setPassword('');
-          setSelectedGroups([]); 
-        }
-        
-        const updatedUser = await fetchUsers(); // Fetch updated groups list
-        setUsers(updatedUser);
+      const newUser = await createUser(Username, Email, Password, user_groupName);
+      
+      if (newUser.error) {
+        setError(newUser.error);
+      } else {
+        setSuccess(newUser.success);
+        setUsername('');
+        setEmail('');
+        setPassword('');
+        setSelectedGroups([]);
+      }
+  
+      const updatedUser = await fetchUsers();
+      setUsers(updatedUser);
     } catch (err) {
-        setError(err.message);
+      setError(err.message);
     }
   };
 
