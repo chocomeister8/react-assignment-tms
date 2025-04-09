@@ -11,7 +11,8 @@ router.post('/create-user', isAuthenticatedUser, validateAccess("admin"), userCo
 router.put('/users/:username', isAuthenticatedUser, validateAccess("admin"), userController.updateUser);
 
 router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => {
-    res.status(200).json({ success: true});
+    const username = req.decoded.username;
+    res.status(200).json({ success: true, username});
 });
 
 router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), (req, res) => {
