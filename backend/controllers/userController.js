@@ -50,6 +50,13 @@ exports.createUser = async (req, res) => {
         return res.status(200).json({ error: "Please fill in all fields!" });
     }
 
+    const usernameRegex = /^[a-z0-9_\-\/]{1,50}$/;
+    if (!usernameRegex.test(username)) {
+        return res.status(200).json({
+            error: "Username can only contain lowercase letters, numbers, and _ - / characters, and must be 50 characters or fewer."
+        });
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {

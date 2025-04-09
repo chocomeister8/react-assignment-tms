@@ -14,7 +14,6 @@ const UserManagement = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 

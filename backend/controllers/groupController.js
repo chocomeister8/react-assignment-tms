@@ -32,8 +32,10 @@ exports.createGroup = (req, res) => {
 
     groupName = groupName.trim().toLowerCase();
     const validPattern = /^[a-zA-Z0-9_/]+$/;
-    if (!validPattern.test(groupName)) {
-        return res.status(200).json({ error: "Group Name can only contain letters, numbers, '_', and '/'." });
+    if (!groupName || groupName.length > 50 || !validPattern.test(groupName)) {
+        return res.status(200).json({
+            error: "Group Name can only contain lowercase letters, numbers, '_', and '/', and must be 50 characters or fewer."
+        });
     }
 
     try {

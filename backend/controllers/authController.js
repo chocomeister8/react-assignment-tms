@@ -103,7 +103,7 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
         }
 
         // Fetch user from database
-        connection.query("SELECT * FROM user WHERE username = ?", [decoded.username], (err, results) => {
+        connection.query("SELECT username, email, password, isActive, user_groupName FROM user WHERE username = ?", [decoded.username], (err, results) => {
             if (err) {
                 return res.status(500).json({ success: false, message: "Database error." });
             }
@@ -169,10 +169,9 @@ const checkGroup = (username, groupName, callback) => {
         const user = results[0];
         const groupString = user.user_groupName || "";
         const isMember = groupString.includes(`,${groupName},`);
-        const isActive = user.isActive;
 
         // Return the result (whether the user is in the admin group)
-        callback(null, groupString, isMember, isActive);
+        callback(null, groupString, isMember);
     });
 };
 
