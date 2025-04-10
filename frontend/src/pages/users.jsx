@@ -2,9 +2,11 @@ import Layout from '../assets/topnavbar';
 import React, { useState, useEffect } from "react";
 import { Badge, Button, Table, Form, Dropdown, Row, Col, Alert } from "react-bootstrap";
 import { fetchGroups, fetchUsers, createGroup , createUser, updateUser} from "../assets/apiCalls";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserManagement = () => {
+  const navigate = useNavigate();
   const [groupName, setGroupName] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null); 
@@ -80,6 +82,14 @@ const UserManagement = () => {
       if (response.error) {
           setError(response.error);
       } else {
+
+        if(response.message == "Unauthorized User."){
+          navigate('/login');
+        }
+        if(response.message == "Access denied: User is not in the required group")
+        {
+          navigate('/tmshome')
+        }
           setSuccess(response.message);
           setGroupName("");
           const updatedGroups = await fetchGroups();
@@ -154,6 +164,13 @@ const UserManagement = () => {
       if (newUser.error) {
         setError(newUser.error);
       } else {
+        if(newUser.message == "Unauthorized User."){
+          navigate('/login');
+        }
+        if(newUser.message == "Access denied: User is not in the required group")
+        {
+          navigate('/tmshome')
+        }
         setSuccess(newUser.success);
         setUsername('');
         setEmail('');
@@ -218,6 +235,13 @@ const UserManagement = () => {
       if(update.error) {
         setError(update.error);
       } else {
+        if(update.message == "Unauthorized User."){
+          navigate('/login');
+        }
+        if(update.message == "Access denied: User is not in the required group")
+        {
+          navigate('/tmshome')
+        }
         setSuccess(update.success);
         setEditUser(null); // exit edit mode
       }
@@ -244,7 +268,7 @@ const UserManagement = () => {
     </div>
     </div>
     <div className="border p-3 w-100 ms-auto">
-    <Row className="mb-3 align-items-end g-2">
+    <Row className="mb-3 align-items-end gy-2 gx-3">
         <Col xs={12} md={3}>
             <Form.Label>Username</Form.Label>
             <Form.Control type="text" className='border-dark' placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} />
@@ -259,8 +283,9 @@ const UserManagement = () => {
         </Col>
         <Col xs={12} md={3}>
         <Form.Label>Groups</Form.Label>
-        <div className="d-flex align-items-center gap-2">
-            <Dropdown variant= "secondary" className="w-50" show={isOpen} onClick={handleDropdownToggle}>
+        <div className="d-flex flex-column flex-md-row gap-2">
+          <div className="w-100">
+            <Dropdown variant= "secondary" className="w-100" show={isOpen} onClick={handleDropdownToggle}>
               <Dropdown.Toggle variant="light" className="w-100 border-dark">
                 {selectedGroups.length === 0 ? "--Select--" : selectedGroups.filter(g => g.trim() !== "").join(",")} 
               </Dropdown.Toggle>
@@ -274,7 +299,10 @@ const UserManagement = () => {
                   )}
                 </Dropdown.Menu>
             </Dropdown>
-            <Button variant="light" className="px-4 w-50 border-dark" onClick={handleCreateUser}>Add User</Button>
+          </div>
+          <div className='w-100'>
+            <Button variant="light" className="w-100 border-dark" onClick={handleCreateUser}>Add User</Button>
+          </div>
         </div>
     </Col>
     </Row>

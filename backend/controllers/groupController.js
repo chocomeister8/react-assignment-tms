@@ -11,7 +11,7 @@ exports.getAllGroups = (req, res) => {
                 return res.status(500).json({ error : err.message });
             }
             res.json(results);
-        })
+        });
     } catch (error) {
         console.error("Error fetching groups:", error);
         return res.status(500).json({ error: "Internal server error."})

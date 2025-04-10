@@ -85,7 +85,7 @@ exports.logout = (req, res) => {
 exports.isAuthenticatedUser = async (req, res, next) => {
     let token = req.cookies.token;
     if (!token) {
-        return res.status(200).json({ success: false, message: "Please log in to access this resource." });
+        return res.status(200).json({ success: false, message: "Unauthorized User." });
     }
 
     try {
@@ -108,8 +108,8 @@ exports.isAuthenticatedUser = async (req, res, next) => {
                 return res.status(500).json({ success: false, message: "Database error." });
             }
 
-            if (results.length === 0) {
-                return res.status(200).json({ success: false, message: "User not found" });
+            if (results.length === 0 || !results[0].isActive) {
+                return res.status(200).json({ success: false, message: "Unauthorized User." });
             }
 
             req.decoded = decoded;

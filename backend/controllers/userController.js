@@ -31,7 +31,7 @@ exports.getUserByUserName = async (req, res) => {
 
     db.query('SELECT username FRON user WHERE username = ?', [username], (err, results) =>{
         if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(404).json({ message: 'User not found!' });
+        if (results.length === 0) return res.status(200).json({ message: 'User not found!' });
         res.json(results[0]);
     })
 };
@@ -117,19 +117,19 @@ exports.createUser = async (req, res) => {
 exports.updateUser = (req, res) => {
     const { username } = req.params;
     const { email, password, isActive, user_groupName } = req.body;
-    const groupsArray = `,${user_groupName.split(',').join(',')},`;
+    const trimmedPassword = typeof password === 'string' ? password.trim() : '';
+    let groupsArray = null;
 
     if(username.toLowerCase() === "admin"){
         if (user_groupName && !user_groupName.includes("admin")) {
-            return res.status(200).json({ error: "You cannot remove 'admin' group from the admin user." });
+            return res.status(200).json({ error: "'admin' group cannot be removed for specific user." });
         }
 
         // Prevent modifying admin's status to inactive
         if (isActive === 0) {
-            return res.status(200).json({ error: "You cannot deactivate the admin user." });
+            return res.status(200).json({ error: "specific user cannot be disabled." });
         }
     }
-
     if (isActive === undefined || isActive === null) {
         isActive = 1;
     }
@@ -142,7 +142,10 @@ exports.updateUser = (req, res) => {
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
-    const trimmedPassword = typeof password === 'string' ? password.trim() : '';
+
+    if (user_groupName && user_groupName.trim() !== '') {
+        groupsArray = `,${user_groupName.split(',').map(g => g.trim()).join(',')},`;
+    }
     // Case 1: password is empty or not provided
     if (!trimmedPassword) {
         db.query('UPDATE user SET email = ?, isActive = ?, user_groupName = ? WHERE username = ?',

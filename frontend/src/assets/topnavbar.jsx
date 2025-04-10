@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-
+  const [username, setUsername] = useState('');
     
   useEffect(() => {
     const checkIsAdmin = async () => {
@@ -31,10 +31,24 @@ const Layout = ({ children }) => {
         setIsAdmin(false);
       } 
     };
-      checkIsAdmin();
+    const fetchUsername = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/auth/validateAccess', { withCredentials: true });
+
+        if (response.data.success) {
+          setUsername(response.data.username);
+        } else {
+          console.log("User authentication failed:", response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUsername();
+    checkIsAdmin();
   }, [])
   
-
     const logout = async () => {
       try {
         await handleLogout();  // Call the logout function
@@ -55,11 +69,15 @@ const Layout = ({ children }) => {
           <NavLink to="/userManagement" className={({ isActive }) => isActive ? 'nav-link active text-light' : 'nav-link text-light'}>User Management</NavLink>
         )}
 
-        <Button variant="danger" onClick={logout} className="ms-auto">
-          Logout
-        </Button>
+      <div className="ms-auto d-flex align-items-center">
+          {username && (
+            <span className="text-light me-3">Welcome back, <strong>{username}</strong></span>
+          )}
+          <Button variant="danger" onClick={logout}>
+            Logout
+          </Button>
+        </div>
       </Navbar>
-
       {/* Main content */}
       <div style={{ marginTop: '70px' }}>
         {children}

@@ -5,3 +5,13 @@
   .nav-link.active {
     text-decoration: underline;
   }
+
+  .sidebar {
+    padding: 1rem;
+    border-right: 1px solid #ddd;
+    height: 100vh;
+  }
+  
+  .task-section {
+    padding: 1rem;
+  }
