@@ -242,18 +242,10 @@ const Sidebar = ( props ) => {
           <ListGroup variant="default">
             {applications.map((app, index) => (
               <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
-              <ListGroup.Item 
-                action 
-                onClick={() => handleShowAppPlans(app)} 
-                style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}
-              >
-                {app.App_Acronym}
+              <ListGroup.Item action onClick={() => handleShowAppPlans(app)} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}>
+              {app.App_Acronym}
               </ListGroup.Item>
-              <i 
-                className="bi bi-info-circle-fill ms-2" 
-                style={{ color: '#000', cursor: 'pointer' }} 
-                onClick={() => handleShowAppDetails(app)} 
-              />
+              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={() => handleShowAppDetails(app)} />
             </div>
             ))}
           </ListGroup>
@@ -269,7 +261,7 @@ const Sidebar = ( props ) => {
             {filteredPlans.length > 0 ? (
               <ListGroup>
                 {filteredPlans.map((plan, index) => (
-                  <ListGroup.Item key={index}>
+                  <ListGroup.Item key={index} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}>
                     <div className="d-flex flex-column">
                       <span><strong>{plan.Plan_MVP_name}</strong></span>
                       <small className="text-muted">Start Date: {formatDate(plan.Plan_startDate)}</small>

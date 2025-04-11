@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { Navbar, Nav, Button } from 'react-bootstrap';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { handleLogout} from "./apiCalls";
-import axios from "axios";
-
+import { handleLogout, validateAdmin, fetchUsername} from "./apiCalls";
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -13,41 +11,41 @@ const Layout = ({ children }) => {
   const [username, setUsername] = useState('');
     
   useEffect(() => {
-    const checkIsAdmin = async () => {
+    const loadData = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/auth/validateAdmin", {
-          withCredentials: true,
-        });
-
-        if (response.data.success === true) {
+        const checkIsAdmin = await validateAdmin();
+        if (checkIsAdmin.success === true) {
           setIsAuthenticated(true);
-          setIsAdmin(response.data.isAdmin);  // Set whether the user is an admin
-        } else {
+          setIsAdmin(checkIsAdmin.isAdmin);
+        }
+        else{
           setIsAuthenticated(false);
           setIsAdmin(false);
         }
-      } catch(error) {
+    } catch (error) {
+        console.error("Admin validation failed:", error);
         setIsAuthenticated(false);
         setIsAdmin(false);
-      } 
+      }
     };
-    const fetchUsername = async () => {
+    const loadUsername = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/auth/validateAccess', { withCredentials: true });
 
-        if (response.data.success) {
-          setUsername(response.data.username);
-        } else {
-          console.log("User authentication failed:", response.data.message);
+        const usernameData = await fetchUsername();
+        if( usernameData.success === true){
+          setUsername(usernameData.username);
+        }
+        else {
+          console.log("User authentication failed:", usernameData.message);
         }
       } catch (error) {
         console.error("Error fetching user:", error);
       }
     };
-
-    fetchUsername();
-    checkIsAdmin();
-  }, [])
+    loadUsername();
+    loadData();
+    
+  }, []);
   
     const logout = async () => {
       try {

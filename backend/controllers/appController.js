@@ -48,12 +48,12 @@ exports.createApp = (req, res) => {
     }
 
     try{
-        db.query('SELECT App_Acronym FROM application WHERE App_Acronym = ?', [App_Acronym], (err, results) => {
+        db.query('SELECT App_Acronym FROM application WHERE App_Acronym = ? AND App_Rnumber = ?', [App_Acronym, App_Rnumber], (err, results) => {
             if (err) {
                 return res.status(500).json({ error: 'Database error occurred.' });
             }
             if (results.length > 0) {
-                return res.status(200).json({ error: 'Application name already exists!'});
+                return res.status(200).json({ error: 'An application with this acronym and Rnumber already exists!'});
             }
             db.query('INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) VALUES (?,?,?,?,?,?,?,?,?,?)', 
                 [App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create], (err, results) => {

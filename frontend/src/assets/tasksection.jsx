@@ -1,7 +1,14 @@
-import React from 'react';
+import React , {useState}from 'react';
 import { Row, Col, Card, ListGroup } from 'react-bootstrap';
 
-const TaskSection = ({ tasks }) => {
+const TaskSection = () => {
+  const [tasks, setTasks] = useState([
+      { status: 'Open', tasks: ['Task 1', 'Task 2'] },
+      { status: 'To Do', tasks: ['Task 3', 'Task 4'] },
+      { status: 'Doing', tasks: ['Task 5'] },
+      { status: 'Done', tasks: ['Task 6'] },
+      { status: 'Closed', tasks: ['Task 7'] },
+    ]);
   return (
     <Row className="mt-3" style={{ rowGap: '1rem' }}>
       {tasks.map((task, idx) => (
