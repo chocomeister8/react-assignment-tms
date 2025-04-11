@@ -22,14 +22,14 @@ router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), 
     res.status(200).json({ success: true, isAdmin: true });
 });
 
-router.get('/groups', isAuthenticatedUser, validateAccess("admin"), groupController.getAllGroups);
-router.post('/create-group', isAuthenticatedUser, validateAccess("admin"), groupController.createGroup);
+router.get('/groups', isAuthenticatedUser, validateAccess(), groupController.getAllGroups);
+router.post('/create-group', isAuthenticatedUser, validateAccess(), groupController.createGroup);
 
-router.get('/applications', isAuthenticatedUser, validateAccess("admin"), appController.getAllApplications);
-router.post('/create-app', isAuthenticatedUser, validateAccess("admin"), appController.createApp);
+router.get('/applications', isAuthenticatedUser, validateAccess(), appController.getAllApplications);
+router.post('/create-app', isAuthenticatedUser, validateAccess("pl"), appController.createApp);
 
-router.get('/plans', isAuthenticatedUser, validateAccess("admin"), planController.getAllPlan);
-router.post('/create-plan', isAuthenticatedUser, validateAccess("admin"), planController.createPlan);
+router.get('/plans', isAuthenticatedUser, validateAccess(), planController.getAllPlan);
+router.post('/create-plan', isAuthenticatedUser, validateAccess("pm"), planController.createPlan);
 
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
 router.post('/create-task', isAuthenticatedUser, validateAccess("pl"), taskController.createTask);
