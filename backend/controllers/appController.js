@@ -22,10 +22,31 @@ exports.getAllApplications = (req, res) => {
 exports.createApp = (req, res) => {
 
     let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
-
+    const app_acronym = App_Acronym.trim().toLowerCase();
+    
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
+
+    if (!App_Acronym || !App_Description || !App_Rnumber || !App_startDate || !App_endDate || !App_permit_Open || !App_permit_toDoList || !App_permit_Doing || !App_permit_Done || !App_permit_Create){
+        return res.status(200).json({ error: "All fields must be filled." });
+    }
+
+    const acronymRegex = /^[a-zA-Z0-9]{1,50}$/;
+    if (!acronymRegex.test(app_acronym)) {
+        return res.status(200).json({ error: 'App Acronym can only consist of alphanumeric characters and not exceed 50 characters.' });
+    }
+
+    if (App_Description.length > 255){
+        return res.status(200).json({ error: 'App description cannot be more than 255 characters.'})
+    }
+
+    const appRNumberRegex = /^[1-9][0-9]{0,3}$/;
+    if (!appRNumberRegex.test(App_Rnumber)){
+      setError("App Rnumber must be a whole number between 1 and 9999 and cannot start with 0.");
+      return;
+    }
+
     try{
         db.query('SELECT App_Acronym FROM application WHERE App_Acronym = ?', [App_Acronym], (err, results) => {
             if (err) {

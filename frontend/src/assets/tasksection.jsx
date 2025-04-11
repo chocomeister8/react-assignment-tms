@@ -8,11 +8,11 @@ const TaskSection = ({ tasks }) => {
         <Col key={idx} style={{ flex: '0 0 20%', maxWidth: '20%',}}>
           <Card style={{ minHeight: '300px' }}>
             <Card.Header><strong>{task.status}</strong></Card.Header>
-            <ListGroup variant="flush">
+            {/* <ListGroup variant="flush">
               {task.tasks.map((item, itemIdx) => (
                 <ListGroup.Item key={itemIdx}>{item}</ListGroup.Item>
               ))}
-            </ListGroup>
+            </ListGroup> */}
           </Card>
         </Col>
       ))}

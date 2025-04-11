@@ -84,12 +84,12 @@ export const fetchApplications = async () => {
 
 export const createApplication = async (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/create-group`,{ gApp_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.post(`${API_BASE_URL}/create-app`,{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {
-        console.error("Error creating group:", error);
-        throw new Error(error.response?.data?.error || "Failed to create group.");
+        console.error("Error creating application", error);
+        throw new Error(error.response?.data?.error || "Failed to create application.");
     }
 };
 
