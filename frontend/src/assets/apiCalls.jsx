@@ -77,8 +77,8 @@ export const fetchApplications = async () => {
         const response = await axios.get(`${API_BASE_URL}/applications`, { withCredentials: true });
         return response.data;
     } catch (error) {
-        console.error("Error fetching groups:", error);
-        throw new Error("Failed to load groups.");
+        console.error("Error fetching applications:", error);
+        throw new Error("Failed to load applications.");
     }
   };
 
@@ -93,4 +93,23 @@ export const createApplication = async (App_Acronym, App_Description, App_Rnumbe
     }
 };
 
-  
+export const fetchPlans = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/plans`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching plans:", error);
+        throw new Error("Failed to load plans.");
+    }
+  };
+
+export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/create-plan`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error creating plan", error);
+        throw new Error(error.response?.data?.error || "Failed to create plan.");
+    }
+};

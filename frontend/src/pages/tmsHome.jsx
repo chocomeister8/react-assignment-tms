@@ -14,9 +14,13 @@ const TmsHome = () => {
     { status: 'Closed', tasks: ['Task 7'] },
   ]);
 
+  const [selectedApp, setSelectedApp] = useState(null);
+  const handleAppSelect = (app) => {
+    setSelectedApp(app);
+  };  
   const handleSuccess = (message) => {
     setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(''), 3000); // Auto-clear after 3s
+    setTimeout(() => setSuccessMessage(''), 5000);
   };
 
   return (
@@ -24,11 +28,11 @@ const TmsHome = () => {
       <Container fluid style={{ height: '100vh' }}>
         <Row style={{ height: '100%' }}>
           <Col md={2} className="bg-light p-0">
-            <Sidebar onAppCreated={handleSuccess} />
+            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} onAppSelect={handleAppSelect} />
           </Col>
 
           <Col md={10} className="p-3">
-          <Row className="align-items-center mb-3">
+          <Row className="align-items-center">
             <Col md={10}>
             {successMessage && (
               <Alert variant="success">{successMessage}</Alert>
@@ -39,7 +43,7 @@ const TmsHome = () => {
             </Col>
           </Row>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h4>App1</h4>
+            <h4>{selectedApp ? selectedApp.App_Acronym : 'No App Selected'}</h4>
           </div>
           <TaskSection tasks={tasks} />
           </Col>

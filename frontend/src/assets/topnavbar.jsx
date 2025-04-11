@@ -79,7 +79,7 @@ const Layout = ({ children }) => {
         </div>
       </Navbar>
       {/* Main content */}
-      <div style={{ marginTop: '70px' }}>
+      <div style={{ marginTop: '50px' }}>
         {children}
       </div>
     </>

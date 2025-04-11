@@ -2,6 +2,7 @@ const express = require('express');
 const userController = require('../controllers/userController');
 const groupController = require('../controllers/groupController');
 const appController = require('../controllers/appController');
+const planController = require('../controllers/planController');
 const taskController = require('../controllers/taskController');
 const { isAuthenticatedUser, validateAccess, logout, login } = require('../controllers/authController');
 
@@ -27,8 +28,11 @@ router.post('/create-group', isAuthenticatedUser, validateAccess("admin"), group
 router.get('/applications', isAuthenticatedUser, validateAccess("admin"), appController.getAllApplications);
 router.post('/create-app', isAuthenticatedUser, validateAccess("admin"), appController.createApp);
 
+router.get('/plans', isAuthenticatedUser, validateAccess("admin"), planController.getAllPlan);
+router.post('/create-plan', isAuthenticatedUser, validateAccess("admin"), planController.createPlan);
+
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
-router.post('/create-task', isAuthenticatedUser, validateAccess("project-lead"), taskController.createTask);
+router.post('/create-task', isAuthenticatedUser, validateAccess("pl"), taskController.createTask);
 
 router.post('/auth/login', login);
 router.post('/auth/logout', isAuthenticatedUser, logout);

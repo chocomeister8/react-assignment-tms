@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from 'react-bootstrap';
-import { createApplication, fetchApplications, fetchGroups } from "../assets/apiCalls";
+import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans } from "../assets/apiCalls";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const Sidebar = ( props ) => {
-  const [showModal, setShowModal] = useState(false); // To manage modal visibility
+  const [showModal, setShowModal] = useState(false);
   const [showDetails, setShowDetailsModal] = useState(false);
-  // Toggle modal visibility
   const handleShowAppModal = () => setShowModal(true);
   const handleCloseAppModal = () => setShowModal(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const handleShowPlanModal = () => setShowPlanModal(true);
+  const handleClosePlanModal = () => setShowPlanModal(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null); 
   const [applications, setApplications] = useState([]);
@@ -28,6 +30,13 @@ const Sidebar = ( props ) => {
     appPermitDone: '',
   });
 
+  const [Plan_MVP_name, setMVPName] = useState('');
+  const [PlanStartDate, setPlanStartDate] = useState('');
+  const [PlanEndDate, setPlanEndDate] = useState('');
+  const [PlanAppName, setPlanAppName] = useState('');
+  const [plans, setPlans] = useState([]);
+  const [filteredPlans, setFilteredPlans] = useState([]);
+
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -42,8 +51,10 @@ const Sidebar = ( props ) => {
       try {
         const applicationsData = await fetchApplications();
         const groupData = await fetchGroups();
+        const plansData = await fetchPlans();
         setApplications(applicationsData);
         setGroups(groupData);
+        setPlans(plansData);
       } catch (err) {
         setError(err.message);
       }
@@ -54,6 +65,9 @@ const Sidebar = ( props ) => {
   const handleShowAppDetails = (app) => {
     setSelectedApp(app);
     setShowDetailsModal(true);
+    if (props.onAppSelect) {
+      props.onAppSelect(app);
+    }
   };
   const handleCloseAppDetails = () => {
     setShowDetailsModal(false);
@@ -74,6 +88,23 @@ const Sidebar = ( props ) => {
       ...prevState,
       [dropdownName]: e.target.value,  // Update the specific dropdown value
     }));
+  };
+
+  const handleShowAppPlans = (app) => {
+    setSelectedApp(app);
+    const appPlans = plans.filter(plan => plan.Plan_app_Acronym === app.App_Acronym);
+    setFilteredPlans(appPlans);
+    if (props.onAppSelect) {
+      props.onAppSelect(app);
+    }
+  }
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleCreateApplication = async () => {
@@ -143,6 +174,57 @@ const Sidebar = ( props ) => {
     }
   }
 
+  const handleCreatePlan = async () => {
+    setError(null);
+    setSuccess(null);
+
+    const plan_mvp_name = Plan_MVP_name.trim().toLowerCase();
+    const plan_startDate = PlanStartDate;
+    const plan_endDate = PlanEndDate;
+    const plan_appName = PlanAppName.trim().toLowerCase();
+
+    console.log(plan_mvp_name, plan_startDate, plan_endDate, plan_appName)
+
+    if(!plan_mvp_name || !plan_startDate || !plan_endDate || !plan_appName){
+      setError("Please fill in all fields!");
+      return;
+    }
+    const planMVPNameRegex = /^[a-zA-Z0-9]{1,50}$/;
+    if(!planMVPNameRegex.test(plan_mvp_name)) {
+      setError("MVP Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
+      return;
+    }
+    try{
+      const newPlan = await createPlan(plan_mvp_name, plan_startDate, plan_endDate, plan_appName);
+      if(newPlan.error) {
+        setError(newPlan.error);
+      }
+      else{
+        if (newPlan.success) {
+          setSuccess(newPlan.success);
+          setPlans((prevPlans) => [...prevPlans, newPlan.plan]);
+        
+          // 🟢 Re-filter plans for the selected app
+          if (selectedApp && newPlan.plan.Plan_app_Acronym === selectedApp.App_Acronym) {
+            handleShowAppPlans(selectedApp);
+          }
+        
+          props.onPlanCreated?.(newPlan.success);
+          setShowPlanModal(false);
+        
+          // Reset form fields
+          setMVPName('');
+          setPlanStartDate('');
+          setPlanEndDate('');
+          setPlanAppName('');
+        }
+      }
+    }
+    catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <div className="sidebar" style={{ padding: '1rem', borderRight: '2px solid #ddd', height: '100vh' }}>
       <Row className="align-items-center mb-3">
@@ -153,9 +235,20 @@ const Sidebar = ( props ) => {
           <hr/>
           <ListGroup variant="default">
             {applications.map((app, index) => (
-              <ListGroup.Item key={index} action onClick={() => handleShowAppDetails(app)} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
+              <ListGroup.Item 
+                action 
+                onClick={() => handleShowAppPlans(app)} 
+                style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}
+              >
                 {app.App_Acronym}
               </ListGroup.Item>
+              <i 
+                className="bi bi-info-circle-fill ms-2" 
+                style={{ color: '#000', cursor: 'pointer' }} 
+                onClick={() => handleShowAppDetails(app)} 
+              />
+            </div>
             ))}
           </ListGroup>
         </Col>
@@ -163,12 +256,29 @@ const Sidebar = ( props ) => {
       <hr />
       <Row className="align-items-center mb-3">
         <Col>
-          <h6 className="mb-3 d-flex justify-content-between align-items-center gap-2">
-            Plan <i className="bi bi-plus" style={{ cursor: 'pointer' }}></i>
-          </h6>
-          <ListGroup>
-            
-          </ListGroup>
+          <h6 className="mb-3 d-flex justify-content-between align-items-center gap-2">Plan
+          {selectedApp && Object.keys(selectedApp).length > 0 && (<i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanModal}></i>)}</h6>
+          {selectedApp && (
+          <div>
+            {filteredPlans.length > 0 ? (
+              <ListGroup>
+                {filteredPlans.map((plan, index) => (
+                  <ListGroup.Item key={index}>
+                    <div className="d-flex flex-column">
+                      <span><strong>{plan.Plan_MVP_name}</strong></span>
+                      <small className="text-muted">Start Date: {formatDate(plan.Plan_startDate)}</small>
+                      <small className="text-muted">End Date: {formatDate(plan.Plan_endDate)}</small>
+                    </div>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            ) : (
+              <div className="d-flex flex-column">
+                <small className="text-muted">No plans.</small>
+              </div>
+            )}
+          </div>
+        )}
         </Col>
       </Row>
       <Modal show={showModal} onHide={handleCloseAppModal}>
@@ -310,49 +420,49 @@ const Sidebar = ( props ) => {
                 <Col md={6}>
                   <Form.Group controlId="detailsAppName" className='mb-1'>
                     <FloatingLabel controlId="selectedAppName" label="App Name:">
-                      <Form.Control type="text" value={selectedApp.App_Acronym || ''} readOnly/>
+                      <Form.Control type="text" value={selectedApp.App_Acronym || ''} disabled/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_permit_create" className='mb-1'>
                     <FloatingLabel controlId="selectedC" label="App Permit Create">
-                      <Form.Control type="text" value={selectedApp.App_permit_Create || '-- Not Set --'} readOnly />
+                      <Form.Control type="text" value={selectedApp.App_permit_Create || '-- Not Set --'} disabled />
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_permit_Open" className="mb-1">
                     <FloatingLabel controlId="selectedO" label="App Permit Open">
-                      <Form.Control type="text" value={selectedApp.App_permit_Open || '-- Not Set --'} readOnly />
+                      <Form.Control type="text" value={selectedApp.App_permit_Open || '-- Not Set --'} disabled />
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_toDoList" className="mb-1">
                     <FloatingLabel controlId="selectedtoDo" label="App Permit toDoList">
-                      <Form.Control type="text" value={selectedApp.App_permit_toDoList || '-- Not Set --'} readOnly />
+                      <Form.Control type="text" value={selectedApp.App_permit_toDoList || '-- Not Set --'} disabled />
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_Doing" className="mb-1">
                     <FloatingLabel controlId="selectedDoing" label="App Permit Doing">
-                      <Form.Control type="text" value={selectedApp.App_permit_Doing || '-- Not Set --'} readOnly />
+                      <Form.Control type="text" value={selectedApp.App_permit_Doing || '-- Not Set --'} disabled />
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_Done" className="mb-1">
                     <FloatingLabel controlId="selectedDone" label="App Permit Done">
-                      <Form.Control type="text" value={selectedApp.App_permit_Done || '-- Not Set --'} readOnly />
+                      <Form.Control type="text" value={selectedApp.App_permit_Done || '-- Not Set --'} disabled />
                     </FloatingLabel>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                 <Form.Group controlId="StartDate" className="mb-1">
                     <FloatingLabel controlId="selectedStartDate" label="Start Date (YYYY-MM-DD)">
-                      <Form.Control type="text" value={selectedApp.App_startDate ? new Date(selectedApp.App_startDate).toISOString().split('T')[0]: ''} readOnly/>
+                      <Form.Control type="text" value={selectedApp.App_startDate ? new Date(selectedApp.App_startDate).toISOString().split('T')[0]: ''} disabled/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="EndDate" className="mb-2">
                     <FloatingLabel controlId="selectedEndDate" label="End Date (YYYY-MM-DD)">
-                      <Form.Control type="text" value={selectedApp.App_endDate ? new Date(selectedApp.App_endDate).toISOString().split('T')[0]: ''  } readOnly/>
+                      <Form.Control type="text" value={selectedApp.App_endDate ? new Date(selectedApp.App_endDate).toISOString().split('T')[0]: ''  } disabled/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="Description" >
                     <FloatingLabel controlId="selecteddescription" label="Description">
-                      <Form.Control as="textarea" rows={6} value={selectedApp.App_Description } style={{ height: '240px'}} readOnly/>
+                      <Form.Control as="textarea" rows={6} value={selectedApp.App_Description } style={{ height: '240px'}} disabled/>
                     </FloatingLabel>
                   </Form.Group>
                 </Col>
@@ -366,6 +476,60 @@ const Sidebar = ( props ) => {
           <Button variant="secondary" onClick={handleCloseAppDetails}>
             Close
           </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showPlanModal} onHide={handleClosePlanModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Create Plan form</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        {error && <Alert style={{width: '100%', transition: 'width 0.3s ease' }} variant="danger">{error}</Alert>} {/* Show error message */}
+          <Form>
+            {/* Row 1: App Name and Description */}
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="formPlanName" className='mb-1'>
+                  <FloatingLabel controlId="floatingPlanName" label="MVP Name">
+                    <Form.Control type="text" placeholder="Enter app name" required onChange={(e) => setMVPName(e.target.value)}/>
+                  </FloatingLabel>
+                </Form.Group>
+                <Form.Group controlId="form" className="mb-1">
+                <FloatingLabel controlId="floatingAppName" label="Start Date">
+                    <Form.Control type="date" placeholder="Choose start date" required onChange={(e) => setPlanStartDate(e.target.value)}/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="formSelectApp" className='mb-1'>
+                  <FloatingLabel controlId="floatingSelectApp" label="Select App">
+                    <Form.Select required value={PlanAppName} onChange={(e) => setPlanAppName(e.target.value)}>
+                    <option value="">-- Select an option --</option>
+                      {Array.isArray(applications) && applications.length > 0 ? (
+                        applications.map((app, index) => (
+                          <option key={index} value={app.App_Acronym}> 
+                            {app.App_Acronym}  
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>No apps available</option>
+                      )}
+                    </Form.Select>
+                  </FloatingLabel>
+                </Form.Group>
+                <Form.Group controlId="formEndDate" className="mb-2">
+                  <FloatingLabel controlId="floatingEndDate" label="End Date">
+                    <Form.Control type="date" placeholder="Choose end date" required onChange={(e) => setPlanEndDate(e.target.value)}/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="w-100 d-flex justify-content-center gap-2">
+            <Button variant="success" onClick={handleCreatePlan}>Create Plan</Button>
+            <Button variant="secondary" onClick={handleClosePlanModal}>Close</Button>
+          </div>
         </Modal.Footer>
       </Modal>
     </div>
