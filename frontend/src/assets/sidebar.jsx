@@ -92,6 +92,7 @@ const Sidebar = ( props ) => {
 
   const handleShowAppPlans = (app) => {
     setSelectedApp(app);
+    setPlanAppName(app.App_Acronym);
     const appPlans = plans.filter(plan => plan.Plan_app_Acronym === app.App_Acronym);
     setFilteredPlans(appPlans);
     if (props.onAppSelect) {
@@ -202,21 +203,26 @@ const Sidebar = ( props ) => {
       else{
         if (newPlan.success) {
           setSuccess(newPlan.success);
-          setPlans((prevPlans) => [...prevPlans, newPlan.plan]);
-        
-          // 🟢 Re-filter plans for the selected app
+          setPlans((prevPlans) => {
+          const updatedPlans = [...prevPlans, newPlan.plan];
           if (selectedApp && newPlan.plan.Plan_app_Acronym === selectedApp.App_Acronym) {
-            handleShowAppPlans(selectedApp);
+            const appPlans = updatedPlans.filter(
+              plan => plan.Plan_app_Acronym === selectedApp.App_Acronym
+            );
+            setFilteredPlans(appPlans);
           }
-        
+
+          return updatedPlans;
+        });
           props.onPlanCreated?.(newPlan.success);
           setShowPlanModal(false);
-        
+
           // Reset form fields
           setMVPName('');
           setPlanStartDate('');
           setPlanEndDate('');
           setPlanAppName('');
+          setError('');
         }
       }
     }
@@ -487,36 +493,22 @@ const Sidebar = ( props ) => {
           <Form>
             {/* Row 1: App Name and Description */}
             <Row>
-              <Col md={6}>
+              <Col md={12}>
                 <Form.Group controlId="formPlanName" className='mb-1'>
                   <FloatingLabel controlId="floatingPlanName" label="MVP Name">
                     <Form.Control type="text" placeholder="Enter app name" required onChange={(e) => setMVPName(e.target.value)}/>
                   </FloatingLabel>
                 </Form.Group>
-                <Form.Group controlId="form" className="mb-1">
+              </Col>
+              <Col md={6}>
+              <Form.Group controlId="form" className="mb-1">
                 <FloatingLabel controlId="floatingAppName" label="Start Date">
                     <Form.Control type="date" placeholder="Choose start date" required onChange={(e) => setPlanStartDate(e.target.value)}/>
                   </FloatingLabel>
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <Form.Group controlId="formSelectApp" className='mb-1'>
-                  <FloatingLabel controlId="floatingSelectApp" label="Select App">
-                    <Form.Select required value={PlanAppName} onChange={(e) => setPlanAppName(e.target.value)}>
-                    <option value="">-- Select an option --</option>
-                      {Array.isArray(applications) && applications.length > 0 ? (
-                        applications.map((app, index) => (
-                          <option key={index} value={app.App_Acronym}> 
-                            {app.App_Acronym}  
-                          </option>
-                        ))
-                      ) : (
-                        <option disabled>No apps available</option>
-                      )}
-                    </Form.Select>
-                  </FloatingLabel>
-                </Form.Group>
-                <Form.Group controlId="formEndDate" className="mb-2">
+                <Form.Group controlId="formEndDate" className="mb-1">
                   <FloatingLabel controlId="floatingEndDate" label="End Date">
                     <Form.Control type="date" placeholder="Choose end date" required onChange={(e) => setPlanEndDate(e.target.value)}/>
                   </FloatingLabel>
