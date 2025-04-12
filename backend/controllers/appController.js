@@ -1,22 +1,16 @@
 const db = require("../config/database"); // Import MySQL connection
 
 exports.getAllApplications = (req, res) => {
-
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
-    try{
-        db.query('SELECT App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create FROM application', 
-            (err, results) => {
-            if (err) {
-                return res.status(500).json({ error : err.message });
-            }
-            res.json(results);
-        });
-    } catch (error) {
-        console.error("Error fetching groups:", error);
-        return res.status(500).json({ error: "Internal server error."})
-    }
+    db.query('SELECT App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create FROM application', 
+        (err, results) => {
+        if (err) {
+            return res.status(500).json({ error : err.message });
+        }
+        res.json(results);
+    });
 };
 
 exports.createApp = (req, res) => {
@@ -46,29 +40,32 @@ exports.createApp = (req, res) => {
       setError("App Rnumber must be a whole number between 1 and 9999 and cannot start with 0.");
       return;
     }
-
-    try{
-        db.query('SELECT App_Acronym FROM application WHERE App_Acronym = ? AND App_Rnumber = ?', [App_Acronym, App_Rnumber], (err, results) => {
-            if (err) {
-                return res.status(500).json({ error: 'Database error occurred.' });
-            }
-            if (results.length > 0) {
-                return res.status(200).json({ error: 'An application with this acronym and Rnumber already exists!'});
+    db.query('SELECT App_Acronym FROM application WHERE App_Acronym = ? AND App_Rnumber = ?', [App_Acronym, App_Rnumber], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database error occurred.' });
+        }
+        if (results.length > 0) {
+            return res.status(200).json({ error: 'An application with this acronym and Rnumber already exists!'});
+        }
+        db.beginTransaction((err) => {
+            if(err) {
+                return res.status(500).json({ error: "Failed to start transaction." });
             }
             db.query('INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) VALUES (?,?,?,?,?,?,?,?,?,?)', 
-                [App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create], (err, results) => {
-                    if(err){
-                        console.log('Error details:', err);
-                        return res.status(500).json({ error: 'Failed to create application.'})
-                    }
-                    res.status(200).json({ success: 'Application created successfully!', application:{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }
+            [App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create], (err, results) => {
+                if(err){
+                    return res.status(500).json({ error: 'Failed to create application.'})
+                }
+                db.commit((err) => {
+                    if(err) {
+                    return db.rollback(() => {
+                        return res.status(500).json({ error: "Transaction commit failed." });
                     });
                 }
-            )
-        })
-    }
-    catch (error) {
-        console.log('Error creating application:', error);
-        return res.status(200).json({ error: 'Internal server error'});
-    }
+                res.status(200).json({ success: 'Application created successfully!', application:{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }});
+                });
+            })
+        });
+    })
+    
 }

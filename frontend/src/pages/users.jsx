@@ -253,7 +253,7 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="p-5 pt-0 ms-auto w-100">
+    <div className="p-5 pt-3 ms-auto w-100">
       <Layout>
     </Layout>
     <div className="d-flex align-items-start gap-1">

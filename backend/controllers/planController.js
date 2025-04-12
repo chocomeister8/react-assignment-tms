@@ -4,18 +4,12 @@ exports.getAllPlan = (req, res) => {
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
-    try{
-        db.query('SELECT Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym FROM plan',
-            (err, results) => {
-            if (err) {
-                return res.status(500).json({ error : err.message });
-            }
-            res.json(results);
-        });
-    } catch (error) {
-        console.error("Error fetching plans:", error);
-        return res.status(500).json({ error: "Internal server error."})
-    }
+    db.query('SELECT Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym FROM plan', (err, results) => {
+        if (err) {
+            return res.status(500).json({ error : err.message });
+        }
+        res.json(results);
+    });
 };
 
 exports.createPlan = (req, res) => {
@@ -34,28 +28,32 @@ exports.createPlan = (req, res) => {
         setError({ error: "Plan MVP Name can only consist of alphanumeric characters and not exceed 50 characters."});
         return;
     }
-    try{
-        db.query('SELECT Plan_MVP_name FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?', [Plan_MVP_name, Plan_app_Acronym], (err, results) => {
-            if (err){
-                return res.status(500).json({ error: 'Database error occurred.' });
-            }
-            if (results.length > 0) {
-                return res.status(200).json({ error: 'Plan name already exists in this application!'});
+    db.query('SELECT Plan_MVP_name FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?', [Plan_MVP_name, Plan_app_Acronym], (err, results) => {
+        if (err){
+            return res.status(500).json({ error: 'Database error occurred.' });
+        }
+        if (results.length > 0) {
+            return res.status(200).json({ error: 'Plan name already exists in this application!'});
+        }
+        db.beginTransaction((err) => {
+            if(err) {
+                return res.status(500).json({ error: "Failed to start transaction." });
             }
             db.query('INSERT INTO plan (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym) VALUES (?,?,?,?)',
-                [Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym], (err, results) => {
-                    if(err){
-                        console.log('Error details:', err);
-                        return res.status(500).json({ error: 'Failed to create plan.'})
-                    }
-                    res.status(200).json({ success: 'Plan created successfully!', plan:{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }
+            [Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym], (err, results) => {
+                if(err){return db.rollback(() => {
+                    return res.status(500).json({ error: 'Failed to create plan.'})
                     });
                 }
-            )
-        })
-    }
-    catch (error){
-        console.log('Error creating plan:', error);
-        return res.status(200).json({ error: 'Internal server error'});
-    }
-}
+                db.commit((err) => {
+                    if (err) {
+                    return db.rollback(() => {
+                        return res.status(500).json({ error: 'Transaction commmit failed.'});
+                    });
+                }
+                res.status(200).json({ success: 'Plan created successfully!', plan:{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }});
+                });
+            });
+        });
+    });
+};

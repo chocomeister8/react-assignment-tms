@@ -49,7 +49,7 @@ const TmsHome = () => {
       setError(null);
       setSuccess(null);
   
-      const task_id = Number(taskID);
+      const task_id = Number(taskID); //use AppRNumber
       const task_name = taskName.trim().toLowerCase();
       const task_description = taskDescription.trim();
       const task_notes = taskNotes.trim();
@@ -167,7 +167,7 @@ const TmsHome = () => {
           </Modal.Body>
           <Modal.Footer>
             <div className="w-100 d-flex justify-content-center gap-2">
-              <Button variant="success" onClick={handleCreateTask}>Create Plan</Button>
+              <Button variant="success" onClick={handleCreateTask}>Create Task</Button>
               <Button variant="secondary" onClick={handleCloseTaskModal}>Close</Button>
             </div>
           </Modal.Footer>
