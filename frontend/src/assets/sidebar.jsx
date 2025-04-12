@@ -145,7 +145,7 @@ const Sidebar = ( props ) => {
     }
 
     try{
-      const newApplication = await createApplication(app_acronym, app_description, app_rnumber, app_startdate, app_enddate, app_permit_create, app_permit_open, app_permit_todo, app_permit_doing, app_permit_done);
+      const newApplication = await createApplication(app_acronym, app_description, app_rnumber, app_startdate, app_enddate, app_permit_open, app_permit_todo, app_permit_doing, app_permit_done, app_permit_create);
       if(newApplication.error) {
         setError(newApplication.error);
       }

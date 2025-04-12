@@ -23,14 +23,12 @@ const Layout = ({ children }) => {
           setIsAdmin(false);
         }
     } catch (error) {
-        console.error("Admin validation failed:", error);
         setIsAuthenticated(false);
         setIsAdmin(false);
       }
     };
     const loadUsername = async () => {
       try {
-
         const usernameData = await fetchUsername();
         if( usernameData.success === true){
           setUsername(usernameData.username);
@@ -49,8 +47,8 @@ const Layout = ({ children }) => {
   
     const logout = async () => {
       try {
-        await handleLogout();  // Call the logout function
-        navigate('/login');    // Redirect after successful logout
+        await handleLogout();
+        navigate('/login');
     } catch (error) {
         console.error("Logout failed:", error);
         alert("Logout failed. Please try again.");

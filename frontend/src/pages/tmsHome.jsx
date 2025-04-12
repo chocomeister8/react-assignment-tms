@@ -13,6 +13,8 @@ const TmsHome = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [username, setUsername] = useState('');
+  const [userGroup, setUserGroup] = useState('');
+
 
   const [taskID, setTaskID] = useState('');
   const [taskName, setTaskName] = useState('');
@@ -36,12 +38,14 @@ const TmsHome = () => {
 
   const loadData = async () => {
     try {
-      const usernameData = await fetchUsername();
-      setUsername(usernameData);
+      const { username, group } = await fetchUsername();
 
-    } catch (error) {
+      setUsername(username);
+      setUserGroup(group);
+
+  } catch (err) {
       setError(err.message);
-    }
+  }
   };
   loadData();
 
@@ -117,9 +121,11 @@ const TmsHome = () => {
               <Col md={10}>
                 <h4>App Name: {selectedApp ? selectedApp.App_Acronym : 'No App Selected'}</h4>
               </Col>
-              <Col md={2}>
-                <Button variant="outline-dark" onClick={handleShowTaskModal}>Create Task</Button>
-              </Col>
+              {userGroup.includes(",pl,") && (
+                <Col md={2}>
+                  <Button variant="outline-dark" onClick={handleShowTaskModal}>Create Task</Button>
+                </Col>
+              )}
               </div>
             <TaskSection/>
             </Row>

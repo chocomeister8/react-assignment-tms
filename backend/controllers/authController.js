@@ -124,54 +124,60 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 exports.validateAccess = (groupName) => {
     return (req, res, next) => {
         const { username } =  req.decoded;
-
         if(!username) {
             return res.status(200).json({ message: " User not authenticated."});
         }
+        checkGroup(username, groupName, (err, groupString, isMember) => {
+            if (err) {
+                return res.status(500).json({ message: "Server error during group check" });
+            }
 
-        if (groupName) {
-            return checkGroup(username, groupName, (err, groupString, isMember) => {
-                if (err) {
-                    return res.status(500).json({ message: "Server error during group check" });
-                }
+            req.userGroup = groupString;
+            req.isAdmin = groupString.includes(',admin,');
 
-                if (!isMember) {
-                    return res.status(200).json({ success: false, message: "Access denied: User is not in the required group" });
-                }
-
-                req.userGroup = groupString;
-                req.isAdmin = isMember;
-                next();
-            });
-        } else {
-            // If no group is specified, just ensure the user is authenticated
-            req.isAuthenticated = true;
+            if (groupName && !isMember) {
+                return res.status(200).json({ success: false, message: "Access denied: User is not in the required group" });
+            }
             next();
-        }
+        });
     }
 }
 
 const checkGroup = (username, groupName, callback) => {
-    const values = [username, `%,${groupName},%`];
+    if (!groupName) {
+        // If no group is specified, return the user's full group string
+        connection.query('SELECT user_groupName FROM user WHERE username = ?', [username], (err, results) => {
+            if (err) {
+                console.error("Database error:", err);
+                return callback(err, null);
+            }
 
-    connection.query('SELECT * FROM user WHERE username = ? AND user_groupName LIKE ?', values, (err, results) => {
-        if (err) {
-            console.error("Database error:", err);
-            return callback(err, null); 
-        }
+            if (results.length === 0) {
+                return callback(null, "", false); // User not found
+            }
 
-        // If no results found, the user doesn't belong to the specified group
-        if (results.length === 0) {
-            return callback(null, false);  // User is not found in the group
-        }
+            const groupString = results[0].user_groupName || "";
+            return callback(null, groupString, false); // false because no group check
+        });
+    } else {
+        // Normal check with groupName
+        const values = [username, `%,${groupName},%`];
+        connection.query('SELECT user_groupName FROM user WHERE username = ? AND user_groupName LIKE ?', values, (err, results) => {
+            if (err) {
+                console.error("Database error:", err);
+                return callback(err, null);
+            }
 
-        const user = results[0];
-        const groupString = user.user_groupName || "";
-        const isMember = groupString.includes(`,${groupName},`);
+            if (results.length === 0) {
+                return callback(null, "", false); // Not in group
+            }
 
-        // Return the result (whether the user is in the admin group)
-        callback(null, groupString, isMember);
-    });
+            const groupString = results[0].user_groupName || "";
+            const isMember = groupString.includes(`,${groupName},`);
+            console.log(`Checking if user is in ${groupName}:`, isMember);
+            return callback(null, groupString, isMember);
+        });
+    }
 };
 
 

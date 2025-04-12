@@ -15,7 +15,7 @@ router.put('/users/:username', isAuthenticatedUser, validateAccess("admin"), use
 
 router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => {
     const username = req.decoded.username;
-    res.status(200).json({ success: true, username});
+    res.status(200).json({ success: true, username, group: req.userGroup});
 });
 
 router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), (req, res) => {

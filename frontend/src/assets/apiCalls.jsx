@@ -119,7 +119,6 @@ export const fetchUsername = async () => {
         const response = await axios.get(`${API_BASE_URL}/auth/validateAccess`, { withCredentials: true });
         return response.data;
     } catch (error) {
-        console.error("Error fetching username:", error);
         throw new Error("Failed to load Username.");
     }
 }
@@ -129,7 +128,6 @@ export const validateAdmin = async () => {
         const response = await axios.get(`${API_BASE_URL}/auth/validateAdmin`, { withCredentials: true });
         return response.data;
     } catch (error) {
-        console.error("Error validating admin:", error);
         throw new Error("Failed to load admin.");
     }
 }
