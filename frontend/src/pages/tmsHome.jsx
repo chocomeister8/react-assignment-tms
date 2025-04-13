@@ -67,9 +67,6 @@ const TmsHome = () => {
       const task_appAcronym = selectedApp.App_Acronym;
       const task_owner = username;
 
-      console.log(task_id ,task_name,task_description ,task_notes ,task_plan , task_appAcronym ,task_state , task_creator, task_owner, task_createDate)
-
-
       if(!task_id || !task_name|| !task_description || !task_notes || !task_state || !task_createDate || !task_creator || !task_plan || !task_appAcronym || !task_owner){
         setError("Please fill in all fields!");
         return;
@@ -130,7 +127,7 @@ const TmsHome = () => {
                 </Col>
               )}
               </div>
-            <TaskSection/>
+            <TaskSection selectedApp={selectedApp}/>
             </Row>
           </Col>
         </Row>

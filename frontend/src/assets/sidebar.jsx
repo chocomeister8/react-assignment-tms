@@ -24,13 +24,7 @@ const Sidebar = ( props ) => {
   const [appStartDate, setAppStartDate] = useState('');
   const [appEndDate, setAppEndDate] = useState('');
   const [appDescription, setAppDescription] = useState('');
-  const [dropdowns, setDropdowns] = useState({
-    appPermitCreate: '',
-    appPermitOpen: '',
-    appPermitToDo: '',
-    appPermitDoing: '',
-    appPermitDone: '',
-  });
+  const [dropdowns, setDropdowns] = useState({appPermitCreate: '', appPermitOpen: '', appPermitToDo: '', appPermitDoing: '', appPermitDone: '',});
 
   const [Plan_MVP_name, setMVPName] = useState('');
   const [PlanStartDate, setPlanStartDate] = useState('');
@@ -270,9 +264,9 @@ const Sidebar = ( props ) => {
                 {filteredPlans.map((plan, index) => (
                   <ListGroup.Item key={index} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}>
                     <div className="d-flex flex-column">
-                      <span><strong>{plan.Plan_MVP_name}</strong></span>
-                      <small className="text-muted">Start Date: {formatDate(plan.Plan_startDate)}</small>
-                      <small className="text-muted">End Date: {formatDate(plan.Plan_endDate)}</small>
+                      <span className='mb-2'>{plan.Plan_MVP_name}</span>
+                      <small className="text-muted" style={{ fontSize: '0.7rem' }}>Start Date: {formatDate(plan.Plan_startDate)}</small>
+                      <small className="text-muted" style={{ fontSize: '0.7rem' }}>End Date: {formatDate(plan.Plan_endDate)}</small>
                     </div>
                   </ListGroup.Item>
                 ))}

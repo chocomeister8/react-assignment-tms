@@ -9,7 +9,7 @@ export const fetchGroups = async () => {
         console.error("Error fetching groups:", error);
         throw new Error("Failed to load groups.");
     }
-  };
+};
 
 export const fetchUsers = async () => {
     try {
@@ -80,7 +80,7 @@ export const fetchApplications = async () => {
         console.error("Error fetching applications:", error);
         throw new Error("Failed to load applications.");
     }
-  };
+};
 
 export const createApplication = async (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) => {
     try {
@@ -101,7 +101,7 @@ export const fetchPlans = async () => {
         console.error("Error fetching plans:", error);
         throw new Error("Failed to load plans.");
     }
-  };
+};
 
 export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym) => {
     try {
@@ -121,7 +121,7 @@ export const fetchUsername = async () => {
     } catch (error) {
         throw new Error("Failed to load Username.");
     }
-}
+};
 
 export const validateAdmin = async () => {
     try {
@@ -130,7 +130,7 @@ export const validateAdmin = async () => {
     } catch (error) {
         throw new Error("Failed to load admin.");
     }
-}
+};
 
 export const createTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) => {
     try {
@@ -140,4 +140,13 @@ export const createTask = async (Task_id, Task_Name, Task_description, Task_note
         console.error("Error creating task", error);
         throw new Error(error.response?.data?.error || "Failed to create task.");
     }
-}
+};
+
+export const fetchTasks = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/tasks`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        throw new Error("Failed to load tasks.");
+    }
+};

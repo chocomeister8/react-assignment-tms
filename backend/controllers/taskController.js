@@ -4,7 +4,7 @@ exports.getAllTasks = (req, res) => {
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
-    db.query('SELECT Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) FROM task', (err, results) => {
+    db.query('SELECT Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate FROM task', (err, results) => {
         if (err) {
         return res.status(500).json({ error : err.message });
         }
