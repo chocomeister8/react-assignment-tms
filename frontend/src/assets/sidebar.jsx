@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from 'react-bootstrap';
 import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans } from "../assets/apiCalls";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { fetchUsername } from '../assets/apiCalls';
 
 const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);
@@ -16,6 +17,8 @@ const Sidebar = ( props ) => {
   const [applications, setApplications] = useState([]);
   const [allGroups, setGroups] = useState([]);
   const [selectedApp, setSelectedApp] = useState([]);
+  const [userGroup, setUserGroup] = useState('');
+  
 
   const [appAcronym, setAppAcronym] = useState('');
   const [appRnumber, setAppRNumber] = useState('');
@@ -47,19 +50,21 @@ const Sidebar = ( props ) => {
       return () => clearTimeout(timer);
     }
 
-    const loadApplications = async () => {
+    const loadData = async () => {
       try {
         const applicationsData = await fetchApplications();
         const groupData = await fetchGroups();
         const plansData = await fetchPlans();
+        const group = await fetchUsername();
         setApplications(applicationsData);
         setGroups(groupData);
         setPlans(plansData);
+        setUserGroup(group.group);
       } catch (err) {
         setError(err.message);
       }
     };
-    loadApplications();
+    loadData();
   }, [])
 
   const handleShowAppDetails = (app) => {
@@ -236,7 +241,10 @@ const Sidebar = ( props ) => {
       <Row className="align-items-center mb-3">
         <Col>
           <h5 className="mb-0 d-flex justify-content-between align-items-center gap-2">
-            App <i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowAppModal}></i>
+            <div> App </div>
+          {userGroup.includes(",pl,") && (
+            <i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowAppModal}></i>
+          )}
           </h5>
           <hr/>
           <ListGroup variant="default">
@@ -255,7 +263,7 @@ const Sidebar = ( props ) => {
       <Row className="align-items-center mb-3">
         <Col>
           <h6 className="mb-3 d-flex justify-content-between align-items-center gap-2">Plan
-          {selectedApp && Object.keys(selectedApp).length > 0 && (<i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanModal}></i>)}</h6>
+          {userGroup.includes(",pm,") && selectedApp && Object.keys(selectedApp).length > 0 && (<i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanModal}></i>)}</h6>
           {selectedApp && (
           <div>
             {filteredPlans.length > 0 ? (

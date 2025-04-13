@@ -43,9 +43,9 @@ const TmsHome = () => {
       setUsername(username);
       setUserGroup(group);
 
-  } catch (err) {
+    } catch (err) {
       setError(err.message);
-  }
+    }
   };
   loadData();
 
@@ -72,7 +72,7 @@ const TmsHome = () => {
         return;
       }
       const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
-      if(!taskMameRegex.test(task_name)) {
+      if(!taskNameRegex.test(task_name)) {
         setError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
         return;
       }
