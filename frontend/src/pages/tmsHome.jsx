@@ -3,7 +3,7 @@ import Layout from '../assets/topnavbar';
 import { Button, Alert, Container, Row, Col, Modal, Form, FloatingLabel } from 'react-bootstrap';
 import Sidebar from '../assets/sidebar';
 import TaskSection from '../assets/tasksection';
-import { fetchUsername } from '../assets/apiCalls';
+import { fetchUsername, fetchPlans, createTask } from '../assets/apiCalls';
 
 const TmsHome = () => {
   const [successMessage, setSuccessMessage] = useState('');
@@ -14,7 +14,7 @@ const TmsHome = () => {
   const [success, setSuccess] = useState(null);
   const [username, setUsername] = useState('');
   const [userGroup, setUserGroup] = useState('');
-
+  const [plans, setPlans] = useState([]);
 
   const [taskID, setTaskID] = useState('');
   const [taskName, setTaskName] = useState('');
@@ -30,7 +30,9 @@ const TmsHome = () => {
   const [selectedApp, setSelectedApp] = useState(null);
   const handleAppSelect = (app) => {
     setSelectedApp(app);
-  };  
+    console.log(app);
+  };
+
   const handleSuccess = (message) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(''), 5000);
@@ -39,9 +41,10 @@ const TmsHome = () => {
   const loadData = async () => {
     try {
       const { username, group } = await fetchUsername();
-
+      const plansData = await fetchPlans();
       setUsername(username);
       setUserGroup(group);
+      setPlans(plansData);
 
     } catch (err) {
       setError(err.message);
@@ -52,21 +55,21 @@ const TmsHome = () => {
   const handleCreateTask = async () => {
       setError(null);
       setSuccess(null);
-  
-      const task_id = Number(taskID); //use AppRNumber
+
+      const task_id = `${selectedApp.App_Acronym}_${selectedApp.App_Rnumber}`;
       const task_name = taskName.trim().toLowerCase();
       const task_description = taskDescription.trim();
       const task_notes = taskNotes.trim();
       const task_state = "Open";
-      const task_createDate = new Date().toISOString();
-      const task_creator = username.username.toString();
+      const task_createDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      const task_creator = username;
       const task_plan = taskPlan.trim();
-      const task_appAcronym = selectedApp.App_Acronym.toString();
-      const task_owner = username.username.toString();
+      const task_appAcronym = selectedApp.App_Acronym;
+      const task_owner = username;
 
-      console.log(task_id ,task_name,task_description ,task_notes ,task_state ,task_createDate ,task_creator ,task_plan ,task_appAcronym ,task_owner)
+      console.log(task_id ,task_name,task_description ,task_notes ,task_plan , task_appAcronym ,task_state , task_creator, task_owner, task_createDate)
 
-  
+
       if(!task_id || !task_name|| !task_description || !task_notes || !task_state || !task_createDate || !task_creator || !task_plan || !task_appAcronym || !task_owner){
         setError("Please fill in all fields!");
         return;
@@ -77,9 +80,9 @@ const TmsHome = () => {
         return;
       }
       try{
-        const newTask = await createTask(task_id, task_name, task_description, task_notes, task_state, task_createDate, task_creator, task_plan, task_appAcronym, task_owner);
+        const newTask = await createTask(task_id ,task_name,task_description ,task_notes ,task_plan , task_appAcronym ,task_state , task_creator, task_owner, task_createDate);
         if(newTask.error) {
-          setError(newPlan.error);
+          setError(newTask.error);
         }
         else{
           if (newTask.success) {
@@ -121,9 +124,9 @@ const TmsHome = () => {
               <Col md={10}>
                 <h4>App Name: {selectedApp ? selectedApp.App_Acronym : 'No App Selected'}</h4>
               </Col>
-              {userGroup.includes(",pl,") && (
-                <Col md={2}>
-                  <Button variant="outline-dark" onClick={handleShowTaskModal}>Create Task</Button>
+              {selectedApp && userGroup.includes(",pl,") && (
+                <Col md={2} className="d-flex justify-content-end">
+                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>Create Task</Button>
                 </Col>
               )}
               </div>
@@ -162,9 +165,16 @@ const TmsHome = () => {
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                <Form.Group controlId="formTaskPlan" className="mb-1">
-                  <FloatingLabel controlId="floatingTaskPlan" label="Task Plan">
-                      <Form.Control type="text" placeholder="Enter Task Plan" required onChange={(e) => setTaskNotes(e.target.value)}/>
+                  <Form.Group controlId="formTaskPlan" className="mb-1">
+                    <FloatingLabel controlId="floatingTaskPlan" label="Task Plan">
+                      <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
+                      <option value="">Select a Plan</option>
+                      {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
+                        <option key={index} value={plan.Plan_MVP_name}>
+                          {plan.Plan_MVP_name}
+                        </option>
+                      ))}
+                      </Form.Select>
                     </FloatingLabel>
                   </Form.Group>
                 </Col>

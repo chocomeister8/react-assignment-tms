@@ -131,3 +131,13 @@ export const validateAdmin = async () => {
         throw new Error("Failed to load admin.");
     }
 }
+
+export const createTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/create-task`, {Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}, { headers: { "Content-Type": "application/json" }, withCredentials: true});
+        return response.data;
+    } catch (error) {
+        console.error("Error creating task", error);
+        throw new Error(error.response?.data?.error || "Failed to create task.");
+    }
+}

@@ -12,6 +12,18 @@ exports.getAllPlan = (req, res) => {
     });
 };
 
+// exports.getPlanByAppAcronym = (req, res) => {
+//     if (!req.decoded) {
+//         return res.status(200).json({ error: "Token is missing or invalid." });
+//     }
+//     db.query('SELECT Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym FROM plan WHERE Plan_app_Acronym = ?', [Plan_app_Acronym], (err, results) => {
+//         if (err) {
+//             return res.status(500).json({ error : err.message });
+//         }
+//         res.json(results);
+//     });
+// };
+
 exports.createPlan = (req, res) => {
     let { Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym } = req.body;
 
