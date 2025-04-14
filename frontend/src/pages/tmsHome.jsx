@@ -106,7 +106,7 @@ const TmsHome = () => {
     }
 
   return (
-    <Layout>
+    <Layout onSuccess={handleSuccess}>
       <Container fluid style={{ height: '100vh' }}>
         <Row style={{ height: '100%' }}>
           <Col md={2} className="bg-light p-0">

@@ -1,21 +1,35 @@
 // Import react-based libraries
 import React, { useEffect, useState } from 'react';
-import { Navbar, Nav, Button } from 'react-bootstrap';
-import { NavLink, useNavigate, Link } from 'react-router-dom';
+import { Navbar, Nav, Button , Modal, Row, Col, Form, FloatingLabel, Alert} from 'react-bootstrap';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 // Styling component
 import './App.css';
 
 // Backend API calls
-import { handleLogout, validateAdmin, fetchUsername} from "./apiCalls";
+import { handleLogout, validateAdmin, fetchUsername, updatePassword, updateEmail} from "./apiCalls";
 
-const Layout = ({ children }) => {
+const Layout = ({ children, onSuccess }) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState('');
-    
+  const [showModal, setShowModal] = useState(false);
+  const handleCloseModal = () => setShowModal(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [editedEmail, setEditedEmail] = useState('');
+  const [editedPassword, setEditedPassword] = useState('');
+
   useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 2000);
+  
+      return () => clearTimeout(timer);
+    }
     const loadData = async () => {
       try {
         const checkIsAdmin = await validateAdmin();
@@ -60,6 +74,58 @@ const Layout = ({ children }) => {
       }
     }
 
+    const handleEmailUpdate = async () => {
+      const email = editedEmail.trim().toLowerCase();
+
+      if(!email) {
+        setError('Please fill in Email.')
+      }
+
+      try {
+        const UpdatedEmail = await updateEmail(email);
+        if(UpdatedEmail.error){
+          setError(UpdatedEmail.error);
+        }
+        else {
+          setSuccess(UpdatedEmail.success);
+          setEditedEmail('');
+          if (onSuccess) onSuccess(UpdatedEmail.success);
+          setError('');
+          setShowModal(false);
+        }
+      } catch (err) {
+        setError("Failed to update email.");
+      }
+    };
+    
+    // Password update handler
+    const handlePasswordUpdate = async () => {
+      
+      const password = editedPassword.trim().toLowerCase();
+      console.log(password);
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+      if (!passwordRegex.test(password)) {
+        setError("Password must be 8–10 characters long, contain at least one letter, one number, and one special character.");
+        return;
+      }
+      try {
+        const updatePw = await updatePassword(password);
+
+        if(updatePw.error){
+          setError(updatePw.error);
+        }
+        else {
+          setSuccess(updatePw.success);
+          setEditedPassword('');
+          if (onSuccess) onSuccess(updatePw.success);
+          setError('');
+          setShowModal(false);
+        }
+      } catch (err) {
+        setError("Failed to update password.");
+      }
+    };
+
   return (
     <>
       <Navbar bg="dark" variant="dark" className="fixed-top px-3">
@@ -72,7 +138,7 @@ const Layout = ({ children }) => {
 
       <div className="ms-auto d-flex align-items-center">
           {username && (
-            <span className="text-light me-3">Welcome back, <strong>{username}</strong></span>
+            <span className="text-light me-3" style={{ cursor: 'pointer' }} ><i className="bi bi-person-circle" onClick={() => setShowModal(true)}><strong> {username}</strong></i></span>
           )}
           <Button variant="danger" onClick={logout}>
             Logout
@@ -83,6 +149,49 @@ const Layout = ({ children }) => {
       <div style={{ marginTop: '50px' }}>
         {children}
       </div>
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        {error && <Alert style={{width: '100%', transition: 'width 0.3s ease' }} variant="danger">{error}</Alert>} {/* Show error message */}
+          <Form>
+            {/* Row 1: App Name and Description */}
+            <Row className="align-items-end">
+              <Col md={9}>
+                <Form.Group controlId="formEmail" className="mb-1">
+                  <Form.Label>Email:</Form.Label>
+                  <Form.Control type="text" placeholder="Enter email" required onChange={(e) => setEditedEmail(e.target.value)} />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="formUpdateBtn" className="mb-1">
+                  <Form.Label className="invisible">Update Email</Form.Label> {/* Keeps spacing consistent */}
+                  <Button variant="success" className="w-100" onClick={handleEmailUpdate}>
+                    Update
+                  </Button>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="align-items-end">
+              <Col md={9}>
+                <Form.Group controlId="formPassword" className="mb-1">
+                  <Form.Label>Password:</Form.Label>
+                  <Form.Control type="password" placeholder="Enter Password:" required onChange={(e) => setEditedPassword(e.target.value)} />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="formUpdateBtn" className="mb-1">
+                  <Form.Label className="invisible">Update Password</Form.Label> {/* Keeps spacing consistent */}
+                  <Button variant="success" className="w-100" onClick={handlePasswordUpdate}>
+                    Update
+                  </Button>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };

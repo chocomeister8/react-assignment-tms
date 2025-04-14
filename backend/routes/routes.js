@@ -40,7 +40,12 @@ router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, 
 router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), (req, res) => {
     res.status(200).json({ success: true, isAdmin: true });
 });
+
 router.post('/auth/login', login);
 router.post('/auth/logout', isAuthenticatedUser, logout);
+
+// User update details routes
+router.put("/user/updateEmail", isAuthenticatedUser, validateAccess(), userController.userUpdateEmail);
+router.put("/user/updatePw", isAuthenticatedUser, validateAccess(), userController.userUpdatePassword);
 
 module.exports = router;

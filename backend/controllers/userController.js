@@ -200,4 +200,78 @@ exports.updateUser = (req, res) => {
     }
 };
 
+exports.userUpdateEmail = (req, res) => {
+    const { email } = req.body;
+
+    if (!req.decoded || !req.decoded.username) {
+        return res.status(200).json({ error: "Unauthorized access." });
+    }
+
+    const username = req.decoded.username;
+
+    db.beginTransaction((err) => {
+        if(err) {
+            return res.status(500).json({ error: "Failed to start transaction." });
+        }
+
+        db.query('UPDATE user SET email = ? WHERE username = ?', [email, username], (err, result) => {
+            if (err) {return db.rollback(() => {
+                console.log('Error details:', err);
+                return res.status(500).json({ error: 'Failed to update email.' });
+                });
+            }
+            db.commit((err) => {
+            if (err) {
+                return db.rollback(() => {
+                    return res.status(500).json({ error: 'Transaction commit failed.' });
+                });
+            }
+            return res.status(200).json({ success: "Email updated successfully!" });            });
+        });
+    })
+};
+
+exports.userUpdatePassword = (req, res) => {
+    const { password } = req.body;
+
+    if (!req.decoded || !req.decoded.username) {
+        return res.status(200).json({ error: "Unauthorized access." });
+    }
+
+    const username = req.decoded.username;
+
+    const trimmedPassword = password.trim();
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+
+    if (!passwordRegex.test(trimmedPassword)) {
+        return res.status(200).json({ 
+            error: "Password must be 8–10 characters long, contain at least one letter, one number, and one special character." 
+        });
+    }
+
+    db.beginTransaction((err) => {
+        if(err) {
+            return res.status(500).json({ error: "Failed to start transaction." });
+        }
+        bcrypt.hash(trimmedPassword, 10, (err, hashedPassword) => {
+            if (err) {
+                return res.status(500).json({ error: "Failed to hash password." });
+            }
+            db.query('UPDATE user SET password = ? WHERE username = ?', [hashedPassword, username], (err, result) => {
+                if (err) {return db.rollback(() => {
+                    console.log('Error details:', err);
+                    return res.status(500).json({ error: 'Failed to update password.' });
+                    });
+                }
+                db.commit((err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        return res.status(500).json({ error: 'Transaction commit failed.' });
+                    });
+                }
+                return res.status(200).json({ success: "Password updated successfully!" });            });
+            });
+        });
+    })
+};
 

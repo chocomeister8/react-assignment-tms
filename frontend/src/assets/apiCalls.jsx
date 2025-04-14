@@ -150,3 +150,21 @@ export const fetchTasks = async () => {
         throw new Error("Failed to load tasks.");
     }
 };
+
+export const updateEmail = async (email) => {
+    const response = await axios.put(`${API_BASE_URL}/user/updateEmail`,
+        {email},{withCredentials: true,
+            headers: {'Content-Type': 'application/json',},
+        }
+    );
+    return response.data;
+};
+
+export const updatePassword = async (password) => {
+    const response = await axios.put(`${API_BASE_URL}/user/updatePw`,
+        {password},{withCredentials: true,
+            headers: {'Content-Type': 'application/json',},
+        }
+    );
+    return response.data;
+};
