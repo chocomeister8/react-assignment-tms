@@ -8,32 +8,38 @@ const { isAuthenticatedUser, validateAccess, logout, login } = require('../contr
 
 const router = express.Router();
 
+// Routes for Admin
+// View all users
 router.get('/users', isAuthenticatedUser, validateAccess("admin"), userController.getAllUsers);
 router.get('/users/:username', isAuthenticatedUser, validateAccess("admin"), userController.getUserByUserName);
+// Create user
 router.post('/create-user', isAuthenticatedUser, validateAccess("admin"), userController.createUser);
+// Update user
 router.put('/users/:username', isAuthenticatedUser, validateAccess("admin"), userController.updateUser);
-
-router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => {
-    const username = req.decoded.username;
-    res.status(200).json({ success: true, username, group: req.userGroup});
-});
-
-router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), (req, res) => {
-    res.status(200).json({ success: true, isAdmin: true });
-});
-
+// Group routes
 router.get('/groups', isAuthenticatedUser, validateAccess(), groupController.getAllGroups);
-router.post('/create-group', isAuthenticatedUser, validateAccess(), groupController.createGroup);
+router.post('/create-group', isAuthenticatedUser, validateAccess("admin"), groupController.createGroup);
 
+// Application routes
 router.get('/applications', isAuthenticatedUser, validateAccess(), appController.getAllApplications);
 router.post('/create-app', isAuthenticatedUser, validateAccess("pl"), appController.createApp);
 
+// Plan routes
 router.get('/plans', isAuthenticatedUser, validateAccess(), planController.getAllPlan);
 router.post('/create-plan', isAuthenticatedUser, validateAccess("pm"), planController.createPlan);
 
+// Task routes
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
 router.post('/create-task', isAuthenticatedUser, validateAccess("pl"), taskController.createTask);
 
+// Authentication routes
+router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => { const username = req.decoded.username;
+    res.status(200).json({ success: true, username, group: req.userGroup});
+});
+    
+router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), (req, res) => {
+    res.status(200).json({ success: true, isAdmin: true });
+});
 router.post('/auth/login', login);
 router.post('/auth/logout', isAuthenticatedUser, logout);
 

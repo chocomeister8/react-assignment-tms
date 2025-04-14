@@ -1,13 +1,19 @@
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+// Import React-based libraries
 import React from "react";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+
+// Default component
 import Login from './pages/Login';
 import TmsHome from './pages/tmsHome'; // Import the homepage
+
+// Admin Control page
 import UserManagment from './pages/users';
-import Axios from 'axios';
+// Protected Routes
 import ProtectedRoute from "../ProtectedRoute";
 
-Axios.defaults.withCredentials = true;
+import Axios from 'axios';
 
+Axios.defaults.withCredentials = true;
 
 function App() {
   return (

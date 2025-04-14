@@ -1,7 +1,10 @@
+// Import react-based libraries
 import React, { useEffect, useState } from 'react';
 import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from 'react-bootstrap';
-import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername  } from "../assets/apiCalls";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+
+// Backend API calls
+import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername  } from "../assets/apiCalls";
 
 const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);

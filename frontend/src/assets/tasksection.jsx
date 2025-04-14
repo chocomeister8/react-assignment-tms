@@ -1,5 +1,8 @@
+// Import react-based libraries
 import React , { useEffect, useState } from 'react';
 import { Row, Col, Card, ListGroup } from 'react-bootstrap';
+
+// Backend API calls
 import { fetchTasks } from '../assets/apiCalls';
 
 

@@ -1,8 +1,13 @@
+// Import react-based libraries
 import React, { useEffect, useState } from 'react';
-import Layout from '../assets/topnavbar';
 import { Button, Alert, Container, Row, Col, Modal, Form, FloatingLabel } from 'react-bootstrap';
+
+// Import top nav bar, sidebar and tasksection component
+import Layout from '../assets/topnavbar';
 import Sidebar from '../assets/sidebar';
 import TaskSection from '../assets/tasksection';
+
+// Import backend API calls
 import { fetchUsername, fetchPlans, createTask } from '../assets/apiCalls';
 
 const TmsHome = () => {
@@ -20,12 +25,8 @@ const TmsHome = () => {
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskNotes, setTaskNotes] = useState('');
-  const [taskState, setTaskState] = useState('');
-  const [taskCreateDate, setTaskCreateDate] = useState('');
-  const [taskCreator, setTaskCreator] = useState('');
   const [taskPlan, setTaskPlan] = useState('');
-  const [taskAppAcronym, setTaskAppAcronym] = useState('');
-  const [taskOwner, setTaskOwner] = useState('');
+
 
   const [selectedApp, setSelectedApp] = useState(null);
   const handleAppSelect = (app) => {

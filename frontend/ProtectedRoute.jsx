@@ -1,10 +1,15 @@
+// Import react-based libraries
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+// Import axios component for backend communication
 import axios from "axios";
 
 const ProtectedRoute = ({ children, adminOnly = false}) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [hasRedirected, setHasRedirected] = useState(false);
+
 
   useEffect(() => {
     const checkAuth = async () => {

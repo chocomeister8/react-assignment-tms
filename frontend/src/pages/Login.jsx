@@ -1,7 +1,11 @@
+// Import react-based libraries
 import React, { useEffect, useState } from "react";
 import { Container, Form, Button, Navbar, Col, Row} from "react-bootstrap";
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+
+import axios from 'axios';
+
+// Snackbar component for message
 import Snackbar from "../assets/snackbar";
 
 function Login() {
@@ -20,11 +24,9 @@ function Login() {
 
         if (res.data.success === true) {
           navigate('/tmshome'); // already logged in
-        } else {
-          navigate('/login');
         }
       } catch (err) {
-        navigate('/login');
+        
       }
     };
 
@@ -76,12 +78,7 @@ function Login() {
                 <Form.Label className="mb-0">Username:</Form.Label>
             </Col>
             <Col sm={9}>
-                <Form.Control
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                />
+                <Form.Control type="text" placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} required/>
             </Col>
         </Form.Group>
         <Form.Group as={Row} controlId="password" className="mb-3 align-items-center">
@@ -89,12 +86,7 @@ function Login() {
                 <Form.Label className="mb-0">Password:</Form.Label>
             </Col>
             <Col sm={9}>
-                <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                />
+                <Form.Control type="password" placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} required/>
             </Col>
         </Form.Group>
         {showSnackbar && <Snackbar message={errorMessage} show={showSnackbar} onHide={handleSnackbarHide} />}

@@ -1,7 +1,12 @@
+// Import react-based libraries
 import React, { useEffect, useState } from 'react';
-import './App.css';
 import { Navbar, Nav, Button } from 'react-bootstrap';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
+
+// Styling component
+import './App.css';
+
+// Backend API calls
 import { handleLogout, validateAdmin, fetchUsername} from "./apiCalls";
 
 const Layout = ({ children }) => {
@@ -59,7 +64,7 @@ const Layout = ({ children }) => {
     <>
       <Navbar bg="dark" variant="dark" className="fixed-top px-3">
         <Nav className="mr-3">
-          <NavLink to="/tmshome"  className={({ isActive }) => isActive ? 'nav-link active text-light' : 'nav-link text-light'}>Task Management</NavLink>
+          <NavLink to="/tmshome" className={({ isActive }) => isActive ? 'nav-link active text-light' : 'nav-link text-light'}>Task Management</NavLink>
         </Nav>
         {isAuthenticated && isAdmin && (
           <NavLink to="/userManagement" className={({ isActive }) => isActive ? 'nav-link active text-light' : 'nav-link text-light'}>User Management</NavLink>

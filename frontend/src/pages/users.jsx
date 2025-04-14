@@ -1,8 +1,13 @@
-import Layout from '../assets/topnavbar'; 
+// Import react-based libraries
 import React, { useState, useEffect } from "react";
 import { Badge, Button, Table, Form, Dropdown, Row, Col, Alert } from "react-bootstrap";
-import { fetchGroups, fetchUsers, createGroup , createUser, updateUser} from "../assets/apiCalls";
 import { useNavigate } from "react-router-dom";
+
+//Import the topnavbar
+import Layout from '../assets/topnavbar'; 
+
+// Backend component calls
+import { fetchGroups, fetchUsers, createGroup , createUser, updateUser} from "../assets/apiCalls";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserManagement = () => {
@@ -52,50 +57,52 @@ const UserManagement = () => {
   const handleCreateGroup = async () => {
     setError(null);
     setSuccess(null);
-
+  
     const GroupName = groupName.trim().toLowerCase();
-
-    // Check if empty
-    if (!GroupName) {
-      setError("Group name cannot be empty.");
-      return;
-    }
-
-    // Regex validation
-    const groupRegex = /^[a-z0-9_/]{1,50}$/;
-    if (!groupRegex.test(GroupName)) {
-      setError("Group name must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_' and '/'.");
-      return;
-    }
-
-    const groupExists = groups.some(
-      (group) => group.groupName.toLowerCase() === GroupName
-    );
-    if (groupExists) {
-      setError("Group name already exists!");
-      return;
-    }
-
+  
     try {
+      // 🔐 Step 1: Check permission first (still calling createGroup)
       const response = await createGroup(GroupName);
-
-      if (response.error) {
-          setError(response.error);
-      } else {
-
-        if(response.message == "Unauthorized User."){
-          navigate('/login');
-        }
-        if(response.message == "Access denied: User is not in the required group")
-        {
-          navigate('/tmshome')
-        }
-          setSuccess(response.message);
-          setGroupName("");
-          const updatedGroups = await fetchGroups();
-          setGroups(updatedGroups);
+  
+      // If unauthorized, redirect right away
+      if (response.message === "Unauthorized User.") {
+        navigate('/login');
+        return;
       }
-
+  
+      if (response.message === "Access denied: User is not in the required group") {
+        alert("Access denied: User is not in the required group");
+        navigate('/login');
+        return;
+      }
+  
+      if (!GroupName) {
+        setError("Group name cannot be empty.");
+        return;
+      }
+  
+      const groupRegex = /^[a-z0-9_/]{1,50}$/;
+      if (!groupRegex.test(GroupName)) {
+        setError("Group name must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_' and '/'.");
+        return;
+      }
+  
+      const groupExists = groups.some(
+        (group) => group.groupName.toLowerCase() === GroupName
+      );
+      if (groupExists) {
+        setError("Group name already exists!");
+        return;
+      }
+      if (response.error) {
+        setError(response.error);
+      } else {
+        setSuccess(response.message);
+        setGroupName("");
+        const updatedGroups = await fetchGroups();
+        setGroups(updatedGroups);
+      }
+  
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Something went wrong. Please try again.");
@@ -109,68 +116,64 @@ const UserManagement = () => {
     const Username = username.trim().toLowerCase();
     const Email = email.trim();
     const Password = password.trim();
-  
-    // Check for empty fields
-    if (!Username || !Email || !Password) {
-      setError("Please fill in all fields!");
-      return;
-    }
-  
-    // Username validation
-    const usernameRegex = /^[a-z0-9_\-/]{1,50}$/;
-    if (!usernameRegex.test(Username)) {
-      setError("Username must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_', '-', and '/'.");
-      return;
-    }
-  
-    // Check if username already exists (case-insensitive)
-    const userExists = users.some(
-      (user) => user.username.toLowerCase() === Username
-    );
-    if (userExists) {
-      setError("Username already exists!");
-      return;
-    }
-  
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(Email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-  
-    // Password validation
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
-    if (!passwordRegex.test(Password)) {
-      setError("Password must be 8–10 characters long, contain at least one letter, one number, and one special character.");
-      return;
-    }
-  
-    const groupRegex = /^[a-z0-9_/]{1,50}$/;
     const cleanedGroups = selectedGroups.map(group => group.trim().toLowerCase());
+    const user_groupName = cleanedGroups.join(',');
+
+    try {
+      // 🔐 Step 1: Try to create the user immediately — this also checks permissions
+      const newUser = await createUser(Username, Email, Password, user_groupName);
   
-    for (let group of cleanedGroups) {
-      if (!groupRegex.test(group)) {
-        setError("Each group must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_' and '/'.");
+      // 🔒 Step 2: Permission check before any validation
+      if (newUser.message === "Unauthorized User.") {
+        navigate("/login");
         return;
       }
-    }
   
-    const user_groupName = cleanedGroups.join(',');
+      if (newUser.message === "Access denied: User is not in the required group") {
+        alert("Access denied: User is not in the required group");
+        navigate("/login");
+        return;
+      }
   
-    try {
-      const newUser = await createUser(Username, Email, Password, user_groupName);
-      
+      // ✅ Step 3: Proceed with field validation only if authorized
+  
+      if (!Username || !Password) {
+        setError("Please fill in all fields!");
+        return;
+      }
+  
+      const usernameRegex = /^[a-z0-9_\-/]{1,50}$/;
+      if (!usernameRegex.test(Username)) {
+        setError("Username must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_', '-', and '/'.");
+        return;
+      }
+  
+      const userExists = users.some(
+        (user) => user.username.toLowerCase() === Username
+      );
+      if (userExists) {
+        setError("Username already exists!");
+        return;
+      }
+  
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
+      if (!passwordRegex.test(Password)) {
+        setError("Password must be 8–10 characters long, contain at least one letter, one number, and one special character.");
+        return;
+      }
+  
+      const groupRegex = /^[a-z0-9_/]{1,50}$/;
+      for (let group of cleanedGroups) {
+        if (!groupRegex.test(group)) {
+          setError("Each group must be lowercase, 50 characters or fewer, and only contain letters, numbers, '_' and '/'.");
+          return;
+        }
+      }
+  
+      // ✅ Step 4: If we reach here, show success and refresh
       if (newUser.error) {
         setError(newUser.error);
       } else {
-        if(newUser.message == "Unauthorized User."){
-          navigate('/login');
-        }
-        if(newUser.message == "Access denied: User is not in the required group")
-        {
-          navigate('/tmshome')
-        }
         setSuccess(newUser.success);
         setUsername('');
         setEmail('');
@@ -180,8 +183,10 @@ const UserManagement = () => {
   
       const updatedUser = await fetchUsers();
       setUsers(updatedUser);
+  
     } catch (err) {
-      setError(err.message);
+      console.error("Unexpected error:", err);
+      setError("Something went wrong. Please try again.");
     }
   };
 
@@ -240,7 +245,8 @@ const UserManagement = () => {
         }
         if(update.message == "Access denied: User is not in the required group")
         {
-          navigate('/tmshome')
+          alert("Access denied: User is not in the required group");
+          navigate('/login');
         }
         setSuccess(update.success);
         setEditUser(null); // exit edit mode
@@ -269,25 +275,25 @@ const UserManagement = () => {
     </div>
     <div className="border p-3 w-100 ms-auto">
     <Row className="mb-3 align-items-end gy-2 gx-3">
-        <Col xs={12} md={3}>
-            <Form.Label>Username</Form.Label>
-            <Form.Control type="text" className='border-dark' placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        </Col>
-        <Col xs={12} md={3}>
-            <Form.Label>Email</Form.Label>
-            <Form.Control type="email" className='border-dark' placeholder="Enter Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </Col>
-        <Col xs={12} md={3}>
-            <Form.Label>Password</Form.Label>
-            <Form.Control type="password" className='border-dark' placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </Col>
-        <Col xs={12} md={3}>
-        <Form.Label>Groups</Form.Label>
+      <Col xs={12} md={3}>
+          <Form.Label>Username</Form.Label>
+          <Form.Control type="text" className='border-dark' placeholder="Enter Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+      </Col>
+      <Col xs={12} md={3}>
+          <Form.Label>Email</Form.Label>
+          <Form.Control type="email" className='border-dark' placeholder="Enter Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </Col>
+      <Col xs={12} md={2}>
+          <Form.Label>Password</Form.Label>
+          <Form.Control type="password" className='border-dark' placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </Col>
+      <Col xs={12} md={2}>
+      <Form.Label>Groups</Form.Label>
         <div className="d-flex flex-column flex-md-row gap-2">
           <div className="w-100">
             <Dropdown variant= "secondary" className="w-100" show={isOpen} onClick={handleDropdownToggle}>
               <Dropdown.Toggle variant="light" className="w-100 border-dark">
-                {selectedGroups.length === 0 ? "--Select--" : selectedGroups.filter(g => g.trim() !== "").join(",")} 
+                {selectedGroups.length === 0 ? "Select" : selectedGroups.filter(g => g.trim() !== "").join(",")} 
               </Dropdown.Toggle>
                 <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (
                   <Dropdown.Item key={index} as="div">
@@ -300,11 +306,13 @@ const UserManagement = () => {
                 </Dropdown.Menu>
             </Dropdown>
           </div>
-          <div className='w-100'>
-            <Button variant="light" className="w-100 border-dark" onClick={handleCreateUser}>Add User</Button>
-          </div>
         </div>
-    </Col>
+      </Col>
+      <Col xs={12} md={2}>
+            <div className='w-100'>
+              <Button variant="light" className="w-100 border-dark" onClick={handleCreateUser}>Add User</Button>
+            </div>
+          </Col>
     </Row>
     </div>
       {/* User Table */}

@@ -43,7 +43,7 @@ exports.createUser = async (req, res) => {
     }
 
     // Validate required fields
-    if (!username || !email || !password) {
+    if (!username || !password) {
         return res.status(200).json({ error: "Please fill in all fields!" });
     }
 
@@ -52,11 +52,6 @@ exports.createUser = async (req, res) => {
         return res.status(200).json({
             error: "Username can only contain lowercase letters, numbers, and _ - / characters, and must be 50 characters or fewer."
         });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-    return res.status(200).json({ error: "Please enter a valid email format!" });
     }
 
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,10}$/;
@@ -129,7 +124,7 @@ exports.updateUser = (req, res) => {
     }
 
     // Validate required fields
-    if (!username || !email) {
+    if (!username) {
         return res.status(200).json({ error: "Please fill in all fields!" });
     }
 
