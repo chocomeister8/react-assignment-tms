@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../assets/topnavbar';
 import { Button, Alert, Container, Row, Col, Modal, Form, FloatingLabel } from 'react-bootstrap';
 import Sidebar from '../assets/sidebar';
@@ -38,19 +38,23 @@ const TmsHome = () => {
     setTimeout(() => setSuccessMessage(''), 5000);
   };
 
-  const loadData = async () => {
-    try {
-      const { username, group } = await fetchUsername();
-      const plansData = await fetchPlans();
-      setUsername(username);
-      setUserGroup(group);
-      setPlans(plansData);
+  useEffect (() => {
 
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-  loadData();
+    const loadData = async () => {
+      try {
+        const { username, group } = await fetchUsername();
+        await fetchPlans().then(data => {
+          setPlans(Array.isArray(data) ? data : []);
+        });
+        setUsername(username);
+        setUserGroup(group);
+  
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    loadData();
+  }, [])
 
   const handleCreateTask = async () => {
       setError(null);

@@ -341,7 +341,6 @@ const UserManagement = () => {
                 {editUser && editUser.username === user.username ? (
                   <Dropdown variant="secondary" show={isGroupOpen} onClick={editGroupDropDownToggle}>
                     <Dropdown.Toggle variant="light" className="w-100 border-dark">
-                      {console.log("editedGroups:", editedGroups)}
                       {editedGroups.length === 0 ? "--Select--" : editedGroups.filter(g => g.trim() !== "").join(",")}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>{groups.length > 0 ? (groups.map((group, index) => (

@@ -15,16 +15,28 @@ const ProtectedRoute = ({ children, adminOnly = false}) => {
 
         const res = await axios.get(response, { withCredentials: true });
 
-        if (res.data.success && (!adminOnly || res.data.isAdmin)) {
+        if (res.data.success) {
+          // Check if user is admin (if adminOnly flag is set)
+          if (res.data.isAdmin === 0 || adminOnly && !res.data.isAdmin) {
+            // If user is not an admin anymore, redirect
+            setIsAuthenticated(false);
+            alert("You no longer have admin rights. Redirecting to login.");
+            navigate("/login");
+            return;
+          }
+          // If authenticated and admin (if adminOnly), allow access
           setIsAuthenticated(true);
         } else {
-          // if not admin, redirect to homepage, not a logged in user goes to log in page
+          // If the user is not authenticated or unauthorized
           setIsAuthenticated(false);
-          navigate(adminOnly ? "/tmshome" : "/login");
+          alert(res.data.message || "Access denied.");
+          navigate("/login");
         }
       } catch (err) {
+        // If there is an error (e.g., token expired or invalid)
         setIsAuthenticated(false);
-        navigate(adminOnly ? "/tmshome" : "/login");
+        alert("An error occurred. You will be redirected.");
+        navigate("/login");
       }
     };
 

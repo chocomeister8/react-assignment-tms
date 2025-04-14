@@ -112,7 +112,7 @@ exports.updateUser = (req, res) => {
     const { username } = req.params;
     const { email, password, isActive, user_groupName } = req.body;
     const trimmedPassword = typeof password === 'string' ? password.trim() : '';
-    let groupsArray = null;
+    let groupsArray = '';
 
     if(username.toLowerCase() === "admin"){
         if (user_groupName && !user_groupName.includes("admin")) {
