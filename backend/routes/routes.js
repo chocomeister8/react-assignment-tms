@@ -37,11 +37,9 @@ router.post('/create-task', isAuthenticatedUser, validateAccess("pl"), taskContr
 router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => { const username = req.decoded.username;
     res.status(200).json({ success: true, username, group: req.userGroup});
 });
-    
 router.get("/auth/validateAdmin", isAuthenticatedUser, validateAccess("admin"), (req, res) => {
     res.status(200).json({ success: true, isAdmin: true });
 });
-
 router.post('/auth/login', login);
 router.post('/auth/logout', isAuthenticatedUser, logout);
 

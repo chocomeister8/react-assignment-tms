@@ -1,6 +1,6 @@
 // Import react-based libraries
 import React, { useEffect, useState } from 'react';
-import { Navbar, Nav, Button , Modal, Row, Col, Form, FloatingLabel, Alert} from 'react-bootstrap';
+import { Navbar, Nav, Button , Modal, Row, Col, Form, Alert} from 'react-bootstrap';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 // Styling component

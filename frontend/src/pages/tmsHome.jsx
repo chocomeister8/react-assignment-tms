@@ -42,7 +42,7 @@ const TmsHome = () => {
 
   const handleSuccess = (message) => {
     setSuccess(message);
-    setTimeout(() => setSuccess(''), 5000);
+    setTimeout(() => setSuccess(''), 3000);
   };
 
   const fetchTasks = async () => {
@@ -107,7 +107,7 @@ const TmsHome = () => {
       console.log('Task Acronym:', selectedApp.App_Acronym);
       console.log('Task Rnumber:', selectedApp.App_Rnumber);
 
-      if(!task_id || !task_name|| !task_description || !task_notes || !task_state || !task_createDate || !task_creator || !task_plan || !task_appAcronym || !task_owner){
+      if(!task_id || !task_name|| !task_description || !task_notes || !task_state || !task_createDate || !task_creator || !task_appAcronym || !task_owner){
         setError("Please fill in all fields!");
         return;
       }
@@ -188,20 +188,6 @@ const TmsHome = () => {
                   </Form.Group>
                   </Col>
                   <Col md={6}>
-                  <Form.Group controlId="formTaskNotes" className='mb-1'>
-                    <FloatingLabel controlId="floatingTaskNotes" label="Task Notes">
-                      <Form.Control type="text" placeholder="Enter task notes" required onChange={(e) => setTaskNotes(e.target.value)}/>
-                    </FloatingLabel>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group controlId="formTaskDescription" className="mb-1">
-                    <FloatingLabel controlId="floatingTaskDescription" label="Task Description">
-                      <Form.Control type="text" placeholder="Enter Task Description" required onChange={(e) => setTaskDescription(e.target.value)}/>
-                    </FloatingLabel>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
                   <Form.Group controlId="formTaskPlan" className="mb-1">
                     <FloatingLabel controlId="floatingTaskPlan" label="Task Plan">
                       <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
@@ -212,6 +198,22 @@ const TmsHome = () => {
                         </option>
                       ))}
                       </Form.Select>
+                    </FloatingLabel>
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group controlId="formTaskDescription" className="mb-1">
+                    <FloatingLabel controlId="floatingTaskDescription" label="Task Description">
+                      <Form.Control as="textarea" rows={3} placeholder="Enter Task Description" required style={{ height: '100px'}} onChange={(e) => setTaskDescription(e.target.value)}/>
+                    </FloatingLabel>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={12}>
+                  <Form.Group controlId="formTaskNotes" className='mb-1'>
+                    <FloatingLabel controlId="floatingTaskNotes" label="Task Notes">
+                      <Form.Control as="textarea" rows={3} placeholder="Enter task notes" required style={{ height: '150px'}} onChange={(e) => setTaskNotes(e.target.value)}/>
                     </FloatingLabel>
                   </Form.Group>
                 </Col>
