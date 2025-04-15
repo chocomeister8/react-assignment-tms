@@ -151,6 +151,16 @@ export const fetchTasks = async () => {
     }
 };
 
+export const fetchTaskByAppAcronym = async (Task_app_Acronym) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/task/${Task_app_Acronym}`,
+        {headers: { "Content-Type": "application/json" }, withCredentials: true });
+        return response.data; 
+    } catch (error) {
+        throw new Error("Failed to fetch tasks.");
+    }
+};
+
 export const updateEmail = async (email) => {
     const response = await axios.put(`${API_BASE_URL}/user/updateEmail`,
         {email},{withCredentials: true,

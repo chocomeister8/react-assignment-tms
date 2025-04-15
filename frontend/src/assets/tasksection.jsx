@@ -2,34 +2,21 @@
 import React , { useEffect, useState } from 'react';
 import { Row, Col, Card, ListGroup } from 'react-bootstrap';
 
-// Backend API calls
-import { fetchTasks } from '../assets/apiCalls';
-
-
-const TaskSection = ({ selectedApp }) => {
+const TaskSection = ({ selectedApp, tasks }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [tasks, setTasks] = useState([]);
   const statusList = ['Open', 'To Do', 'Doing', 'Done', 'Closed'];
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const tasksData = await fetchTasks();
-        setTasks(tasksData);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
-    loadData();
-  }, [selectedApp]);
+  const taskArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
 
   const getTasksByStatus = (status) => {
-    if (!selectedApp) return [];
-    return tasks.filter((task) => {
-      return task.Task_state === status && task.Task_app_Acronym === selectedApp.App_Acronym;
-    });
+    if (!selectedApp || !Array.isArray(taskArray)) {
+      console.log('Early return: selectedApp or taskArray invalid');
+      return [];
+    }
+    const filteredTasks = taskArray.filter(
+      (task) => task.Task_state === status && task.Task_app_Acronym === selectedApp.App_Acronym
+    );
+    return filteredTasks;
   };
 
   return (
@@ -47,7 +34,7 @@ const TaskSection = ({ selectedApp }) => {
               </Card.Header>
               <ListGroup variant="flush">
                 {filteredTasks.length > 0 ? (filteredTasks.map((task, itemIdx) => (
-                <ListGroup.Item key={itemIdx} className="px-1 py-1">
+                <ListGroup.Item key={itemIdx} className="px-1 py-1" style = {{overflowX: 'auto'}}>
                   <Card className="mb-2 shadow-sm">
                     <Card.Body className="p-2">
                       <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>

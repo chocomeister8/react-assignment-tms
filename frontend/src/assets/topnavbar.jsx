@@ -78,7 +78,8 @@ const Layout = ({ children, onSuccess }) => {
       const email = editedEmail.trim().toLowerCase();
 
       if(!email) {
-        setError('Please fill in Email.')
+        setError('Please fill in Email.');
+        return;
       }
 
       try {

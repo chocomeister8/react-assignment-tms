@@ -30,6 +30,7 @@ router.post('/create-plan', isAuthenticatedUser, validateAccess("pm"), planContr
 
 // Task routes
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
+router.get('/task/:Task_app_Acronym', isAuthenticatedUser, validateAccess(), taskController.getTaskByAppAcronym);
 router.post('/create-task', isAuthenticatedUser, validateAccess("pl"), taskController.createTask);
 
 // Authentication routes

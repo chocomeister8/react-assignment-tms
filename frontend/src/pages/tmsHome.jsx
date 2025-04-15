@@ -8,7 +8,7 @@ import Sidebar from '../assets/sidebar';
 import TaskSection from '../assets/tasksection';
 
 // Import backend API calls
-import { fetchUsername, fetchPlans, createTask } from '../assets/apiCalls';
+import { fetchUsername, fetchPlans, createTask, fetchTaskByAppAcronym } from '../assets/apiCalls';
 
 const TmsHome = () => {
   const [successMessage, setSuccessMessage] = useState('');
@@ -21,25 +21,46 @@ const TmsHome = () => {
   const [userGroup, setUserGroup] = useState('');
   const [plans, setPlans] = useState([]);
 
-  const [taskID, setTaskID] = useState('');
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskNotes, setTaskNotes] = useState('');
   const [taskPlan, setTaskPlan] = useState('');
 
-
+  const [tasks, setTasks] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
-  const handleAppSelect = (app) => {
+
+  const handleAppSelect = async (app) => {
     setSelectedApp(app);
+    try {
+      const tasksData = await fetchTasks();
+      setTasks(tasksData);
+    } catch (err) {
+      setError("Failed to fetch tasks.");
+    }
     console.log(app);
   };
 
   const handleSuccess = (message) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(''), 5000);
+    setSuccess(message);
+    setTimeout(() => setSuccess(''), 5000);
+  };
+
+  const fetchTasks = async () => {
+    if(!selectedApp) {
+      return;
+    }
+    try {
+      const fetchedTasks = await fetchTaskByAppAcronym(selectedApp.App_Acronym);
+      setTasks(fetchedTasks);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   useEffect (() => {
+    if (selectedApp) {
+      fetchTasks();
+    }
 
     const loadData = async () => {
       try {
@@ -49,13 +70,24 @@ const TmsHome = () => {
         });
         setUsername(username);
         setUserGroup(group);
+        fetchPlans();
   
       } catch (err) {
         setError(err.message);
       }
     };
+
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 2000);
+  
+      return () => clearTimeout(timer);
+    }
+
     loadData();
-  }, [])
+  }, [selectedApp])
 
   const handleCreateTask = async () => {
       setError(null);
@@ -71,6 +103,9 @@ const TmsHome = () => {
       const task_plan = taskPlan.trim();
       const task_appAcronym = selectedApp.App_Acronym;
       const task_owner = username;
+
+      console.log('Task Acronym:', selectedApp.App_Acronym);
+      console.log('Task Rnumber:', selectedApp.App_Rnumber);
 
       if(!task_id || !task_name|| !task_description || !task_notes || !task_state || !task_createDate || !task_creator || !task_plan || !task_appAcronym || !task_owner){
         setError("Please fill in all fields!");
@@ -97,6 +132,8 @@ const TmsHome = () => {
             setTaskNotes('');
             setTaskPlan('');
             setError('');
+
+            fetchTasks();
           }
         }
       }
@@ -116,9 +153,7 @@ const TmsHome = () => {
           <Col md={10} className="p-3">
             <Row className="align-items-center">
               <Col md={12}>
-              {successMessage && (
-                <Alert variant="success">{successMessage}</Alert>
-              )}
+              {success && <Alert style={{width: '100%', transition: 'width 0.3s ease' }} variant="success">{success}</Alert>} 
               </Col>
             </Row>
             <Row>
@@ -132,7 +167,7 @@ const TmsHome = () => {
                 </Col>
               )}
               </div>
-            <TaskSection selectedApp={selectedApp}/>
+            <TaskSection selectedApp={selectedApp} tasks={tasks}/>
             </Row>
           </Col>
         </Row>

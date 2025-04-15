@@ -265,11 +265,11 @@ const Sidebar = ( props ) => {
             {filteredPlans.length > 0 ? (
               <ListGroup>
                 {filteredPlans.map((plan, index) => (
-                  <ListGroup.Item key={index} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}>
+                  <ListGroup.Item key={index} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis', borderRadius: '8px' }}>
                     <div className="d-flex flex-column">
                       <span className='mb-2'>{plan.Plan_MVP_name}</span>
-                      <small className="text-muted" style={{ fontSize: '0.7rem' }}>Start Date: {formatDate(plan.Plan_startDate)}</small>
-                      <small className="text-muted" style={{ fontSize: '0.7rem' }}>End Date: {formatDate(plan.Plan_endDate)}</small>
+                      <small className="text-muted" style={{ fontSize: '0.6rem' }}>Start Date: {formatDate(plan.Plan_startDate)}</small>
+                      <small className="text-muted" style={{ fontSize: '0.6rem' }}>End Date: {formatDate(plan.Plan_endDate)}</small>
                     </div>
                   </ListGroup.Item>
                 ))}

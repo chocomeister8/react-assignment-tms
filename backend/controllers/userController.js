@@ -22,7 +22,7 @@ exports.getUserByUserName = async (req, res) => {
 
     const { username } = req.params;
 
-    db.query('SELECT username FRON user WHERE username = ?', [username], (err, results) =>{
+    db.query('SELECT username FROM user WHERE username = ?', [username], (err, results) =>{
         if (err) return res.status(500).json({ error: err.message });
         if (results.length === 0) return res.status(200).json({ message: 'User not found!' });
         res.json(results[0]);
