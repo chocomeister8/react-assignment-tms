@@ -27,7 +27,6 @@ const sendToken = (user, req, statusCode, res) => {
         success: true,
         token
     });
-    console.log("Token generated with IP: ", ipAddress, "and Browser: ", browserType);
 };
 
 exports.login = async (req, res, next) => {
@@ -60,9 +59,7 @@ exports.login = async (req, res, next) => {
             if (!isPasswordMatched) {
                 return res.status(200).json({ success: false, message: "Invalid Login" });
             }
-
             sendToken(user, req, 200, res);
-
         } catch (error) {
 
             return res.status(500).json({ success: false, message: "Error verifying password!" });
@@ -174,11 +171,42 @@ const checkGroup = (username, groupName, callback) => {
 
             const groupString = results[0].user_groupName || "";
             const isMember = groupString.includes(`,${groupName},`);
-            console.log(`Checking if user is in ${groupName}:`, isMember);
             return callback(null, groupString, isMember);
         });
     }
 };
+
+exports.getCreateTaskPermission = (req, res, next) => {
+    const { username } =  req.decoded;
+    const { Task_app_Acronym } = req.body;
+
+    // Get groupname assigned to app_permit_create for app
+    return connection.query('SELECT App_permit_Create FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, results) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Database error while checking permissions." });
+        }
+        if (results.length === 0){
+            return res.status(200).json({ success: false, message: " User not allowed to perform this action."});
+        }
+
+        const groupName = results[0].App_permit_Create;
+
+        checkGroup(username, groupName, (err, groupString, isMember) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Server error during group check" });
+            }
+
+            req.app_permit_create = groupString.includes(groupName);
+
+            // if user's group is not part of app_permit_create
+            if (groupName && !isMember) {
+                return res.status(200).json({ success: false, message: "Access denied: User is not in the required group" });
+            }
+            // Contunue to taskcontroller to create task
+            next();
+        });
+    });
+}
 
 
 

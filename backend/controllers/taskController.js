@@ -34,7 +34,11 @@ exports.getTaskByAppAcronym = (req, res) => {
 
 exports.createTask = (req, res) => {
 
-    let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate } = req.body;
+    let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;
+
+    const Task_state = 'Open';
+    const Task_createDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const Task_owner = Task_creator;
 
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
@@ -58,8 +62,9 @@ exports.createTask = (req, res) => {
                     return res.status(200).json({ error: 'Application does not exist.' });
                 }
         
-                const task_number = appResults[0];
-                console.log(task_number);
+                const task_number = appResults[0].App_Rnumber;
+                const Task_id = `${Task_app_Acronym}_${task_number}`;
+                
         
                 db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                     if (err) {

@@ -1,6 +1,6 @@
 // Import react-based libraries
 import React , { useState } from 'react';
-import { Row, Col, Card, ListGroup, Modal, Button, Form,  } from 'react-bootstrap';
+import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel  } from 'react-bootstrap';
 
 const TaskSection = ({ selectedApp, tasks }) => {
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ const TaskSection = ({ selectedApp, tasks }) => {
 
   const getTasksByStatus = (status) => {
     if (!selectedApp || !Array.isArray(taskArray)) {
-      console.log('Early return: selectedApp or taskArray invalid');
+      //console.log('Early return: selectedApp or taskArray invalid');
       return [];
     }
     const filteredTasks = taskArray.filter(
@@ -82,103 +82,85 @@ const TaskSection = ({ selectedApp, tasks }) => {
         </Modal.Header>
         <Modal.Body>
         <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskName" className="mb-1">
-              <Form.Label>Task Name:</Form.Label>
+          <Col md={6}>
+            <Form.Group controlId="taskName" className="mb-2">
+              <FloatingLabel controlId="floatingTaskName" label="Task Name:">
+                <Form.Control type="text" value={selectedTask?.Task_Name} disabled />
+              </FloatingLabel>
             </Form.Group>
           </Col>
-          <Col md={9}>
-          <Form.Control type="text" value={selectedTask?.Task_Name} disabled />
+          <Col md={6}>
+            <Form.Group controlId="taskid" className="mb-2">
+              <FloatingLabel controlId="floatingTaskid" label="Task Plan:">
+                <Form.Control type="text" value={selectedTask?.Task_id} disabled/>
+              </FloatingLabel>
+            </Form.Group>
           </Col>
         </Row>
         <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskDesc" className="mb-1">
-              <Form.Label>Task Description:</Form.Label>
+          <Col md={6}>
+            <Form.Group controlId="taskState" className="mb-2">
+              <FloatingLabel controlId="floatingTaskState" label="Task State:">
+                <Form.Control type="text" value={selectedTask?.Task_state} disabled />
+              </FloatingLabel>
             </Form.Group>
           </Col>
-          <Col md={9}>
-          <Form.Control type="text" value={selectedTask?.Task_description} disabled />
+          <Col md={6}>
+            <Form.Group controlId="taskcreateDate" className="mb-2">
+              <FloatingLabel controlId="floatingTaskDate" label="Date Created:">
+                <Form.Control type="text" value={selectedTask?.Task_createDate} disabled />
+              </FloatingLabel>
+            </Form.Group>
           </Col>
         </Row>
         <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskId" className="mb-1">
-              <Form.Label>Task ID:</Form.Label>
+          <Col md={6}>
+            <Form.Group controlId="taskPlan" className="mb-2">
+              <FloatingLabel controlId="floatingTaskState" label="Task Plan:">
+                <Form.Control type="text" value={selectedTask?.Task_plan} disabled />
+              </FloatingLabel>
             </Form.Group>
           </Col>
-          <Col md={9}>
-          <Form.Control type="text" disabled />
+          <Col md={6}>
+            <Form.Group controlId="taskcreator" className="mb-2">
+              <FloatingLabel controlId="floatingTaskCreator" label="Creator:">
+                <Form.Control type="text" value={selectedTask?.Task_creator} disabled />
+              </FloatingLabel>
+            </Form.Group>
           </Col>
         </Row>
         <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskPlan" className="mb-1">
-              <Form.Label>Task Plan:</Form.Label>
+          <Col md={6}>
+            <Form.Group controlId="taskAppAcronym" className="mb-2">
+              <FloatingLabel controlId="floatingTaskAppAcronym" label="Task App Acronym:">
+                <Form.Control type="text" value={selectedTask?.Task_app_Acronym} disabled />
+              </FloatingLabel>
             </Form.Group>
           </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_plan} disabled />
+          <Col md={6}>
+            <Form.Group controlId="taskOwner" className="mb-2">
+              <FloatingLabel controlId="floatingOwner" label="Task Owner:">
+                <Form.Control type="text" value={selectedTask?.Task_owner} disabled />
+              </FloatingLabel>
+            </Form.Group>
           </Col>
         </Row>
         <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskAppAcronym" className="mb-1">
-              <Form.Label>Task App Acronym:</Form.Label>
+          <Col md={12}>
+            <Form.Group controlId="taskDesc" className="mb-2">
+              <FloatingLabel controlId="floatingTaskDesc" label="Description:">
+                <Form.Control type="textarea" value={selectedTask?.Task_description} disabled />
+              </FloatingLabel>
             </Form.Group>
-          </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_app_Acronym} disabled />
           </Col>
         </Row>
         <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskState" className="mb-1">
-              <Form.Label>Task State:</Form.Label>
+          <Col md={12}>
+            <Form.Group controlId="taskNotes" className="mb-2">
+              <FloatingLabel controlId="floatingTaskNotes" label="Task Notes:">
+                <Form.Control type="textarea" value={selectedTask?.Task_notes} disabled />
+              </FloatingLabel>
             </Form.Group>
-          </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_state} disabled />
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskcreator" className="mb-1">
-              <Form.Label>Task Creator:</Form.Label>
-            </Form.Group>
-          </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_creator} disabled />
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskOwner" className="mb-1">
-              <Form.Label>Task Owner:</Form.Label>
-            </Form.Group>
-          </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_owner} disabled />
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskCreateDate" className="mb-1">
-              <Form.Label>Task Create Date:</Form.Label>
-            </Form.Group>
-          </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_createDate} disabled />
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={3}>
-            <Form.Group controlId="taskNotes" className="mb-1">
-              <Form.Label>Task Notes:</Form.Label>
-            </Form.Group>
-          </Col>
-          <Col md={9}>
-            <Form.Control type="text" value={selectedTask?.Task_notes} disabled />
           </Col>
         </Row>
         </Modal.Body>

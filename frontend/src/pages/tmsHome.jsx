@@ -8,10 +8,9 @@ import Sidebar from '../assets/sidebar';
 import TaskSection from '../assets/tasksection';
 
 // Import backend API calls
-import { fetchUsername, fetchPlans, createTask, fetchTaskByAppAcronym } from '../assets/apiCalls';
+import { fetchUsername, fetchPlans, createTask, fetchTaskByAppAcronym, checkcreateTaskPermission } from '../assets/apiCalls';
 
 const TmsHome = () => {
-  const [successMessage, setSuccessMessage] = useState('');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const handleShowTaskModal = () => setShowTaskModal(true);
   const handleCloseTaskModal = () => setShowTaskModal(false);
@@ -28,6 +27,7 @@ const TmsHome = () => {
 
   const [tasks, setTasks] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
+  const [hasPermission, setHasPermission] = useState(false);
 
   const handleAppSelect = async (app) => {
     setSelectedApp(app);
@@ -37,7 +37,6 @@ const TmsHome = () => {
     } catch (err) {
       setError("Failed to fetch tasks.");
     }
-    console.log(app);
   };
 
   const handleSuccess = (message) => {
@@ -62,9 +61,28 @@ const TmsHome = () => {
       fetchTasks();
     }
 
+    const checkPermission = async () => {
+      try {
+        if (!selectedApp) {
+          return;
+        } 
+  
+        const response = await checkcreateTaskPermission(selectedApp.App_Acronym); // your axios call
+        if (response.success) {
+          setHasPermission(true);
+        } else {
+          setHasPermission(false);
+        }
+      } catch (err) {
+        console.error("Permission check error:", err.message);
+        setHasPermission(false);
+      }
+    };
+
+
     const loadData = async () => {
       try {
-        const { username, group } = await fetchUsername();
+        const { username, group } = await fetchUsername();        
         await fetchPlans().then(data => {
           setPlans(Array.isArray(data) ? data : []);
         });
@@ -77,6 +95,9 @@ const TmsHome = () => {
       }
     };
 
+    checkPermission();
+    loadData();
+
     if (error || success) {
       const timer = setTimeout(() => {
         setError('');
@@ -85,29 +106,20 @@ const TmsHome = () => {
   
       return () => clearTimeout(timer);
     }
-
-    loadData();
   }, [selectedApp])
 
   const handleCreateTask = async () => {
       setError(null);
       setSuccess(null);
 
-      const task_id = `${selectedApp.App_Acronym}_${selectedApp.App_Rnumber}`;
       const task_name = taskName.trim().toLowerCase();
       const task_description = taskDescription.trim();
       const task_notes = taskNotes.trim();
-      const task_state = "Open";
-      const task_createDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
       const task_creator = username;
       const task_plan = taskPlan.trim();
       const task_appAcronym = selectedApp.App_Acronym;
-      const task_owner = username;
 
-      console.log('Task Acronym:', selectedApp.App_Acronym);
-      console.log('Task Rnumber:', selectedApp.App_Rnumber);
-
-      if(!task_id || !task_name|| !task_description || !task_notes || !task_state || !task_createDate || !task_creator || !task_appAcronym || !task_owner){
+      if(!task_name|| !task_description || !task_notes || !task_creator || !task_appAcronym){
         setError("Please fill in all fields!");
         return;
       }
@@ -117,9 +129,13 @@ const TmsHome = () => {
         return;
       }
       try{
-        const newTask = await createTask(task_id ,task_name,task_description ,task_notes ,task_plan , task_appAcronym ,task_state , task_creator, task_owner, task_createDate);
+        const newTask = await createTask(task_name,task_description ,task_notes ,task_plan , task_appAcronym , task_creator);
         if(newTask.error) {
           setError(newTask.error);
+        }
+        if(newTask.success === false){
+          setError(newTask.message);
+          return;
         }
         else{
           if (newTask.success) {
@@ -161,7 +177,7 @@ const TmsHome = () => {
               <Col md={10}>
                 <h4>App Name: {selectedApp ? selectedApp.App_Acronym : 'No App Selected'}</h4>
               </Col>
-              {selectedApp && userGroup.includes(",pl,") && (
+              {selectedApp && hasPermission && (
                 <Col md={2} className="d-flex justify-content-end">
                   <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>Create Task</Button>
                 </Col>

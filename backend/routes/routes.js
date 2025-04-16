@@ -4,7 +4,7 @@ const groupController = require('../controllers/groupController');
 const appController = require('../controllers/appController');
 const planController = require('../controllers/planController');
 const taskController = require('../controllers/taskController');
-const { isAuthenticatedUser, validateAccess, logout, login } = require('../controllers/authController');
+const { isAuthenticatedUser, validateAccess, logout, login, getCreateTaskPermission } = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -31,7 +31,10 @@ router.post('/create-plan', isAuthenticatedUser, validateAccess("pm"), planContr
 // Task routes
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
 router.get('/task/:Task_app_Acronym', isAuthenticatedUser, validateAccess(), taskController.getTaskByAppAcronym);
-router.post('/create-task', isAuthenticatedUser, validateAccess("pl"), taskController.createTask);
+router.post('/create-task', isAuthenticatedUser, getCreateTaskPermission, taskController.createTask);
+router.post('/check-create-task-permission', isAuthenticatedUser, getCreateTaskPermission, (req, res) => {
+    res.status(200).json({ success: true });
+});
 
 // Authentication routes
 router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => { const username = req.decoded.username;
