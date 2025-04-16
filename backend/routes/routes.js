@@ -23,6 +23,8 @@ router.post('/create-group', isAuthenticatedUser, validateAccess("admin"), group
 // Application routes
 router.get('/applications', isAuthenticatedUser, validateAccess(), appController.getAllApplications);
 router.post('/create-app', isAuthenticatedUser, validateAccess("pl"), appController.createApp);
+router.put('/applications/:application', isAuthenticatedUser, validateAccess("admin"), appController.updateApp);
+
 
 // Plan routes
 router.get('/plans', isAuthenticatedUser, validateAccess(), planController.getAllPlan);

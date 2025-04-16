@@ -49,19 +49,19 @@ const TaskSection = ({ selectedApp, tasks }) => {
                 {filteredTasks.length > 0 ? (filteredTasks.map((task, itemIdx) => (
                 <ListGroup.Item key={itemIdx} className="px-1 border-0" style = {{ padding: '0.25rem', cursor: 'pointer'}} onClick={() => handleTaskClick(task)}>
                   <Card className="shadow-sm">
-                    <Card.Body className="p-2">
-                      <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>
-                        {task.Task_Name}
-                      </Card.Title>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="text-muted" style={{ fontSize: '0.6rem' }}>
-                          Plan: {task.Task_plan || 'N/A'}
-                        </span>
-                        <span className="text-muted" style={{ fontSize: '0.6rem' }}>
-                          Task owner: {task.Task_owner || 'Unassigned'}
-                        </span>
-                      </div>
-                    </Card.Body>
+                  <Card.Body className="p-2" style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis' }}>
+                    <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>
+                      {task.Task_Name}
+                    </Card.Title>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>
+                        Plan: {task.Task_plan || 'N/A'}
+                      </span>
+                      <span className="text-muted" style={{ fontSize: '0.6rem' }}>
+                        Task owner: {task.Task_owner || 'Unassigned'}
+                      </span>
+                    </div>
+                  </Card.Body>
                   </Card>
                 </ListGroup.Item>
                 ))
@@ -91,7 +91,7 @@ const TaskSection = ({ selectedApp, tasks }) => {
           </Col>
           <Col md={6}>
             <Form.Group controlId="taskid" className="mb-2">
-              <FloatingLabel controlId="floatingTaskid" label="Task Plan:">
+              <FloatingLabel controlId="floatingTaskid" label="Task ID:">
                 <Form.Control type="text" value={selectedTask?.Task_id} disabled/>
               </FloatingLabel>
             </Form.Group>
@@ -108,7 +108,7 @@ const TaskSection = ({ selectedApp, tasks }) => {
           <Col md={6}>
             <Form.Group controlId="taskcreateDate" className="mb-2">
               <FloatingLabel controlId="floatingTaskDate" label="Date Created:">
-                <Form.Control type="text" value={selectedTask?.Task_createDate} disabled />
+                <Form.Control type="text" value={selectedTask?.Task_createDate ? new Date(selectedTask.Task_createDate).toISOString().split('T')[0] : ''} disabled />
               </FloatingLabel>
             </Form.Group>
           </Col>

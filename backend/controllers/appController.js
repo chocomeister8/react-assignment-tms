@@ -66,6 +66,40 @@ exports.createApp = (req, res) => {
                 });
             })
         });
-    })
-    
+    });
+}
+
+exports.updateApp = (req, res) => {
+    let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
+    if(!req.decoded) {
+        return res.status(200).json({ error: "Token is missing or invalid."});
+    }
+    if (!App_Description ||!App_startDate || !App_endDate){
+        return res.status(200).json({ error: "All fields must be filled." });
+    }
+    if (App_Description.length > 255){
+        return res.status(200).json({ error: 'App description cannot be more than 255 characters.'})
+    }
+    db.beginTransaction((err) => {
+        if(err) {
+            return res.status(500).json({ error: "Failed to start transaction." });
+        }
+        db.query('UPDATE application SET App_Description = ?, App_startDate = ?, App_endDate = ?, App_permit_Open = ?, App_permit_toDoList = ?, App_permit_Doing = ?, App_permit_Done = ?, App_permit_Create = ? WHERE App_Acronym = ? AND App_Rnumber = ?', 
+            [App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create, App_Acronym, App_Rnumber], (err, results) => {
+            if(err){
+                return db.rollback(() => {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Failed to update application.' });
+                });
+            }
+            db.commit((err) => {
+                if(err) {
+                return db.rollback(() => {
+                    return res.status(500).json({ error: "Transaction commit failed." });
+                });
+            }
+            res.status(200).json({ success: 'Application updated successfully!', application:{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }});
+            });
+        });
+    });
 }

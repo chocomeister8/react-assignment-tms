@@ -93,6 +93,17 @@ export const createApplication = async (App_Acronym, App_Description, App_Rnumbe
     }
 };
 
+export const updateApplication = async (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) => {
+    try {
+        const response = await axios.put(`${API_BASE_URL}/applications/${App_Acronym}`,{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error updating application", error);
+        throw new Error(error.response?.data?.error || "Failed to update application.");
+    }
+};
+
 export const fetchPlans = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/plans`, { withCredentials: true });

@@ -119,7 +119,7 @@ const TmsHome = () => {
       const task_plan = taskPlan.trim();
       const task_appAcronym = selectedApp.App_Acronym;
 
-      if(!task_name|| !task_description || !task_notes || !task_creator || !task_appAcronym){
+      if(!task_name|| !task_description || !task_creator || !task_appAcronym){
         setError("Please fill in all fields!");
         return;
       }
@@ -163,7 +163,7 @@ const TmsHome = () => {
       <Container fluid style={{ height: '100vh' }}>
         <Row style={{ height: '100%' }}>
           <Col md={2} className="bg-light p-0">
-            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} onAppSelect={handleAppSelect} />
+            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} onUpdateDone={handleSuccess} onAppSelect={handleAppSelect} />
           </Col>
 
           <Col md={10} className="p-3">

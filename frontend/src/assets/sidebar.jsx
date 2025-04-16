@@ -4,7 +4,7 @@ import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from '
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // Backend API calls
-import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername  } from "../assets/apiCalls";
+import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication  } from "../assets/apiCalls";
 
 const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);
@@ -123,6 +123,8 @@ const Sidebar = ( props ) => {
     const app_permit_todo = dropdowns.appPermitToDo.trim(); 
     const app_permit_doing = dropdowns.appPermitDoing.trim(); 
     const app_permit_done = dropdowns.appPermitDone.trim(); 
+
+
     
     if(!app_acronym || !app_rnumber || !app_description || !app_permit_create || !app_permit_open || !app_permit_todo || !app_permit_doing || !app_permit_done ){
       setError("Please fill in all fields!");
@@ -162,19 +164,59 @@ const Sidebar = ( props ) => {
         setAppStartDate('');
         setAppEndDate('');
         setAppDescription('');
-        setDropdowns({
-          appPermitCreate: '',
-          appPermitOpen: '',
-          appPermitToDo: '',
-          appPermitDoing: '',
-          appPermitDone: '',
-        });
+        setDropdowns({appPermitCreate: '',appPermitOpen: '',appPermitToDo: '',appPermitDoing: '',appPermitDone: '',});
       }
     }
     catch (err) {
       setError(err.message);
     }
   }
+
+  const handleUpdateApplication = async () => {
+    setError(null);
+    setSuccess(null);
+  
+    const { App_Acronym, App_Rnumber, App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create} = selectedApp;
+  
+    if (!App_Description ||!App_startDate ||!App_endDate ||!App_permit_Open ||!App_permit_toDoList ||!App_permit_Doing ||!App_permit_Done ||!App_permit_Create) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+  
+    if (App_Description.length > 255) {
+      setError("App description cannot exceed 255 characters.");
+      return;
+    }
+
+    const formattedStartDate = new Date(App_startDate).toISOString().split('T')[0];
+    const formattedEndDate = new Date(App_endDate).toISOString().split('T')[0];
+  
+    try {
+      const updateapplication = await updateApplication(App_Acronym, App_Description, App_Rnumber, formattedStartDate, formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create);
+  
+      if (updateapplication.error) {
+        setError(updateapplication.error);
+      } else {
+        handleCloseAppDetails();
+        console.log(updateapplication)
+        setApplications((prevApps) => prevApps.map((app) => app.App_Acronym === App_Acronym && app.App_Rnumber === App_Rnumber 
+        ? { ...app, App_Description, App_startDate: formattedStartDate, App_endDate: formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }: app
+          )
+        );
+        props.onUpdateDone?.(updateapplication.success);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  const handleAppChange = (field) => (e) => {
+    const value = e.target.value;
+    setSelectedApp((prevApp) => ({
+      ...prevApp,
+      [field]: value,
+    }));
+  };
 
   const handleCreatePlan = async () => {
     setError(null);
@@ -413,7 +455,7 @@ const Sidebar = ( props ) => {
       </Modal>
       <Modal show={showDetails} onHide={handleCloseAppDetails}>
         <Modal.Header closeButton>
-          <Modal.Title>Application Information (Read-Only)</Modal.Title>
+          <Modal.Title>Application Information</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedApp ? (
@@ -427,44 +469,104 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="detailsApp_permit_create" className='mb-1'>
                     <FloatingLabel controlId="selectedC" label="App Permit Create">
-                      <Form.Control type="text" value={selectedApp.App_permit_Create || '-- Not Set --'} disabled />
+                    <Form.Select required onChange={handleAppChange('App_permit_Create')} value={selectedApp.App_permit_Create}>
+                      <option value="">-- Select an option --</option>
+                      {Array.isArray(allGroups) && allGroups.length > 0 ? (
+                        allGroups.map((group, index) => (
+                          <option key={index} value={group.groupName}> 
+                            {group.groupName}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>No groups available</option> // Show a fallback if no groups are available
+                      )}
+                    </Form.Select>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_permit_Open" className="mb-1">
                     <FloatingLabel controlId="selectedO" label="App Permit Open">
-                      <Form.Control type="text" value={selectedApp.App_permit_Open || '-- Not Set --'} disabled />
+                      <Form.Select required onChange={handleAppChange('App_permit_Open')} value={selectedApp.App_permit_Open}>
+                      <option value="">-- Select an option --</option>
+                        {Array.isArray(allGroups) && allGroups.length > 0 ? (
+                          allGroups.map((group, index) => (
+                            <option key={index} value={group.groupName}>
+                              {group.groupName} 
+                            </option>
+                          ))
+                        ) : (
+                          <option disabled>No groups available</option>
+                        )}
+                      </Form.Select>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_toDoList" className="mb-1">
                     <FloatingLabel controlId="selectedtoDo" label="App Permit toDoList">
-                      <Form.Control type="text" value={selectedApp.App_permit_toDoList || '-- Not Set --'} disabled />
+                      <Form.Select required onChange={handleAppChange('App_permit_toDoList')}  value={selectedApp.App_permit_toDoList}>
+                      <option value="">-- Select an option --</option>
+                        {Array.isArray(allGroups) && allGroups.length > 0 ? (
+                          allGroups.map((group, index) => (
+                            <option key={index} value={group.groupName}>
+                              {group.groupName} 
+                            </option>
+                          ))
+                        ) : (
+                          <option disabled>No groups available</option> 
+                        )}
+                      </Form.Select>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_Doing" className="mb-1">
                     <FloatingLabel controlId="selectedDoing" label="App Permit Doing">
-                      <Form.Control type="text" value={selectedApp.App_permit_Doing || '-- Not Set --'} disabled />
+                      <Form.Select required onChange={handleAppChange('App_permit_Doing')} value={selectedApp.App_permit_Doing}>
+                      <option value="">-- Select an option --</option>
+                        {Array.isArray(allGroups) && allGroups.length > 0 ? (
+                          allGroups.map((group, index) => (
+                            <option key={index} value={group.groupName}> 
+                              {group.groupName}  
+                            </option>
+                          ))
+                        ) : (
+                          <option disabled>No groups available</option> // Show a fallback if no groups are available
+                        )}
+                      </Form.Select>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="detailsApp_Done" className="mb-1">
                     <FloatingLabel controlId="selectedDone" label="App Permit Done">
-                      <Form.Control type="text" value={selectedApp.App_permit_Done || '-- Not Set --'} disabled />
+                    <Form.Select required onChange={handleAppChange('App_permit_Done')} value={selectedApp.App_permit_Done}>
+                    <option value="">-- Select an option --</option>
+                      {Array.isArray(allGroups) && allGroups.length > 0 ? (
+                        allGroups.map((group, index) => (
+                          <option key={index} value={group.groupName}> 
+                            {group.groupName}  
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>No groups available</option> // Show a fallback if no groups are available
+                      )}
+                    </Form.Select>
                     </FloatingLabel>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                <Form.Group controlId="StartDate" className="mb-1">
+                  <Form.Group controlId="app_rnum" className="mb-1">
+                    <FloatingLabel controlId="app_Rnum" label="App RNumber">
+                      <Form.Control type="text" value={selectedApp.App_Rnumber || ''} disabled/>
+                    </FloatingLabel>
+                  </Form.Group>
+                  <Form.Group controlId="StartDate" className="mb-1">
                     <FloatingLabel controlId="selectedStartDate" label="Start Date (YYYY-MM-DD)">
-                      <Form.Control type="text" value={selectedApp.App_startDate ? new Date(selectedApp.App_startDate).toISOString().split('T')[0]: ''} disabled/>
+                      <Form.Control type="date" placeholder="Choose start date" required onChange={handleAppChange('App_startDate')} value={selectedApp.App_startDate ? new Date(selectedApp.App_startDate).toISOString().split('T')[0]: ''}/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="EndDate" className="mb-2">
                     <FloatingLabel controlId="selectedEndDate" label="End Date (YYYY-MM-DD)">
-                      <Form.Control type="text" value={selectedApp.App_endDate ? new Date(selectedApp.App_endDate).toISOString().split('T')[0]: ''  } disabled/>
+                    <Form.Control type="date" placeholder="Choose End date" required onChange={handleAppChange('App_endDate')} value={selectedApp.App_endDate ? new Date(selectedApp.App_endDate).toISOString().split('T')[0]: '' }/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="Description" >
                     <FloatingLabel controlId="selecteddescription" label="Description">
-                      <Form.Control as="textarea" rows={6} value={selectedApp.App_Description } style={{ height: '240px'}} disabled/>
+                      <Form.Control as="textarea" rows={6} value={selectedApp.App_Description || '' } onChange={handleAppChange('App_Description')} style={{ height: '180px'}}/>
                     </FloatingLabel>
                   </Form.Group>
                 </Col>
@@ -475,6 +577,9 @@ const Sidebar = ( props ) => {
           )}
         </Modal.Body>
         <Modal.Footer>
+          <Button variant="success" onClick={handleUpdateApplication}>
+            Update Application
+          </Button>
           <Button variant="secondary" onClick={handleCloseAppDetails}>
             Close
           </Button>
