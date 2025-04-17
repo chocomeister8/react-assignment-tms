@@ -4,7 +4,7 @@ import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from '
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // Backend API calls
-import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication, fetchTasks  } from "../assets/apiCalls";
+import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication, updatePlan } from "../assets/apiCalls";
 
 const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);
@@ -14,6 +14,8 @@ const Sidebar = ( props ) => {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const handleShowPlanModal = () => setShowPlanModal(true);
   const handleClosePlanModal = () => setShowPlanModal(false);
+  const [showPlanDetailsModal, setShowPlanDetailsModal] = useState(false);
+  const handleClosePlanDetailsModal = () => setShowPlanDetailsModal(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null); 
   const [applications, setApplications] = useState([]);
@@ -21,7 +23,6 @@ const Sidebar = ( props ) => {
   const [selectedApp, setSelectedApp] = useState([]);
   const [userGroup, setUserGroup] = useState('');
   
-
   const [appAcronym, setAppAcronym] = useState('');
   const [appRnumber, setAppRNumber] = useState('');
   const [appStartDate, setAppStartDate] = useState('');
@@ -34,34 +35,37 @@ const Sidebar = ( props ) => {
   const [PlanEndDate, setPlanEndDate] = useState('');
   const [PlanAppName, setPlanAppName] = useState('');
   const [plans, setPlans] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const [filteredPlans, setFilteredPlans] = useState([]);
+  const [isEditingPlan, setIsEditingPlan] = useState(false);
+;
 
+  const loadData = async () => {
+    try {
+      const applicationsData = await fetchApplications();
+      const groupData = await fetchGroups();
+      const plansData = await fetchPlans();
+      const group = await fetchUsername();
+  
+      setApplications(applicationsData);
+      setGroups(groupData);
+      setPlans(plansData);
+      setUserGroup(group.group);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
         setError('');
         setSuccess('');
       }, 2000);
-  
       return () => clearTimeout(timer);
     }
-
-    const loadData = async () => {
-      try {
-        const applicationsData = await fetchApplications();
-        const groupData = await fetchGroups();
-        const plansData = await fetchPlans();
-        const group = await fetchUsername();
-
-        setApplications(applicationsData);
-        setGroups(groupData);
-        setPlans(plansData);
-        setUserGroup(group.group);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-    loadData();
+  
+    loadData(); // ✅ use it here
   }, [])
 
   const handleShowAppDetails = (app) => {
@@ -126,8 +130,6 @@ const Sidebar = ( props ) => {
     const app_permit_todo = dropdowns.appPermitToDo.trim(); 
     const app_permit_doing = dropdowns.appPermitDoing.trim(); 
     const app_permit_done = dropdowns.appPermitDone.trim(); 
-
-
     
     if(!app_acronym || !app_rnumber ){
       setError("Please fill in all fields!");
@@ -272,6 +274,43 @@ const Sidebar = ( props ) => {
     catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleShowPlanDetailsModal = (plan) => {
+    setMVPName(plan.Plan_MVP_name);
+    setPlanStartDate(plan.Plan_startDate); 
+    setPlanEndDate(plan.Plan_endDate);
+    setShowPlanDetailsModal(true); // Show the modal
+
+  };
+
+  const handleUpdatePlan = async () => {
+    setError(null);
+    setSuccess(null);
+  
+    const formattedStartDate = formatDate(PlanStartDate);
+    const formattedEndDate = formatDate(PlanEndDate);
+
+    try {
+      const updateplan = await updatePlan(Plan_MVP_name, formattedStartDate, formattedEndDate , PlanAppName);
+  
+      console.log('API Response:', updateplan);
+
+      if (updateplan.error) {
+        setError(updateplan.error);
+      } else {
+        handleClosePlanDetailsModal();
+        const refreshedPlans = await fetchPlans();
+        setPlans(refreshedPlans);
+        setIsEditingPlan(false);
+        const updatedFilteredPlans = refreshedPlans.filter( plan => plan.Plan_app_Acronym === PlanAppName);
+        setFilteredPlans(updatedFilteredPlans);
+        props.onUpdateDone?.(updateplan.success);
+        }
+        fetchPlans();
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
@@ -286,14 +325,14 @@ const Sidebar = ( props ) => {
           </h5>
           <hr/>
           <ListGroup variant="default">
-            {applications.map((app, index) => (
-              <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
-              <ListGroup.Item action onClick={() => handleShowAppPlans(app)} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px' }}>
-              {app.App_Acronym}
+          {applications.map((app, index) => { const isSelected = selectedApp?.App_Acronym === app.App_Acronym;
+          return (
+            <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
+              <ListGroup.Item action onClick={() => !isSelected && handleShowAppPlans(app)} style={{flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px', backgroundColor: isSelected ? '#d3d3d3' : '',pointerEvents: isSelected ? 'none' : 'auto',}}>
+                {app.App_Acronym}
               </ListGroup.Item>
-              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={() => handleShowAppDetails(app)} />
-            </div>
-            ))}
+              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }}onClick={() => handleShowAppDetails(app)}/>
+            </div>);})}
           </ListGroup>
         </Col>
       </Row>
@@ -301,28 +340,41 @@ const Sidebar = ( props ) => {
       <Row className="align-items-center mb-3">
         <Col>
           <h6 className="mb-3 d-flex justify-content-between align-items-center gap-2">Plan
-          {userGroup.includes(",pm,") && selectedApp && Object.keys(selectedApp).length > 0 && (<i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanModal}></i>)}</h6>
+            {userGroup.includes(",pm,") && selectedApp && Object.keys(selectedApp).length > 0 && (
+              <i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanDetailsModal}></i>)}
+          </h6>
           {selectedApp && (
-          <div>
-            {filteredPlans.length > 0 ? (
-              <ListGroup>
-                {filteredPlans.map((plan, index) => (
-                  <ListGroup.Item key={index} style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis', borderRadius: '8px' }}>
-                    <div className="d-flex flex-column">
-                      <span className='mb-2'>{plan.Plan_MVP_name}</span>
-                      <small className="text-muted" style={{ fontSize: '0.6rem' }}>Start Date: {formatDate(plan.Plan_startDate)}</small>
-                      <small className="text-muted" style={{ fontSize: '0.6rem' }}>End Date: {formatDate(plan.Plan_endDate)}</small>
-                    </div>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
-            ) : (
-              <div className="d-flex flex-column">
-                <small className="text-muted">No plans.</small>
-              </div>
-            )}
-          </div>
-        )}
+            <div>
+              {filteredPlans.length > 0 ? (
+                <ListGroup>
+                  {filteredPlans.map((plan, index) => {
+                    const isPlanSelected = selectedPlan?.Plan_MVP_name === plan.Plan_MVP_name;
+                    return (
+                      <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
+                        <ListGroup.Item onClick={() => !isPlanSelected && handleShowPlanDetailsModal(plan)}
+                          style={{flexGrow: 1,whiteSpace: 'nowrap',overflowX: 'auto',textOverflow: 'ellipsis',borderRadius: '8px',backgroundColor: isPlanSelected ? '#d3d3d3' : '',pointerEvents: isPlanSelected ? 'none' : 'auto',}}>
+                          <div className="d-flex flex-column">
+                            <span className="mb-2">{plan.Plan_MVP_name}</span>
+                            <small className="text-muted" style={{ fontSize: '0.6rem' }}>
+                              Start Date: {formatDate(plan.Plan_startDate)}
+                            </small>
+                            <small className="text-muted" style={{ fontSize: '0.6rem' }}>
+                              End Date: {formatDate(plan.Plan_endDate)}
+                            </small>
+                          </div>
+                        </ListGroup.Item>
+                        <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={() => handleShowPlanDetailsModal(plan)}/>
+                      </div>
+                    );
+                  })}
+                </ListGroup>
+              ) : (
+                <div className="d-flex flex-column">
+                  <small className="text-muted">No plans.</small>
+                </div>
+              )}
+            </div>
+          )}
         </Col>
       </Row>
       <Modal show={showModal} onHide={handleCloseAppModal}>
@@ -577,13 +629,15 @@ const Sidebar = ( props ) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-        {userGroup.includes(",pm,") && (
+        <div className="w-100 d-flex justify-content-center gap-2">
+        {userGroup.includes(",pl,") && (
           <Button variant="success" onClick={handleUpdateApplication}>
             Update Application
           </Button>)}
           <Button variant="secondary" onClick={handleCloseAppDetails}>
             Close
           </Button>
+          </div>
         </Modal.Footer>
       </Modal>
       <Modal show={showPlanModal} onHide={handleClosePlanModal}>
@@ -623,6 +677,53 @@ const Sidebar = ( props ) => {
           <div className="w-100 d-flex justify-content-center gap-2">
             <Button variant="success" onClick={handleCreatePlan}>Create Plan</Button>
             <Button variant="secondary" onClick={handleClosePlanModal}>Close</Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Plan Information</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        {error && <Alert style={{width: '100%', transition: 'width 0.3s ease' }} variant="danger">{error}</Alert>} {/* Show error message */}
+          <Form>
+            {/* Row 1: App Name and Description */}
+            <Row>
+              <Col md={12}>
+                <Form.Group controlId="formEditPlanName" className='mb-1'>
+                  <FloatingLabel controlId="floatingEditPlanName" label="MVP Name">
+                    <Form.Control type="text" placeholder="Enter app name" value= {Plan_MVP_name} required onChange={(e) => setMVPName(e.target.value)} disabled/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+              <Form.Group controlId="formEditStartDate" className="mb-1">
+                <FloatingLabel controlId="floatingStartDate" label="Start Date">
+                    <Form.Control type="date" placeholder="Choose start date" value= {formatDate(PlanStartDate)} required onChange={(e) => setPlanStartDate(e.target.value)}  disabled={!isEditingPlan}/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="formEditEndDate" className="mb-1">
+                  <FloatingLabel controlId="floatingEditEndDate" label="End Date">
+                    <Form.Control type="date" placeholder="Choose end date" value= {formatDate(PlanEndDate)} required onChange={(e) => setPlanEndDate(e.target.value)}  disabled={!isEditingPlan}/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="w-100 d-flex justify-content-center gap-2">
+          {!isEditingPlan ? (
+            <Button variant="primary" onClick={() => setIsEditingPlan(true)}>Edit</Button>
+            ) : (
+            <Button variant="success" onClick={handleUpdatePlan}>Update Plan</Button>
+            )}
+            <Button variant="secondary" onClick={() => {setIsEditingPlan(false); handleClosePlanDetailsModal();
+            }}>
+              Close
+            </Button>
           </div>
         </Modal.Footer>
       </Modal>

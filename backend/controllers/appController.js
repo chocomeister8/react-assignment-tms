@@ -91,9 +91,7 @@ exports.updateApp = (req, res) => {
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
-    // if (!App_Description ||!App_startDate || !App_endDate){
-    //     return res.status(200).json({ error: "All fields must be filled." });
-    // }
+
     if (App_Description.length > 255){
         return res.status(200).json({ error: 'App description cannot be more than 255 characters.'})
     }

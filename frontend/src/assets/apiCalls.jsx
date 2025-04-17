@@ -125,6 +125,17 @@ export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Pl
     }
 };
 
+export const updatePlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym) => {
+    try {
+        const response = await axios.put(`${API_BASE_URL}/plan/${Plan_MVP_name}`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error updating plan", error);
+        throw new Error(error.response?.data?.error || "Failed to update plan.");
+    }
+};
+
 export const fetchUsername = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/auth/validateAccess`, { withCredentials: true });

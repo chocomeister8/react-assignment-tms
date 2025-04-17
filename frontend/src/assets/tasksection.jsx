@@ -32,6 +32,16 @@ const TaskSection = ({ selectedApp, tasks }) => {
     setSelectedTask(null);
   };
 
+  const parseTaskNotes = (notes) => {
+    if (!notes) return [];
+    try {
+      const parsed = JSON.parse(notes);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
   return (
     <div>
     {error && <div className="alert alert-danger">{error}</div>}
@@ -156,9 +166,35 @@ const TaskSection = ({ selectedApp, tasks }) => {
         </Row>
         <Row className="align-items-end">
           <Col md={12}>
-            <Form.Group controlId="taskNotes" className="mb-2">
-              <FloatingLabel controlId="floatingTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" value={selectedTask?.Task_notes || ""} disabled />
+          <Form.Group controlId="taskNotes" className="mb-2" style={{ position: 'relative' }}>
+            <Form.Label 
+              style={{position: 'absolute',top: '-0.75rem',left: '1rem',backgroundColor: '#fff',padding: '0 0.25rem',fontSize: '0.85rem',color: '#6c757d',zIndex: 1}}>
+              Task Notes
+            </Form.Label>
+            <Card className="mt-3">
+              <Card.Body style={{ maxHeight: '200px', overflowY: 'auto', padding: '0.75rem' }}>
+                {parseTaskNotes(selectedTask?.Task_notes).map((note, index) => (
+                  <div key={index} className="mb-3 p-2 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
+                    {/* First row: formatted with | separator */}
+                    <div className="mb-1">
+                      <strong className="text-muted">{note.username}</strong> 
+                      <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | {note.timestamp}</strong>
+                      <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | State: {note.currentState}</strong>
+                    </div>
+                    {/* Second row: Description (notes) */}
+                    <div>{note.desc}</div>
+                  </div>
+                ))}
+              </Card.Body>
+            </Card>
+          </Form.Group>
+          </Col>
+        </Row>
+        <Row className="align-items-end">
+          <Col md={12}>
+            <Form.Group controlId="editTaskNotes" className="mb-2">
+              <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
+                <Form.Control type="textarea" disabled />
               </FloatingLabel>
             </Form.Group>
           </Col>

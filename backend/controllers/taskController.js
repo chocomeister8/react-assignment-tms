@@ -37,7 +37,7 @@ exports.createTask = (req, res) => {
     let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;
 
     if (!Task_notes || Task_notes.trim() === "") {
-        TaskNotes = "Task created.";
+        Task_notes = "Task created.";
     }
 
     const Task_state = 'Open';

@@ -12,18 +12,6 @@ exports.getAllPlan = (req, res) => {
     });
 };
 
-// exports.getPlanByAppAcronym = (req, res) => {
-//     if (!req.decoded) {
-//         return res.status(200).json({ error: "Token is missing or invalid." });
-//     }
-//     db.query('SELECT Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym FROM plan WHERE Plan_app_Acronym = ?', [Plan_app_Acronym], (err, results) => {
-//         if (err) {
-//             return res.status(500).json({ error : err.message });
-//         }
-//         res.json(results);
-//     });
-// };
-
 exports.createPlan = (req, res) => {
     let { Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym } = req.body;
 
@@ -69,3 +57,38 @@ exports.createPlan = (req, res) => {
         });
     });
 };
+
+exports.updatePlan = (req, res) => {
+    let { Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym } = req.body;
+
+    if(!req.decoded) {
+        return res.status(200).json({ error: "Token is missing or invalid."});
+    }
+
+    if(!Plan_startDate || !Plan_endDate){
+        return res.status(200).json({ error: "All fields must be filled." });
+    }
+
+    db.beginTransaction((err) => {
+        if(err) {
+            return res.status(500).json({ error: "Failed to start transaction." });
+        }
+        db.query('UPDATE plan SET Plan_startDate = ?, Plan_endDate = ? WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?', 
+            [Plan_startDate, Plan_endDate, Plan_MVP_name, Plan_app_Acronym], (err, results) => {
+            if(err){
+                return db.rollback(() => {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: 'Failed to update plan.' });
+                });
+            }
+            db.commit((err) => {
+                if(err) {
+                return db.rollback(() => {
+                    return res.status(500).json({ error: "Transaction commit failed." });
+                });
+            }
+            res.status(200).json({ success: 'Plan updated successfully!', plan:{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }});
+            });
+        });
+    });
+}

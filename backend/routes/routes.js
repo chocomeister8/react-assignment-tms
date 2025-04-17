@@ -29,6 +29,7 @@ router.put('/applications/:application', isAuthenticatedUser, validateAccess("pl
 // Plan routes
 router.get('/plans', isAuthenticatedUser, validateAccess(), planController.getAllPlan);
 router.post('/create-plan', isAuthenticatedUser, validateAccess("pm"), planController.createPlan);
+router.put('/plan/:plan', isAuthenticatedUser, validateAccess("pm"), planController.updatePlan);
 
 // Task routes
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
