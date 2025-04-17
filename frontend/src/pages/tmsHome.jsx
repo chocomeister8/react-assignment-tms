@@ -119,7 +119,7 @@ const TmsHome = () => {
       const task_plan = taskPlan.trim();
       const task_appAcronym = selectedApp.App_Acronym;
 
-      if(!task_name|| !task_description || !task_creator || !task_appAcronym){
+      if(!task_name|| !task_creator || !task_appAcronym){
         setError("Please fill in all fields!");
         return;
       }

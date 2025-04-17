@@ -17,12 +17,19 @@ exports.createApp = (req, res) => {
 
     let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
     const app_acronym = App_Acronym.trim().toLowerCase();
+    const startDate = App_startDate === '' ? null : App_startDate;
+    const endDate = App_endDate === '' ? null : App_endDate;
+    const permitCreateValue = App_permit_Create === '' ? null : App_permit_Create;
+    const permitOpenValue = App_permit_Open === '' ? null : App_permit_Open;
+    const permittoDoListValue = App_permit_toDoList === '' ? null : App_permit_toDoList;
+    const permitDoingValue = App_permit_Doing === '' ? null : App_permit_Doing;
+    const permitDoneValue = App_permit_Done === '' ? null : App_permit_Done;
     
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
 
-    if (!App_Acronym || !App_Description || !App_Rnumber || !App_startDate || !App_endDate || !App_permit_Open || !App_permit_toDoList || !App_permit_Doing || !App_permit_Done || !App_permit_Create){
+    if (!App_Acronym || !App_Rnumber){
         return res.status(200).json({ error: "All fields must be filled." });
     }
 
@@ -52,7 +59,7 @@ exports.createApp = (req, res) => {
                 return res.status(500).json({ error: "Failed to start transaction." });
             }
             db.query('INSERT INTO Application (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) VALUES (?,?,?,?,?,?,?,?,?,?)', 
-            [App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create], (err, results) => {
+            [App_Acronym, App_Description, App_Rnumber, startDate, endDate, permitOpenValue, permittoDoListValue, permitDoingValue, permitDoneValue, permitCreateValue], (err, results) => {
                 if(err){
                     return res.status(500).json({ error: 'Failed to create application.'})
                 }
@@ -62,7 +69,7 @@ exports.createApp = (req, res) => {
                         return res.status(500).json({ error: "Transaction commit failed." });
                     });
                 }
-                res.status(200).json({ success: 'Application created successfully!', application:{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }});
+                res.status(200).json({ success: 'Application created successfully!', application:{ App_Acronym, App_Description, App_Rnumber, startDate, endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }});
                 });
             })
         });
@@ -71,12 +78,22 @@ exports.createApp = (req, res) => {
 
 exports.updateApp = (req, res) => {
     let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
+    const startDate = App_startDate === '' ? null : App_startDate;
+    const endDate = App_endDate === '' ? null : App_endDate;
+    const permitCreateValue = App_permit_Create === '' ? null : App_permit_Create;
+    const permitOpenValue = App_permit_Open === '' ? null : App_permit_Open;
+    const permittoDoListValue = App_permit_toDoList === '' ? null : App_permit_toDoList;
+    const permitDoingValue = App_permit_Doing === '' ? null : App_permit_Doing;
+    const permitDoneValue = App_permit_Done === '' ? null : App_permit_Done;
+
+    console.log(startDate,endDate,permitCreateValue)
+
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
-    if (!App_Description ||!App_startDate || !App_endDate){
-        return res.status(200).json({ error: "All fields must be filled." });
-    }
+    // if (!App_Description ||!App_startDate || !App_endDate){
+    //     return res.status(200).json({ error: "All fields must be filled." });
+    // }
     if (App_Description.length > 255){
         return res.status(200).json({ error: 'App description cannot be more than 255 characters.'})
     }
@@ -85,7 +102,7 @@ exports.updateApp = (req, res) => {
             return res.status(500).json({ error: "Failed to start transaction." });
         }
         db.query('UPDATE application SET App_Description = ?, App_startDate = ?, App_endDate = ?, App_permit_Open = ?, App_permit_toDoList = ?, App_permit_Doing = ?, App_permit_Done = ?, App_permit_Create = ? WHERE App_Acronym = ? AND App_Rnumber = ?', 
-            [App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create, App_Acronym, App_Rnumber], (err, results) => {
+            [App_Description, startDate, endDate, permitOpenValue, permittoDoListValue, permitDoingValue, permitDoneValue, permitCreateValue, App_Acronym, App_Rnumber], (err, results) => {
             if(err){
                 return db.rollback(() => {
                     console.error('Database error:', err);
@@ -98,7 +115,7 @@ exports.updateApp = (req, res) => {
                     return res.status(500).json({ error: "Transaction commit failed." });
                 });
             }
-            res.status(200).json({ success: 'Application updated successfully!', application:{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }});
+            res.status(200).json({ success: 'Application updated successfully!', application:{ App_Acronym, App_Description, App_Rnumber, startDate, endDate, permitOpenValue, permittoDoListValue, permitDoingValue, permitDoneValue, permitCreateValue }});
             });
         });
     });

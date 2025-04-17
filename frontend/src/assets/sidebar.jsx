@@ -126,7 +126,7 @@ const Sidebar = ( props ) => {
 
 
     
-    if(!app_acronym || !app_rnumber || !app_description || !app_permit_create || !app_permit_open || !app_permit_todo || !app_permit_doing || !app_permit_done ){
+    if(!app_acronym || !app_rnumber ){
       setError("Please fill in all fields!");
       return;
     }
@@ -178,18 +178,15 @@ const Sidebar = ( props ) => {
   
     const { App_Acronym, App_Rnumber, App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create} = selectedApp;
   
-    if (!App_Description ||!App_startDate ||!App_endDate ||!App_permit_Open ||!App_permit_toDoList ||!App_permit_Doing ||!App_permit_Done ||!App_permit_Create) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-  
     if (App_Description.length > 255) {
       setError("App description cannot exceed 255 characters.");
       return;
     }
 
-    const formattedStartDate = new Date(App_startDate).toISOString().split('T')[0];
-    const formattedEndDate = new Date(App_endDate).toISOString().split('T')[0];
+    const formattedStartDate =  App_startDate && !isNaN(new Date(App_startDate).getTime()) ? new Date(App_startDate).toISOString().split('T')[0] : null;
+    const formattedEndDate =  App_endDate && !isNaN(new Date(App_endDate).getTime()) ? new Date(App_endDate).toISOString().split('T')[0] : null;
+
+    console.log("date:",formattedStartDate, formattedEndDate)
   
     try {
       const updateapplication = await updateApplication(App_Acronym, App_Description, App_Rnumber, formattedStartDate, formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create);
