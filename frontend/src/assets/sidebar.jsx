@@ -4,7 +4,7 @@ import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from '
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // Backend API calls
-import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication  } from "../assets/apiCalls";
+import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication, fetchTasks  } from "../assets/apiCalls";
 
 const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);
@@ -52,6 +52,7 @@ const Sidebar = ( props ) => {
         const groupData = await fetchGroups();
         const plansData = await fetchPlans();
         const group = await fetchUsername();
+
         setApplications(applicationsData);
         setGroups(groupData);
         setPlans(plansData);
@@ -94,6 +95,8 @@ const Sidebar = ( props ) => {
   const handleShowAppPlans = (app) => {
     setSelectedApp(app);
     setPlanAppName(app.App_Acronym);
+    // const appTasks = tasks.filter(task => task.Task_app_Acronym === app.App_Acronym);
+    // setFilteredTasks(appTasks);
     const appPlans = plans.filter(plan => plan.Plan_app_Acronym === app.App_Acronym);
     setFilteredPlans(appPlans);
     if (props.onAppSelect) {
@@ -574,9 +577,10 @@ const Sidebar = ( props ) => {
           )}
         </Modal.Body>
         <Modal.Footer>
+        {userGroup.includes(",pm,") && (
           <Button variant="success" onClick={handleUpdateApplication}>
             Update Application
-          </Button>
+          </Button>)}
           <Button variant="secondary" onClick={handleCloseAppDetails}>
             Close
           </Button>

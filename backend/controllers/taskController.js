@@ -25,7 +25,7 @@ exports.getTaskByAppAcronym = (req, res) => {
             return res.status(500).json({ error: err.message });
         }
         if (results.length === 0){
-            return res.status(200).json({ message: 'Task not found!' });
+            return res.status(200).json([{ message: 'Task not found!' }]);
         }
         console.log(results);
         res.status(200).json({ tasks: results });
@@ -36,9 +36,23 @@ exports.createTask = (req, res) => {
 
     let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;
 
+    if (!Task_notes || Task_notes.trim() === "") {
+        TaskNotes = "Task created.";
+    }
+
     const Task_state = 'Open';
     const Task_createDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const Task_owner = Task_creator;
+
+    const timestamp = Task_createDate;
+    const Task_notes_json = JSON.stringify([
+    {
+        username: Task_creator,
+        currentState: Task_state,
+        timestamp: timestamp,
+        desc: Task_notes,
+    }
+    ]);
 
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
@@ -80,7 +94,7 @@ exports.createTask = (req, res) => {
                         }
                     
                         db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        [Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate], (err, results) => {
+                        [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate], (err, results) => {
                             if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
                                 });
                             }
@@ -95,7 +109,7 @@ exports.createTask = (req, res) => {
                                     if (err) {return db.rollback(() => {res.status(500).json({ error: "Transaction commit failed." });
                                         });
                                     }
-                                    res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}
+                                    res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}
                                     });
                                 });
                             });
@@ -114,13 +128,13 @@ exports.createTask = (req, res) => {
             if (appResults.length === 0) {
                 return res.status(200).json({ error: 'Application does not exist.' });
             }
-    
-            const task_number = appResults[0];
-            console.log(task_number);
             
             if (!Task_plan || Task_plan.trim() === "") {
                 Task_plan = null;
             }
+
+            const task_number = appResults[0].App_Rnumber;
+            const Task_id = `${Task_app_Acronym}_${task_number}`;
     
             db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                 if (err) {
@@ -136,7 +150,7 @@ exports.createTask = (req, res) => {
                     }
                 
                     db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate], (err, results) => {
+                    [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate], (err, results) => {
                         if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
                             });
                         }
@@ -151,7 +165,7 @@ exports.createTask = (req, res) => {
                                 if (err) {return db.rollback(() => {res.status(500).json({ error: "Transaction commit failed." });
                                     });
                                 }
-                                res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}
+                                res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}
                                 });
                             });
                         });
