@@ -1,14 +1,64 @@
 // Import react-based libraries
-import React , { useState } from 'react';
-import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel  } from 'react-bootstrap';
+import React , { useEffect, useState } from 'react';
+import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel, Alert } from 'react-bootstrap';
 
-const TaskSection = ({ selectedApp, tasks }) => {
+// Import backend API calls
+import { fetchUsername, fetchPlans, updateTask } from '../assets/apiCalls';
+
+const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
+  const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [Modalerror, setModalError] = useState(null);
   const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [userGroup, setUserGroup] = useState('');
+  const [username, setUsername] = useState('');
+  const [plans, setPlans] = useState([]);
+  const [isEditingTask, setIsEditingTask] = useState(false);
+
+  const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskNotes, setTaskNotes] = useState('');
+  const [taskPlan, setTaskPlan] = useState('');
+  const [taskState, setTaskState] = useState('');
 
   const statusList = ['Open', 'To Do', 'Doing', 'Done', 'Closed'];
   const taskArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
+
+  useEffect (() => {  
+    if (selectedTask) {
+      setTaskName(selectedTask.Task_Name || '');
+      setTaskDescription(selectedTask.Task_description || '');
+      setTaskNotes(selectedTask.Task_notes || '');
+      setTaskPlan(selectedTask.Task_plan || '');
+      setTaskState(selectedTask.Task_state || '');
+    }
+  
+    const loadData = async () => {
+      try {
+        const { username, group } = await fetchUsername();        
+        await fetchPlans().then(data => {
+          setPlans(Array.isArray(data) ? data : []);
+        });
+        setUsername(username);
+        setUserGroup(group);
+        fetchPlans();
+  
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    loadData();
+  
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 2000);
+  
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTask]);
 
 
   const getTasksByStatus = (status) => {
@@ -32,6 +82,10 @@ const TaskSection = ({ selectedApp, tasks }) => {
     setSelectedTask(null);
   };
 
+  const handleEditClick = () => {
+    setIsEditingTask(true);
+  };
+
   const parseTaskNotes = (notes) => {
     if (!notes) return [];
     try {
@@ -42,10 +96,48 @@ const TaskSection = ({ selectedApp, tasks }) => {
     }
   };
 
+  const handleUpdateTask = async () => {
+      setModalError(null);
+    
+      const task_id = selectedTask?.Task_id.trim();
+      const task_name = taskName.trim().toLowerCase();
+      const task_description = taskDescription.trim();
+      const task_notes = taskNotes.trim();
+      const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
+      const task_state = taskState.trim();
+      const task_owner = username.trim();
+
+      if(!task_name || !task_state){
+        setModalError("Please fill in all fields!");
+        return;
+      }
+      const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
+      if(!taskNameRegex.test(task_name)) {
+        setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
+        return;
+      }
+      try {
+        const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_state, task_owner);
+        if (updatetask.error || updatetask.success === false) {
+          setModalError(updatetask.message || updatetask.error);
+          return;
+        }
+        else {
+          setIsEditingTask(false);
+          setShowTaskDetailsModal(false);
+          await refetchTasks();
+          onUpdateSuccess("Task updated successfully!");
+          }
+      }
+      catch (err) {
+        setModalError(err.message);
+      }
+    }
+
   return (
     <div>
     {error && <div className="alert alert-danger">{error}</div>}
-
+    
     <Row className="mt-3" style={{ rowGap: '1rem' }}>
       {statusList.map((status, idx) => {
         const filteredTasks = getTasksByStatus(status);
@@ -95,7 +187,7 @@ const TaskSection = ({ selectedApp, tasks }) => {
           <Col md={6}>
             <Form.Group controlId="taskName" className="mb-2">
               <FloatingLabel controlId="floatingTaskName" label="Task Name:">
-                <Form.Control type="text" value={selectedTask?.Task_Name || ""} disabled />
+                <Form.Control type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)} disabled={!isEditingTask} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -109,11 +201,22 @@ const TaskSection = ({ selectedApp, tasks }) => {
         </Row>
         <Row className="align-items-end">
           <Col md={6}>
-            <Form.Group controlId="taskState" className="mb-2">
-              <FloatingLabel controlId="floatingTaskState" label="Task State:">
-                <Form.Control type="text" value={selectedTask?.Task_state || ""} disabled />
-              </FloatingLabel>
-            </Form.Group>
+          <Form.Group controlId="taskState" className="mb-2">
+            <FloatingLabel controlId="floatingTaskState" label="Task State:">
+              {isEditingTask ? (
+                <Form.Select required value={taskState} onChange={(e) => setTaskState(e.target.value)}>
+                  <option value="">Select a State</option>
+                  {statusList.map((status, index) => (
+                    <option key={index} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </Form.Select>
+              ) : (
+                <Form.Control type="text" value={selectedTask?.Task_state || "No state assigned"} disabled readOnly/>
+              )}
+            </FloatingLabel>
+          </Form.Group>
           </Col>
           <Col md={6}>
             <Form.Group controlId="taskcreateDate" className="mb-2">
@@ -125,11 +228,18 @@ const TaskSection = ({ selectedApp, tasks }) => {
         </Row>
         <Row className="align-items-end">
           <Col md={6}>
-            <Form.Group controlId="taskPlan" className="mb-2">
-              <FloatingLabel controlId="floatingTaskState" label="Task Plan:">
+          <Form.Group controlId="taskPlan" className="mb-2">
+            <FloatingLabel label="Task Plan:"> {isEditingTask ? (
+              <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
+                <option value="">Select a Plan</option>
+                {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
+                  <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>))}
+              </Form.Select>
+              ) : (
                 <Form.Control type="text" value={selectedTask?.Task_plan || ""} disabled />
-              </FloatingLabel>
-            </Form.Group>
+              )}
+            </FloatingLabel>
+          </Form.Group>
           </Col>
           <Col md={6}>
             <Form.Group controlId="taskcreator" className="mb-2">
@@ -159,7 +269,7 @@ const TaskSection = ({ selectedApp, tasks }) => {
           <Col md={12}>
             <Form.Group controlId="taskDesc" className="mb-2">
               <FloatingLabel controlId="floatingTaskDesc" label="Description:">
-                <Form.Control type="textarea" value={selectedTask?.Task_description || ""} disabled />
+                <Form.Control as="textarea" value={selectedTask?.Task_description || ""} onChange={(e) => setTaskDescription(e.target.value)}  disabled={!isEditingTask}/>
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -194,16 +304,30 @@ const TaskSection = ({ selectedApp, tasks }) => {
           <Col md={12}>
             <Form.Group controlId="editTaskNotes" className="mb-2">
               <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" disabled />
+                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)}  disabled={!isEditingTask} />
               </FloatingLabel>
             </Form.Group>
           </Col>
         </Row>
+        {Modalerror && <Alert variant="danger" className="mb-2">{Modalerror}</Alert>}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
+          <Modal.Footer>
+          <div className="w-100 d-flex justify-content-center gap-2">
+            {userGroup.includes("") ? (
+              !isEditingTask ? (
+                <Button variant="success" onClick={handleEditClick}>Edit</Button>
+              ) : (
+                <Button variant="success" onClick={handleUpdateTask}>Update Task</Button>
+              )
+            ) : null}
+            
+            <Button variant="secondary" onClick={() => {
+              setIsEditingTask(false);
+              setShowTaskDetailsModal();
+            }}>
+              Close
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
   </div>

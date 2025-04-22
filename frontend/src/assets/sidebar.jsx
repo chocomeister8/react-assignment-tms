@@ -331,7 +331,7 @@ const Sidebar = ( props ) => {
               <ListGroup.Item action onClick={() => !isSelected && handleShowAppPlans(app)} style={{flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px', backgroundColor: isSelected ? '#d3d3d3' : '',pointerEvents: isSelected ? 'none' : 'auto',}}>
                 {app.App_Acronym}
               </ListGroup.Item>
-              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }}onClick={() => handleShowAppDetails(app)}/>
+              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={() => handleShowAppDetails(app)}/>
             </div>);})}
           </ListGroup>
         </Col>
@@ -341,7 +341,7 @@ const Sidebar = ( props ) => {
         <Col>
           <h6 className="mb-3 d-flex justify-content-between align-items-center gap-2">Plan
             {userGroup.includes(",pm,") && selectedApp && Object.keys(selectedApp).length > 0 && (
-              <i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanDetailsModal}></i>)}
+              <i className="bi bi-plus" style={{ cursor: 'pointer' }} onClick={handleShowPlanModal}></i>)}
           </h6>
           {selectedApp && (
             <div>

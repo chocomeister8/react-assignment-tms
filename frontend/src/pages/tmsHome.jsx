@@ -56,6 +56,16 @@ const TmsHome = () => {
       setError(err.message);
     }
   };
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 2000);
+  
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
 
   useEffect (() => {
     if (selectedApp) {
@@ -80,7 +90,6 @@ const TmsHome = () => {
       }
     };
 
-
     const loadData = async () => {
       try {
         const { username, group } = await fetchUsername();        
@@ -99,14 +108,6 @@ const TmsHome = () => {
     checkPermission();
     loadData();
 
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError('');
-        setSuccess('');
-      }, 2000);
-  
-      return () => clearTimeout(timer);
-    }
   }, [selectedApp])
 
   const handleCreateTask = async () => {
@@ -184,7 +185,7 @@ const TmsHome = () => {
                 </Col>
               )}
               </div>
-            <TaskSection selectedApp={selectedApp} tasks={tasks}/>
+            <TaskSection selectedApp={selectedApp} tasks={tasks} refetchTasks={fetchTasks} onUpdateSuccess={handleSuccess}/>
             </Row>
           </Col>
         </Row>

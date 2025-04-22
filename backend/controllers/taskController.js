@@ -41,15 +41,15 @@ exports.createTask = (req, res) => {
     }
 
     const Task_state = 'Open';
-    const Task_createDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const task_createLocalDateTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
+    const formattedDatetime = task_createLocalDateTime.replace("T", " ").slice(0, 19);
     const Task_owner = Task_creator;
 
-    const timestamp = Task_createDate;
     const Task_notes_json = JSON.stringify([
     {
         username: Task_creator,
         currentState: Task_state,
-        timestamp: timestamp,
+        timestamp: formattedDatetime,
         desc: Task_notes,
     }
     ]);
@@ -94,7 +94,7 @@ exports.createTask = (req, res) => {
                         }
                     
                         db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate], (err, results) => {
+                        [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
                             if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
                                 });
                             }
@@ -109,7 +109,7 @@ exports.createTask = (req, res) => {
                                     if (err) {return db.rollback(() => {res.status(500).json({ error: "Transaction commit failed." });
                                         });
                                     }
-                                    res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}
+                                    res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime}
                                     });
                                 });
                             });
@@ -150,7 +150,7 @@ exports.createTask = (req, res) => {
                     }
                 
                     db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate], (err, results) => {
+                    [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
                         if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
                             });
                         }
@@ -165,7 +165,7 @@ exports.createTask = (req, res) => {
                                 if (err) {return db.rollback(() => {res.status(500).json({ error: "Transaction commit failed." });
                                     });
                                 }
-                                res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate}
+                                res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner,formattedDatetime}
                                 });
                             });
                         });
@@ -175,3 +175,84 @@ exports.createTask = (req, res) => {
         });
     };
 };
+
+exports.updateTask = (req, res) => {
+    let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_state, Task_owner} = req.body;
+
+    if(!req.decoded) {
+        return res.status(200).json({ error: "Token is missing or invalid."});
+    }
+
+    if(!Task_Name || !Task_state || !Task_owner){
+        return res.status(200).json({ error: "All fields must be filled." });
+    }
+
+    db.query("SELECT Task_state, Task_notes FROM task WHERE Task_id = ? ", [Task_id], (err, results) => {
+        if (err || results.length === 0){
+            return res.status(500).json({ error: "Failed to fetch task state."});
+        }
+
+        const currentState = results[0].Task_state;
+        const validTransitions = {
+            "Open" : ["Open", "To Do"],
+            "To Do" : ["To Do", "Doing"],
+            "Doing" : ["Done", "Doing"],
+        }
+
+        if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
+            return res.status(400).json({
+                error: `Invalid state transition from "${currentState}" to "${Task_state}".`
+            });
+        }
+
+        const localDatetime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
+    
+        const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
+
+        const noteDescription = (!Task_notes || Task_notes.trim() === "")
+        ? `Task updated by ${Task_owner} at ${formattedDatetime}`
+        : Task_notes.trim();
+
+        const newNote = {
+            username: Task_owner,
+            currentState: Task_state,
+            timestamp: formattedDatetime,
+            desc: noteDescription
+        };
+
+        let existingNotes = [];
+
+        try {
+        existingNotes = JSON.parse(results[0].Task_notes || "[]");
+        } catch (e) {
+        existingNotes = [];
+        }
+
+        existingNotes.push(newNote);
+        const updatedNotesJSON = JSON.stringify(existingNotes);
+
+        db.beginTransaction((err) => {
+            if(err) {
+                return res.status(500).json({ error: "Failed to start transaction." });
+            }
+
+            db.query(`UPDATE task SET Task_Name = ?, Task_description = ?, Task_notes = ?, Task_plan = ?, Task_state = ? , Task_owner = ? WHERE Task_id = ?`, 
+                [Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner, Task_id], (err, result) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Update Error:", err); // Add this
+                        return res.status(500).json({ error: "Failed to update task." });
+                    });
+                }
+                db.commit((err) => {
+                    if(err) {
+                        return db.rollback(() => {
+                            return res.status(500).json({ error: "Failed to commit transaction." });
+                        })
+                    }
+                    return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
+                });
+            });
+        });
+    });
+}

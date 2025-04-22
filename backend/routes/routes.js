@@ -35,9 +35,8 @@ router.put('/plan/:plan', isAuthenticatedUser, validateAccess("pm"), planControl
 router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
 router.get('/task/:Task_app_Acronym', isAuthenticatedUser, validateAccess(), taskController.getTaskByAppAcronym);
 router.post('/create-task', isAuthenticatedUser, getCreateTaskPermission, taskController.createTask);
-router.post('/check-create-task-permission', isAuthenticatedUser, getCreateTaskPermission, (req, res) => {
-    res.status(200).json({ success: true });
-});
+router.post('/check-create-task-permission', isAuthenticatedUser, getCreateTaskPermission, (req, res) => {res.status(200).json({ success: true });});
+router.put('/task/:task', isAuthenticatedUser, validateAccess(), taskController.updateTask);
 
 // Authentication routes
 router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => { const username = req.decoded.username;
