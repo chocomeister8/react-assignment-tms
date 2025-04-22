@@ -197,6 +197,7 @@ exports.updateTask = (req, res) => {
             "Open" : ["Open", "To Do"],
             "To Do" : ["To Do", "Doing"],
             "Doing" : ["Done", "Doing"],
+            "Done" : ["Done", "Closed"],
         }
 
         if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
@@ -210,7 +211,7 @@ exports.updateTask = (req, res) => {
         const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
 
         const noteDescription = (!Task_notes || Task_notes.trim() === "")
-        ? `Task updated by ${Task_owner} at ${formattedDatetime}`
+        ? `Task updated by ${Task_owner}`
         : Task_notes.trim();
 
         const newNote = {

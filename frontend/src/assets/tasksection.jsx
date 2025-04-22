@@ -29,7 +29,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
     if (selectedTask) {
       setTaskName(selectedTask.Task_Name || '');
       setTaskDescription(selectedTask.Task_description || '');
-      setTaskNotes(selectedTask.Task_notes || '');
+      setTaskNotes("");
       setTaskPlan(selectedTask.Task_plan || '');
       setTaskState(selectedTask.Task_state || '');
     }
@@ -102,7 +102,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       const task_id = selectedTask?.Task_id.trim();
       const task_name = taskName.trim().toLowerCase();
       const task_description = taskDescription.trim();
-      const task_notes = taskNotes.trim();
+      const task_notes = taskNotes;
       const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
       const task_state = taskState.trim();
       const task_owner = username.trim();
@@ -269,7 +269,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
           <Col md={12}>
             <Form.Group controlId="taskDesc" className="mb-2">
               <FloatingLabel controlId="floatingTaskDesc" label="Description:">
-                <Form.Control as="textarea" value={selectedTask?.Task_description || ""} onChange={(e) => setTaskDescription(e.target.value)}  disabled={!isEditingTask}/>
+                <Form.Control as="textarea" value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)}  disabled={!isEditingTask}/>
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -304,7 +304,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
           <Col md={12}>
             <Form.Group controlId="editTaskNotes" className="mb-2">
               <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)}  disabled={!isEditingTask} />
+                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!isEditingTask} />
               </FloatingLabel>
             </Form.Group>
           </Col>
