@@ -319,7 +319,7 @@ const Sidebar = ( props ) => {
           )}
           </h5>
           <hr/>
-          <ListGroup variant="default">
+          <ListGroup variant="default" style={{maxHeight: '300px', overflowY: 'auto', paddingRight: '10px',}}>
           {applications.map((app, index) => { const isSelected = selectedApp?.App_Acronym === app.App_Acronym;
           return (
             <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
@@ -341,7 +341,7 @@ const Sidebar = ( props ) => {
           {selectedApp && (
             <div>
               {filteredPlans.length > 0 ? (
-                <ListGroup>
+                <ListGroup style={{maxHeight: '300px', overflowY: 'auto', paddingRight: '10px',}}>
                   {filteredPlans.map((plan, index) => {
                     const isPlanSelected = selectedPlan?.Plan_MVP_name === plan.Plan_MVP_name;
                     return (
