@@ -208,6 +208,68 @@ exports.getCreateTaskPermission = (req, res, next) => {
     });
 }
 
+exports.getUpdateTaskPermission = (req, res, next) => {
+    const { username } = req.decoded;
+    const { Task_id } = req.body;
+
+    // Step 1: Get the current task state and acronym
+    connection.query('SELECT Task_state, Task_app_Acronym FROM task WHERE Task_id = ?', [Task_id], (err, taskResults) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Error retrieving task data." });
+        }
+        if (taskResults.length === 0) {
+            return res.status(404).json({ success: false, message: "Task not found." });
+        }
+
+        const { Task_state, Task_app_Acronym } = taskResults[0];
+
+        // Step 2: Determine correct permission column based on state
+        let permitColumn;
+        switch (Task_state) {
+            case 'Open':
+                permitColumn = 'App_permit_Open';
+                break;
+            case 'To Do':
+                permitColumn = 'App_permit_toDoList';
+                break;
+            case 'Doing':
+                permitColumn = 'App_permit_Doing';
+                break;
+            case 'Done':
+                permitColumn = 'App_permit_Done';
+                break;
+            default:
+                return res.status(400).json({ success: false, message: "Invalid task state for permission check." });
+        }
+
+        // Step 3: Get group name for the state from the application table
+        connection.query(`SELECT ?? FROM application WHERE App_Acronym = ?`, [permitColumn, Task_app_Acronym], (err, appResults) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Error retrieving permission data." });
+            }
+            if (appResults.length === 0) {
+                return res.status(404).json({ success: false, message: "Application not found." });
+            }
+
+            const groupName = appResults[0][permitColumn];
+
+            // Step 4: Check if user is in the correct group
+            checkGroup(username, groupName, (err, groupString, isMember) => {
+                if (err) {
+                    return res.status(500).json({ success: false, message: "Error during group membership check." });
+                }
+
+                if (!isMember) {
+                    return res.status(403).json({ success: false, message: "Access denied: You are not permitted to update this task." });
+                }
+
+                req.task_state_permission = true; // optional, can be used later in controller
+                next();
+            });
+        });
+    });
+};
+
 
 
 

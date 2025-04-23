@@ -134,6 +134,7 @@ const TmsHome = () => {
         const newTask = await createTask(task_name,task_description ,task_notes ,task_plan , task_appAcronym , task_creator);
         if(newTask.error) {
           setError(newTask.error);
+          return;
         }
         if(newTask.success === false){
           setError(newTask.message);

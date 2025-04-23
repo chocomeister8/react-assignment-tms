@@ -3,7 +3,7 @@ import React , { useEffect, useState } from 'react';
 import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel, Alert } from 'react-bootstrap';
 
 // Import backend API calls
-import { fetchUsername, fetchPlans, updateTask } from '../assets/apiCalls';
+import { fetchUsername, fetchPlans, updateTask, checkUpdateTaskPermission } from '../assets/apiCalls';
 
 const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
   const [success, setSuccess] = useState(null);
@@ -21,6 +21,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
   const [taskNotes, setTaskNotes] = useState('');
   const [taskPlan, setTaskPlan] = useState('');
   const [taskState, setTaskState] = useState('');
+  const [hasUpdatePermission, setHasUpdatePermission] = useState(false);
 
   const statusList = ['Open', 'To Do', 'Doing', 'Done', 'Closed'];
   const taskArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
@@ -33,6 +34,23 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       setTaskPlan(selectedTask.Task_plan || '');
       setTaskState(selectedTask.Task_state || '');
     }
+
+    const checkUpdatePermission = async () => {
+      try {
+        if (!selectedApp) {
+          return;
+        }
+    
+        const response = await checkUpdateTaskPermission(selectedTask.Task_id); 
+        if (response.success) {
+          setHasUpdatePermission(true);
+        } else {
+          setHasUpdatePermission(false);
+        }
+      } catch (err) {
+        setHasUpdatePermission(false);
+      }
+    };
   
     const loadData = async () => {
       try {
@@ -47,6 +65,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         setError(err.message);
       }
     };
+    checkUpdatePermission();
     loadData();
   
     if (error || success) {
@@ -118,8 +137,12 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       }
       try {
         const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
-        if (updatetask.error || updatetask.success === false) {
-          setModalError(updatetask.message || updatetask.error);
+        if(updatetask.error) {
+          setModalError(updatetask.error);
+          return;
+        }
+        if(updatetask.success === false){
+          setModalError(updatetask.message);
           return;
         }
         else {
@@ -353,6 +376,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
             ) : null}
             <Button variant="secondary" onClick={() => {
               setIsEditingTask(false);
+              setModalError('');
               setShowTaskDetailsModal();
             }}>
               Close

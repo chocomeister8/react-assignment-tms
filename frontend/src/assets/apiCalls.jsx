@@ -199,9 +199,18 @@ export const updateTask = async (Task_id, Task_Name, Task_description, Task_note
         return response.data;
     } catch (error) {
         console.error("Error updating task", error);
-        throw new Error(error.response?.data?.error || "Failed to update task.");
+        throw new Error(error.response?.data?.message || "Failed to update task.");
     }
 }
+
+export const checkUpdateTaskPermission = async (Task_id) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/check-update-task-permission`, { Task_id }, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Update permission check failed");
+    }
+};
 
 export const updateEmail = async (email) => {
     const response = await axios.put(`${API_BASE_URL}/user/updateEmail`,

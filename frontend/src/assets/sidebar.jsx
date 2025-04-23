@@ -71,9 +71,6 @@ const Sidebar = ( props ) => {
   const handleShowAppDetails = (app) => {
     setSelectedApp(app);
     setShowDetailsModal(true);
-    if (props.onAppSelect) {
-      props.onAppSelect(app);
-    }
   };
   const handleCloseAppDetails = () => {
     setShowDetailsModal(false);
@@ -99,8 +96,6 @@ const Sidebar = ( props ) => {
   const handleShowAppPlans = (app) => {
     setSelectedApp(app);
     setPlanAppName(app.App_Acronym);
-    // const appTasks = tasks.filter(task => task.Task_app_Acronym === app.App_Acronym);
-    // setFilteredTasks(appTasks);
     const appPlans = plans.filter(plan => plan.Plan_app_Acronym === app.App_Acronym);
     setFilteredPlans(appPlans);
     if (props.onAppSelect) {
@@ -331,7 +326,7 @@ const Sidebar = ( props ) => {
               <ListGroup.Item action onClick={() => !isSelected && handleShowAppPlans(app)} style={{flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px', backgroundColor: isSelected ? '#d3d3d3' : '',pointerEvents: isSelected ? 'none' : 'auto',}}>
                 {app.App_Acronym}
               </ListGroup.Item>
-              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={() => handleShowAppDetails(app)}/>
+              <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={(e) => {e.stopPropagation(); handleShowAppDetails(app)}}/>
             </div>);})}
           </ListGroup>
         </Col>
