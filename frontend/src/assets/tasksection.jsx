@@ -42,7 +42,6 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         });
         setUsername(username);
         setUserGroup(group);
-        fetchPlans();
   
       } catch (err) {
         setError(err.message);
@@ -104,6 +103,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       const task_description = taskDescription.trim();
       const task_notes = taskNotes;
       const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
+      const task_app_acronym = selectedTask?.Task_app_Acronym;
       const task_state = taskState.trim();
       const task_owner = username.trim();
 
@@ -117,7 +117,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         return;
       }
       try {
-        const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_state, task_owner);
+        const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
         if (updatetask.error || updatetask.success === false) {
           setModalError(updatetask.message || updatetask.error);
           return;
@@ -133,6 +133,42 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         setModalError(err.message);
       }
     }
+
+  const getVariantClass = (status) => {
+    switch (status) {
+      case 'To Do':
+        return 'bg-info';
+      case 'Doing':
+        return 'bg-warning';
+      case 'Done':
+        return 'bg-success';
+      case 'Closed':
+        return 'bg-secondary';
+      default:
+        return '';
+    }
+  };
+
+  const handleStatusChange = (task, newStatus) => {
+    // Update the task status based on user selection
+    task.Task_status = newStatus;
+    // Make sure to save the changes to your state or backend
+  };
+  
+  const getStatusOptions = (taskStatus) => {
+    switch (taskStatus) {
+      case 'Open':
+        return ['Open', 'To Do']; // Only allow "Open" or "To Do" from "Open"
+      case 'To Do':
+        return ['To Do', 'Doing']; // Only allow "To Do" or "Doing" from "To Do"
+      case 'Doing':
+        return ['Doing', 'Done']; // Only allow "Doing" or "Done" from "Doing"
+      case 'Done':
+        return ['Closed', 'Doing']; // Only allow "Closed" or "Doing" from "Done"
+      default:
+        return []; // No options for undefined status
+    }
+  };
 
   return (
     <div>
@@ -150,20 +186,20 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
               <ListGroup variant="flush" style={{ overflowY: 'auto', flexGrow: 1 }}>
                 {filteredTasks.length > 0 ? (filteredTasks.map((task, itemIdx) => (
                 <ListGroup.Item key={itemIdx} className="px-1 border-0" style = {{ padding: '0.25rem', cursor: 'pointer'}} onClick={() => handleTaskClick(task)}>
-                  <Card className="shadow-sm">
-                  <Card.Body className="p-2" style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis' }}>
-                    <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>
-                      {task.Task_Name}
-                    </Card.Title>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>
-                        Plan: {task.Task_plan || 'N/A'}
-                      </span>
-                      <span className="text-muted" style={{ fontSize: '0.6rem' }}>
-                        Task owner: {task.Task_owner || 'Unassigned'}
-                      </span>
-                    </div>
-                  </Card.Body>
+                  <Card className={`shadow-sm ${getVariantClass(task.Task_state)} `}>
+                    <Card.Body className="p-2" style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis' }}>
+                      <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>
+                        {task.Task_Name}
+                      </Card.Title>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>
+                          Plan: {task.Task_plan || 'N/A'}
+                        </span>
+                        <span className="text-muted" style={{ fontSize: '0.6rem' }}>
+                          Task owner: {task.Task_owner || 'Unassigned'}
+                        </span>
+                      </div>
+                    </Card.Body>
                   </Card>
                 </ListGroup.Item>
                 ))
@@ -205,8 +241,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
             <FloatingLabel controlId="floatingTaskState" label="Task State:">
               {isEditingTask ? (
                 <Form.Select required value={taskState} onChange={(e) => setTaskState(e.target.value)}>
-                  <option value="">Select a State</option>
-                  {statusList.map((status, index) => (
+                  <option value="">Select a State</option>{getStatusOptions(selectedTask?.Task_state).map((status, index) => (
                     <option key={index} value={status}>
                       {status}
                     </option>
@@ -276,28 +311,28 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         </Row>
         <Row className="align-items-end">
           <Col md={12}>
-          <Form.Group controlId="taskNotes" className="mb-2" style={{ position: 'relative' }}>
-            <Form.Label 
-              style={{position: 'absolute',top: '-0.75rem',left: '1rem',backgroundColor: '#fff',padding: '0 0.25rem',fontSize: '0.85rem',color: '#6c757d',zIndex: 1}}>
-              Task Notes
-            </Form.Label>
-            <Card className="mt-3">
-              <Card.Body style={{ maxHeight: '200px', overflowY: 'auto', padding: '0.75rem' }}>
-                {parseTaskNotes(selectedTask?.Task_notes).map((note, index) => (
-                  <div key={index} className="mb-3 p-2 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
-                    {/* First row: formatted with | separator */}
-                    <div className="mb-1">
-                      <strong className="text-muted">{note.username}</strong> 
-                      <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | {note.timestamp}</strong>
-                      <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | State: {note.currentState}</strong>
+            <Form.Group controlId="taskNotes" className="mb-2" style={{ position: 'relative' }}>
+              <Form.Label 
+                style={{position: 'absolute',top: '-0.75rem',left: '1rem',backgroundColor: '#fff',padding: '0 0.25rem',fontSize: '0.85rem',color: '#6c757d',zIndex: 1}}>
+                Task Notes
+              </Form.Label>
+              <Card className="mt-3">
+                <Card.Body style={{ maxHeight: '200px', overflowY: 'auto', padding: '0.75rem' }}>
+                  {parseTaskNotes(selectedTask?.Task_notes).map((note, index) => (
+                    <div key={index} className="mb-3 p-2 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
+                      {/* First row: formatted with | separator */}
+                      <div className="mb-1">
+                        <strong className="text-muted">{note.username}</strong> 
+                        <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | {note.timestamp}</strong>
+                        <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | State: {note.currentState}</strong>
+                      </div>
+                      {/* Second row: Description (notes) */}
+                      <div>{note.desc}</div>
                     </div>
-                    {/* Second row: Description (notes) */}
-                    <div>{note.desc}</div>
-                  </div>
-                ))}
-              </Card.Body>
-            </Card>
-          </Form.Group>
+                  ))}
+                </Card.Body>
+              </Card>
+            </Form.Group>
           </Col>
         </Row>
         <Row className="align-items-end">
@@ -313,14 +348,9 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         </Modal.Body>
           <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
-            {userGroup.includes("") ? (
-              !isEditingTask ? (
-                <Button variant="success" onClick={handleEditClick}>Edit</Button>
-              ) : (
-                <Button variant="success" onClick={handleUpdateTask}>Update Task</Button>
-              )
+            {userGroup.includes("") ? (!isEditingTask ? (
+              <Button variant="success" onClick={handleEditClick}>Edit</Button>) : (<Button variant="success" onClick={handleUpdateTask}>Update Task</Button>)
             ) : null}
-            
             <Button variant="secondary" onClick={() => {
               setIsEditingTask(false);
               setShowTaskDetailsModal();

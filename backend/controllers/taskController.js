@@ -120,7 +120,6 @@ exports.createTask = (req, res) => {
         });
     }
     else {
-
         db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
             if (err){
                 return res.status(500).json({ error: 'Database error during app check.' });
@@ -177,7 +176,7 @@ exports.createTask = (req, res) => {
 };
 
 exports.updateTask = (req, res) => {
-    let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_state, Task_owner} = req.body;
+    let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner} = req.body;
 
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
@@ -187,73 +186,174 @@ exports.updateTask = (req, res) => {
         return res.status(200).json({ error: "All fields must be filled." });
     }
 
-    db.query("SELECT Task_state, Task_notes FROM task WHERE Task_id = ? ", [Task_id], (err, results) => {
-        if (err || results.length === 0){
-            return res.status(500).json({ error: "Failed to fetch task state."});
-        }
-
-        const currentState = results[0].Task_state;
-        const validTransitions = {
-            "Open" : ["Open", "To Do"],
-            "To Do" : ["To Do", "Doing"],
-            "Doing" : ["Done", "Doing"],
-            "Done" : ["Done", "Closed"],
-        }
-
-        if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
-            return res.status(400).json({
-                error: `Invalid state transition from "${currentState}" to "${Task_state}".`
-            });
-        }
-
-        const localDatetime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
-    
-        const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
-
-        const noteDescription = (!Task_notes || Task_notes.trim() === "")
-        ? `Task updated by ${Task_owner}`
-        : Task_notes.trim();
-
-        const newNote = {
-            username: Task_owner,
-            currentState: Task_state,
-            timestamp: formattedDatetime,
-            desc: noteDescription
-        };
-
-        let existingNotes = [];
-
-        try {
-        existingNotes = JSON.parse(results[0].Task_notes || "[]");
-        } catch (e) {
-        existingNotes = [];
-        }
-
-        existingNotes.push(newNote);
-        const updatedNotesJSON = JSON.stringify(existingNotes);
-
-        db.beginTransaction((err) => {
-            if(err) {
-                return res.status(500).json({ error: "Failed to start transaction." });
+    if (Task_plan) {
+        db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ? ',[Task_plan, Task_app_Acronym], (err, planResults) => {
+            if (err) {
+                return res.status(500).json({ error: 'Database error during plan check.'});
             }
 
-            db.query(`UPDATE task SET Task_Name = ?, Task_description = ?, Task_notes = ?, Task_plan = ?, Task_state = ? , Task_owner = ? WHERE Task_id = ?`, 
-                [Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner, Task_id], (err, result) => {
-                if (err) {
-                    return db.rollback(() => {
-                        console.error("Update Error:", err); // Add this
-                        return res.status(500).json({ error: "Failed to update task." });
-                    });
+            if(planResults.length === 0) {
+                return res.status(200).json({ error: 'Plan does not exist.' });
+            }
+        
+            db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
+                if (err){
+                    return res.status(500).json({ error: 'Database error during app check.' });
+                } 
+                if (appResults.length === 0) {
+                    return res.status(200).json({ error: 'Application does not exist.' });
                 }
-                db.commit((err) => {
-                    if(err) {
-                        return db.rollback(() => {
-                            return res.status(500).json({ error: "Failed to commit transaction." });
-                        })
+
+                db.query("SELECT Task_state, Task_notes FROM task WHERE Task_id = ? ", [Task_id], (err, results) => {
+                    if (err || results.length === 0){
+                        return res.status(500).json({ error: "Failed to fetch task state."});
                     }
-                    return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
+
+                    const currentState = results[0].Task_state;
+                    const validTransitions = {
+                        "Open" : ["Open", "To Do"],
+                        "To Do" : ["To Do", "Doing"],
+                        "Doing" : ["Done", "Doing"],
+                        "Done" : ["Done", "Closed", "Doing"],
+                    }
+
+                    if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
+                        return res.status(400).json({
+                            error: `Invalid state transition from "${currentState}" to "${Task_state}".`
+                        });
+                    }
+
+                    const localDatetime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
+                
+                    const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
+
+                    const noteDescription = (!Task_notes || Task_notes.trim() === "")
+                    ? `Task updated by ${Task_owner}`
+                    : Task_notes.trim();
+
+                    const newNote = {
+                        username: Task_owner,
+                        currentState: Task_state,
+                        timestamp: formattedDatetime,
+                        desc: noteDescription
+                    };
+
+                    let existingNotes = [];
+
+                    try {
+                    existingNotes = JSON.parse(results[0].Task_notes || "[]");
+                    } catch (e) {
+                    existingNotes = [];
+                    }
+
+                    existingNotes.push(newNote);
+                    const updatedNotesJSON = JSON.stringify(existingNotes);
+
+                    db.beginTransaction((err) => {
+                        if(err) {
+                            return res.status(500).json({ error: "Failed to start transaction." });
+                        }
+
+                        db.query(`UPDATE task SET Task_Name = ?, Task_description = ?, Task_notes = ?, Task_plan = ?, Task_state = ? , Task_owner = ? WHERE Task_id = ?`, 
+                            [Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner, Task_id], (err, result) => {
+                            if (err) {
+                                return db.rollback(() => {
+                                    console.error("Update Error:", err); // Add this
+                                    return res.status(500).json({ error: "Failed to update task." });
+                                });
+                            }
+                            db.commit((err) => {
+                                if(err) {
+                                    return db.rollback(() => {
+                                        return res.status(500).json({ error: "Failed to commit transaction." });
+                                    })
+                                }
+                                return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
+                            });
+                        });
+                    });
                 });
             });
         });
-    });
+    }
+    else {
+        db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
+            if (err){
+                return res.status(500).json({ error: 'Database error during app check.' });
+            } 
+            if (appResults.length === 0) {
+                return res.status(200).json({ error: 'Application does not exist.' });
+            }
+
+            db.query("SELECT Task_state, Task_notes FROM task WHERE Task_id = ? ", [Task_id], (err, results) => {
+                if (err || results.length === 0){
+                    return res.status(500).json({ error: "Failed to fetch task state."});
+                }
+
+                const currentState = results[0].Task_state;
+                const validTransitions = {
+                    "Open" : ["Open", "To Do"],
+                    "To Do" : ["To Do", "Doing"],
+                    "Doing" : ["Done", "Doing"],
+                    "Done" : ["Done", "Closed"],
+                }
+
+                if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
+                    return res.status(400).json({
+                        error: `Invalid state transition from "${currentState}" to "${Task_state}".`
+                    });
+                }
+
+                const localDatetime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
+            
+                const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
+
+                const noteDescription = (!Task_notes || Task_notes.trim() === "")
+                ? `Task updated by ${Task_owner}`
+                : Task_notes.trim();
+
+                const newNote = {
+                    username: Task_owner,
+                    currentState: Task_state,
+                    timestamp: formattedDatetime,
+                    desc: noteDescription
+                };
+
+                let existingNotes = [];
+
+                try {
+                existingNotes = JSON.parse(results[0].Task_notes || "[]");
+                } catch (e) {
+                existingNotes = [];
+                }
+
+                existingNotes.push(newNote);
+                const updatedNotesJSON = JSON.stringify(existingNotes);
+
+                db.beginTransaction((err) => {
+                    if(err) {
+                        return res.status(500).json({ error: "Failed to start transaction." });
+                    }
+
+                    db.query(`UPDATE task SET Task_Name = ?, Task_description = ?, Task_notes = ?, Task_plan = ?, Task_state = ? , Task_owner = ? WHERE Task_id = ?`, 
+                        [Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner, Task_id], (err, result) => {
+                        if (err) {
+                            return db.rollback(() => {
+                                console.error("Update Error:", err); // Add this
+                                return res.status(500).json({ error: "Failed to update task." });
+                            });
+                        }
+                        db.commit((err) => {
+                            if(err) {
+                                return db.rollback(() => {
+                                    return res.status(500).json({ error: "Failed to commit transaction." });
+                                })
+                            }
+                            return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
+                        });
+                    });
+                });
+            });
+        });
+    }
 }
