@@ -232,7 +232,7 @@ export const updatePassword = async (password) => {
 
 export const approveTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
-        const response = await axios.put(`${API_BASE_URL}/task/approve`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.put(`${API_BASE_URL}/approvetask/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {
@@ -243,7 +243,7 @@ export const approveTask = async (Task_id, Task_Name, Task_description, Task_not
 
 export const rejectTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
-        const response = await axios.put(`${API_BASE_URL}/task/reject`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.put(`${API_BASE_URL}/rejecttask/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {

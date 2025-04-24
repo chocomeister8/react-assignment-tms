@@ -178,7 +178,7 @@ const TmsHome = () => {
             <Row>
             <div className="d-flex justify-content-between align-items-center mt-3">
               <Col md={10}>
-                <h4>App Name: {selectedApp ? selectedApp.App_Acronym : 'No App Selected'}</h4>
+                <h5>App Name: {selectedApp ? selectedApp.App_Acronym : 'No App Selected'}</h5>
               </Col>
               {selectedApp && hasPermission && (
                 <Col md={2} className="d-flex justify-content-end">

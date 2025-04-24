@@ -177,8 +177,6 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
     const task_state = "Closed";
     const task_owner = username.trim();
 
-    console.log("notes", task_notes);
-
     if(!task_state){
       setModalError("Please fill in all fields!");
       return;
@@ -194,16 +192,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       return;
     }
     try {
-      console.log("Request Payload:", {
-        Task_id: task_id,
-        Task_Name: task_name,
-        Task_description: task_description,
-        Task_notes: task_notes,
-        Task_plan: task_plan,
-        Task_app_Acronym: task_app_acronym,
-        Task_state: task_state,
-        Task_owner: task_owner
-    });
+      
       const approvetask = await approveTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
       if(approvetask.error) {
         setModalError(approvetask.error);
