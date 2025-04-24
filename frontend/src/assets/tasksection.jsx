@@ -379,14 +379,25 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         <Row className="align-items-end">
           <Col md={6}>
           <Form.Group controlId="taskPlan" className="mb-2">
-            <FloatingLabel label="Task Plan:"> {(isEditingTask || (taskState === "Done" && hasUpdatePermission)) ? (
-              <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
-                <option value="">Select a Plan</option>
-                {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
-                  <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>))}
-              </Form.Select>
+            <FloatingLabel label="Task Plan:">
+              {/* Check if the task is in 'Open' state, if not, disable the select field */}
+              {(isEditingTask && selectedTask?.Task_state === "Open") || 
+              (selectedTask?.Task_state === "Done" && hasUpdatePermission) ? (
+                <Form.Select 
+                  required 
+                  value={taskPlan} 
+                  onChange={(e) => setTaskPlan(e.target.value)}>
+                  <option value="">Select a Plan</option>
+                  {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
+                    <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+                  ))}
+                </Form.Select>
               ) : (
-                <Form.Control type="text" value={selectedTask?.Task_plan || ""} disabled />
+                <Form.Control 
+                  type="text" 
+                  value={selectedTask?.Task_plan || ""} 
+                  disabled 
+                />
               )}
             </FloatingLabel>
           </Form.Group>
