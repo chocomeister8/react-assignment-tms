@@ -194,7 +194,7 @@ export const fetchTaskByAppAcronym = async (Task_app_Acronym) => {
 
 export const updateTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
-        const response = await axios.put(`${API_BASE_URL}/task/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.put(`${API_BASE_URL}/task/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {
@@ -229,3 +229,25 @@ export const updatePassword = async (password) => {
     );
     return response.data;
 };
+
+export const approveTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
+    try {
+        const response = await axios.put(`${API_BASE_URL}/task/approve`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error approving task", error);
+        throw new Error(error.response?.data?.message || "Failed to approve task.");
+    }
+}
+
+export const rejectTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
+    try {
+        const response = await axios.put(`${API_BASE_URL}/task/reject`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error rejecting task", error);
+        throw new Error(error.response?.data?.message || "Failed to reject task.");
+    }
+}

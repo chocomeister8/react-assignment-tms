@@ -3,7 +3,7 @@ import React , { useEffect, useState } from 'react';
 import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel, Alert } from 'react-bootstrap';
 
 // Import backend API calls
-import { fetchUsername, fetchPlans, updateTask, checkUpdateTaskPermission } from '../assets/apiCalls';
+import { fetchUsername, fetchPlans, updateTask, checkUpdateTaskPermission, approveTask, rejectTask } from '../assets/apiCalls';
 
 const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
   const [success, setSuccess] = useState(null);
@@ -22,6 +22,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
   const [taskPlan, setTaskPlan] = useState('');
   const [taskState, setTaskState] = useState('');
   const [hasUpdatePermission, setHasUpdatePermission] = useState(false);
+  const [previousState, setPreviousState] = useState("");
 
   const statusList = ['Open', 'To Do', 'Doing', 'Done', 'Closed'];
   const taskArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
@@ -113,48 +114,155 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
     }
   };
 
-  const handleUpdateTask = async () => {
-      setModalError(null);
-    
-      const task_id = selectedTask?.Task_id.trim();
-      const task_name = taskName.trim().toLowerCase();
-      const task_description = taskDescription.trim();
-      const task_notes = taskNotes;
-      const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
-      const task_app_acronym = selectedTask?.Task_app_Acronym;
-      const task_state = taskState.trim();
-      const task_owner = username.trim();
+  const handleTaskStateChange = (e) => {
+    const newState = e.target.value;
+    setTaskState(newState);
+  
+    // Store the previous state
+    setPreviousState(selectedTask?.Task_state);
+  };
 
-      if(!task_name || !task_state){
-        setModalError("Please fill in all fields!");
-        return;
-      }
-      const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
-      if(!taskNameRegex.test(task_name)) {
-        setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
-        return;
-      }
-      try {
-        const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
-        if(updatetask.error) {
-          setModalError(updatetask.error);
-          return;
-        }
-        if(updatetask.success === false){
-          setModalError(updatetask.message);
-          return;
-        }
-        else {
-          setIsEditingTask(false);
-          setShowTaskDetailsModal(false);
-          await refetchTasks();
-          onUpdateSuccess("Task updated successfully!");
-          }
-      }
-      catch (err) {
-        setModalError(err.message);
-      }
+  const handleUpdateTask = async () => {
+    setModalError(null);
+
+    const task_id = selectedTask?.Task_id.trim();
+    const task_name = taskName.trim().toLowerCase();
+    const task_description = taskDescription.trim();
+    const task_notes = taskNotes;
+    const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
+    const task_app_acronym = selectedTask?.Task_app_Acronym;
+    const task_state = taskState.trim();
+    const task_owner = username.trim();
+
+    if(!task_name || !task_state){
+      setModalError("Please fill in all fields!");
+      return;
     }
+    const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
+    if(!taskNameRegex.test(task_name)) {
+      setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
+      return;
+    }
+    try {
+      const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
+      if(updatetask.error) {
+        setModalError(updatetask.error);
+        return;
+      }
+      if(updatetask.success === false){
+        setModalError(updatetask.message);
+        return;
+      }
+      else {
+        setIsEditingTask(false);
+        setShowTaskDetailsModal(false);
+        await refetchTasks();
+        onUpdateSuccess("Task updated successfully!");
+        }
+    }
+    catch (err) {
+      setModalError(err.message);
+    }
+  }
+
+  const handleApproveTask = async () => {
+    setModalError(null);
+
+    const task_id = selectedTask?.Task_id.trim();
+    const task_name = taskName.trim().toLowerCase();
+    const task_description = taskDescription.trim();
+    const task_notes = taskNotes?.trim() === "" ? "" : taskNotes.trim();
+    const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
+    const task_app_acronym = selectedTask?.Task_app_Acronym;
+    const task_state = "Closed";
+    const task_owner = username.trim();
+
+    console.log("notes", task_notes);
+
+    if(!task_state){
+      setModalError("Please fill in all fields!");
+      return;
+    }
+    const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
+    if(!taskNameRegex.test(task_name)) {
+      setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
+      return;
+    }
+
+    if (selectedTask?.Task_plan !== taskPlan) {
+      setModalError("Changing the task plan during approval is not allowed.");
+      return;
+    }
+    try {
+      console.log("Request Payload:", {
+        Task_id: task_id,
+        Task_Name: task_name,
+        Task_description: task_description,
+        Task_notes: task_notes,
+        Task_plan: task_plan,
+        Task_app_Acronym: task_app_acronym,
+        Task_state: task_state,
+        Task_owner: task_owner
+    });
+      const approvetask = await approveTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
+      if(approvetask.error) {
+        setModalError(approvetask.error);
+        return;
+      }
+      if(approvetask.success === false){
+        setModalError(approvetask.message);
+        return;
+      }
+      else {
+        setIsEditingTask(false);
+        setShowTaskDetailsModal(false);
+        await refetchTasks();
+        onUpdateSuccess("Task approved successfully!");
+        }
+    }
+    catch (err) {
+      setModalError(err.message);
+    }
+  }
+
+  const handleRejectTask = async () => {
+    setModalError(null);
+
+    const task_id = selectedTask?.Task_id.trim();
+    const task_name = taskName.trim().toLowerCase();
+    const task_description = taskDescription.trim();
+    const task_notes = taskNotes?.trim() === "" ? null : taskNotes.trim();
+    const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
+    const task_app_acronym = selectedTask?.Task_app_Acronym;
+    const task_state = "Doing";
+    const task_owner = username.trim();
+
+    if(!task_state){
+      setModalError("Please fill in all fields!");
+      return;
+    }
+
+    try {
+      const rejecttask = await rejectTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
+      if(rejecttask.error) {
+        setModalError(rejecttask.error);
+        return;
+      }
+      if(rejecttask.success === false){
+        setModalError(rejecttask.message);
+        return;
+      }
+      else {
+        setIsEditingTask(false);
+        setShowTaskDetailsModal(false);
+        await refetchTasks();
+        onUpdateSuccess("Task rejected successfully!");
+        }
+    }
+    catch (err) {
+      setModalError(err.message);
+    }
+  }
 
   const getVariantClass = (status) => {
     switch (status) {
@@ -171,12 +279,6 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
     }
   };
 
-  const handleStatusChange = (task, newStatus) => {
-    // Update the task status based on user selection
-    task.Task_status = newStatus;
-    // Make sure to save the changes to your state or backend
-  };
-  
   const getStatusOptions = (taskStatus) => {
     switch (taskStatus) {
       case 'Open':
@@ -187,10 +289,13 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         return ['To Do', 'Doing', 'Done'];
       case 'Done':
         return ['Closed', 'Doing']; 
+      case 'Closed':
+      return []; 
       default:
         return []; 
     }
   };
+
 
   return (
     <div>
@@ -236,7 +341,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       })}
     </Row>
     <Modal show={showTaskDetailsModal} onHide={handleClose} centered>
-        <Modal.Header closeButton>
+        <Modal.Header closeButton >
           <Modal.Title>Task Name: {selectedTask?.Task_Name}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -285,7 +390,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         <Row className="align-items-end">
           <Col md={6}>
           <Form.Group controlId="taskPlan" className="mb-2">
-            <FloatingLabel label="Task Plan:"> {isEditingTask ? (
+            <FloatingLabel label="Task Plan:"> {(isEditingTask || (taskState === "Done" && hasUpdatePermission)) ? (
               <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
                 <option value="">Select a Plan</option>
                 {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
@@ -360,7 +465,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
           <Col md={12}>
             <Form.Group controlId="editTaskNotes" className="mb-2">
               <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!isEditingTask} />
+                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(isEditingTask|| (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -369,9 +474,9 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         </Modal.Body>
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
-            {(hasUpdatePermission && taskState === "Done") ? (
-              <><Button variant="success" onClick={console.log('approve')}>Approve</Button>
-                <Button variant="danger" onClick={console.log('reject')}>Reject</Button></>
+            {(hasUpdatePermission && selectedTask?.Task_state === "Done") ? (
+              <><Button variant="success" onClick={handleApproveTask}>Approve</Button>
+                <Button variant="danger" onClick={handleRejectTask}>Reject</Button></>
             ) : (
               hasUpdatePermission && (
                 !isEditingTask ? (
@@ -385,7 +490,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
             <Button variant="secondary" onClick={() => {
               setIsEditingTask(false);
               setModalError('');
-              setShowTaskDetailsModal();
+              setShowTaskDetailsModal(false);
             }}>
               Close
             </Button>

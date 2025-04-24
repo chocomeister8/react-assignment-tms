@@ -13,12 +13,12 @@ const sendToken = (user, req, statusCode, res) => {
     // Create JWT Token with additional details
     const token = jwt.sign(
         { username: user.username, group: user.group, ipAddress, browserType }, process.env.JWT_SECRET, // Replace with an environment variable
-        { expiresIn: "1h" }
+        { expiresIn: "2h" }
     );
 
     // Options for cookie
     const options = {
-        expires: new Date(Date.now() + 60 * 60 * 1000),
+        expires: new Date(Date.now() + 120 * 60 * 1000),
         httpOnly: true,
         secure : false
     };
@@ -218,7 +218,7 @@ exports.getUpdateTaskPermission = (req, res, next) => {
             return res.status(500).json({ success: false, message: "Error retrieving task data." });
         }
         if (taskResults.length === 0) {
-            return res.status(404).json({ success: false, message: "Task not found." });
+            return res.status(200).json({ success: false, message: "Task not found." });
         }
 
         const { Task_state, Task_app_Acronym } = taskResults[0];
@@ -238,6 +238,9 @@ exports.getUpdateTaskPermission = (req, res, next) => {
             case 'Done':
                 permitColumn = 'App_permit_Done';
                 break;
+            case 'Closed':
+                permitColumn = null; // No permission check needed
+                break;
             default:
                 return res.status(400).json({ success: false, message: "Invalid task state for permission check." });
         }
@@ -248,7 +251,7 @@ exports.getUpdateTaskPermission = (req, res, next) => {
                 return res.status(500).json({ success: false, message: "Error retrieving permission data." });
             }
             if (appResults.length === 0) {
-                return res.status(404).json({ success: false, message: "Application not found." });
+                return res.status(200).json({ success: false, message: "Application not found." });
             }
 
             const groupName = appResults[0][permitColumn];
@@ -260,7 +263,7 @@ exports.getUpdateTaskPermission = (req, res, next) => {
                 }
 
                 if (!isMember) {
-                    return res.status(403).json({ success: false, message: "Access denied: You are not permitted to update this task." });
+                    return res.status(200).json({ success: false, message: "Access denied: You are not permitted to update this task." });
                 }
 
                 req.task_state_permission = true; // optional, can be used later in controller

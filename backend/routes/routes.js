@@ -40,6 +40,9 @@ router.post('/check-create-task-permission', isAuthenticatedUser, getCreateTaskP
 router.put('/task/:task', isAuthenticatedUser, getUpdateTaskPermission, taskController.updateTask);
 router.post('/check-update-task-permission', isAuthenticatedUser, getUpdateTaskPermission, (req, res) => {res.status(200).json({ success: true });});
 
+router.put('/task/approve', isAuthenticatedUser, getUpdateTaskPermission, taskController.approveTask)
+router.put('/task/reject', isAuthenticatedUser, getUpdateTaskPermission, taskController.rejectTask)
+
 // Authentication routes
 router.get("/auth/validateAccess", isAuthenticatedUser, validateAccess(), (req, res) => { const username = req.decoded.username;
     res.status(200).json({ success: true, username, group: req.userGroup});
