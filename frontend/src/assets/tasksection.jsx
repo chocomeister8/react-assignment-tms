@@ -185,7 +185,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       case 'To Do':
         return ['To Do', 'Doing']; // Only allow "To Do" or "Doing" from "To Do"
       case 'Doing':
-        return ['Doing', 'Done']; // Only allow "Doing" or "Done" from "Doing"
+        return ['To Do', 'Doing', 'Done']; // Only allow "Doing" or "Done" from "Doing"
       case 'Done':
         return ['Closed', 'Doing']; // Only allow "Closed" or "Doing" from "Done"
       default:

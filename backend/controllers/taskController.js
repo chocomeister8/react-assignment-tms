@@ -1,4 +1,29 @@
-const db = require("../config/database"); // Import MySQL connection
+const db = require("../config/database"); // Import MySQL 
+const nodemailer = require('nodemailer');
+
+const sendStatusChangeEmail = async (taskId, taskName, updatedBy, recipientEmail) => {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // or your SMTP provider
+      auth: {
+        user: 'wisexun@gmail.com',
+        pass: 'wfyo fmze frpm ianb',
+      },
+    });
+  
+    const mailOptions = {
+      from: '"Task Management System" <weissxun@gmail.com>',
+      to: recipientEmail,
+      subject: `Task ${taskName} sent for approval`,
+      text: `Task ID :${taskId} - Name: ${taskName} was sent for approval by ${updatedBy}.`
+    };
+  
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('Email sent!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
+  };
 
 exports.getAllTasks = (req, res) => {
     if (!req.decoded) {
@@ -213,7 +238,7 @@ exports.updateTask = (req, res) => {
                     const validTransitions = {
                         "Open" : ["Open", "To Do"],
                         "To Do" : ["To Do", "Doing"],
-                        "Doing" : ["Done", "Doing"],
+                        "Doing" : ["To Do", "Done", "Doing"],
                         "Done" : ["Done", "Closed", "Doing"],
                     }
 
@@ -227,9 +252,7 @@ exports.updateTask = (req, res) => {
                 
                     const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
 
-                    const noteDescription = (!Task_notes || Task_notes.trim() === "")
-                    ? `Task updated by ${Task_owner}`
-                    : Task_notes.trim();
+                    const noteDescription = (!Task_notes || Task_notes.trim() === "") ? `Task updated by ${Task_owner}` : Task_notes.trim();
 
                     const newNote = {
                         username: Task_owner,
@@ -262,11 +285,33 @@ exports.updateTask = (req, res) => {
                                     return res.status(500).json({ error: "Failed to update task." });
                                 });
                             }
+                        
                             db.commit((err) => {
                                 if(err) {
                                     return db.rollback(() => {
                                         return res.status(500).json({ error: "Failed to commit transaction." });
                                     })
+                                }
+                                const shouldSendEmail = currentState === "Doing" && Task_state === "Done";
+
+                                if (shouldSendEmail) {
+                                    db.query('SELECT Task_creator FROM task WHERE Task_id = ?', [Task_id], (err, taskResult) => {
+                                        if (err || taskResult.length === 0) {
+                                          console.error('Error fetching task creator:', err);
+                                          return;
+                                        }
+                                      
+                                        const taskCreator = taskResult[0].Task_creator;
+                                        db.query('SELECT email FROM user WHERE username = ?', [taskCreator], (err, userResult) => {
+                                            if (err || userResult.length === 0) {
+                                              console.error('Error fetching email for creator:', err);
+                                              return;
+                                            }
+                                        
+                                            const recipientEmail = userResult[0].email;
+                                            sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
+                                          });
+                                    });
                                 }
                                 return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
                             });
@@ -294,7 +339,7 @@ exports.updateTask = (req, res) => {
                 const validTransitions = {
                     "Open" : ["Open", "To Do"],
                     "To Do" : ["To Do", "Doing"],
-                    "Doing" : ["Done", "Doing"],
+                    "Doing" : ["To Do", "Done", "Doing"],
                     "Done" : ["Done", "Closed"],
                 }
 
@@ -348,6 +393,27 @@ exports.updateTask = (req, res) => {
                                 return db.rollback(() => {
                                     return res.status(500).json({ error: "Failed to commit transaction." });
                                 })
+                            }
+                            const shouldSendEmail = currentState === "Doing" && Task_state === "Done";
+
+                            if (shouldSendEmail) {
+                                db.query('SELECT Task_creator FROM task WHERE Task_id = ?', [Task_id], (err, taskResult) => {
+                                    if (err || taskResult.length === 0) {
+                                      console.error('Error fetching task creator:', err);
+                                      return;
+                                    }
+                                  
+                                    const taskCreator = taskResult[0].Task_creator;
+                                    db.query('SELECT email FROM user WHERE username = ?', [taskCreator], (err, userResult) => {
+                                        if (err || userResult.length === 0) {
+                                          console.error('Error fetching email for creator:', err);
+                                          return;
+                                        }
+                                    
+                                        const recipientEmail = userResult[0].email;
+                                        sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
+                                      });
+                                });
                             }
                             return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
                         });
