@@ -14,7 +14,7 @@ const sendStatusChangeEmail = async (taskId, taskName, updatedBy, recipientEmail
       from: '"Task Management System" <weissxun@gmail.com>',
       to: recipientEmail,
       subject: `Task ${taskName} sent for approval`,
-      text: `Task ID :${taskId} - Name: ${taskName} was sent for approval by ${updatedBy}.`
+      text: `Task ID :${taskId} , Task Name: ${taskName} was sent for approval by ${updatedBy}.`
     };
   
     try {
@@ -256,7 +256,7 @@ exports.updateTask = (req, res) => {
 
                     const newNote = {
                         username: Task_owner,
-                        currentState: Task_state,
+                        currentState: currentState,
                         timestamp: formattedDatetime,
                         desc: noteDescription
                     };
@@ -359,7 +359,7 @@ exports.updateTask = (req, res) => {
 
                 const newNote = {
                     username: Task_owner,
-                    currentState: Task_state,
+                    currentState: currentState,
                     timestamp: formattedDatetime,
                     desc: noteDescription
                 };

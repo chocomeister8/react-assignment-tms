@@ -81,7 +81,6 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
 
   const getTasksByStatus = (status) => {
     if (!selectedApp || !Array.isArray(taskArray)) {
-      //console.log('Early return: selectedApp or taskArray invalid');
       return [];
     }
     const filteredTasks = taskArray.filter(
@@ -160,13 +159,13 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
   const getVariantClass = (status) => {
     switch (status) {
       case 'To Do':
-        return 'bg-info';
+        return 'bg-info-subtle';
       case 'Doing':
-        return 'bg-warning';
+        return 'bg-warning-subtle';
       case 'Done':
-        return 'bg-success';
+        return 'bg-success-subtle';
       case 'Closed':
-        return 'bg-secondary';
+        return 'bg-secondary-subtle';
       default:
         return '';
     }
@@ -181,22 +180,21 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
   const getStatusOptions = (taskStatus) => {
     switch (taskStatus) {
       case 'Open':
-        return ['Open', 'To Do']; // Only allow "Open" or "To Do" from "Open"
+        return ['Open', 'To Do'];
       case 'To Do':
-        return ['To Do', 'Doing']; // Only allow "To Do" or "Doing" from "To Do"
+        return ['To Do', 'Doing']; 
       case 'Doing':
-        return ['To Do', 'Doing', 'Done']; // Only allow "Doing" or "Done" from "Doing"
+        return ['To Do', 'Doing', 'Done'];
       case 'Done':
-        return ['Closed', 'Doing']; // Only allow "Closed" or "Doing" from "Done"
+        return ['Closed', 'Doing']; 
       default:
-        return []; // No options for undefined status
+        return []; 
     }
   };
 
   return (
     <div>
     {error && <div className="alert alert-danger">{error}</div>}
-    
     <Row className="mt-3" style={{ rowGap: '1rem' }}>
       {statusList.map((status, idx) => {
         const filteredTasks = getTasksByStatus(status);
@@ -369,11 +367,21 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
         </Row>
         {Modalerror && <Alert variant="danger" className="mb-2">{Modalerror}</Alert>}
         </Modal.Body>
-          <Modal.Footer>
+        <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
-            {userGroup.includes("") ? (!isEditingTask ? (
-              <Button variant="success" onClick={handleEditClick}>Edit</Button>) : (<Button variant="success" onClick={handleUpdateTask}>Update Task</Button>)
-            ) : null}
+            {(hasUpdatePermission && taskState === "Done") ? (
+              <><Button variant="success" onClick={console.log('approve')}>Approve</Button>
+                <Button variant="danger" onClick={console.log('reject')}>Reject</Button></>
+            ) : (
+              hasUpdatePermission && (
+                !isEditingTask ? (
+                  <Button variant="success" onClick={handleEditClick}>Edit</Button>
+                ) : (
+                  <Button variant="success" onClick={handleUpdateTask}>Update Task</Button>
+                )
+              )
+            )}
+
             <Button variant="secondary" onClick={() => {
               setIsEditingTask(false);
               setModalError('');
