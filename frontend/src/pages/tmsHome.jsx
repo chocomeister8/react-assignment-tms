@@ -182,7 +182,9 @@ const TmsHome = () => {
               </Col>
               {selectedApp && hasPermission && (
                 <Col md={2} className="d-flex justify-content-end">
-                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>Create Task</Button>
+                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>
+                    Create Task
+                  </Button>
                 </Col>
               )}
               </div>

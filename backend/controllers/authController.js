@@ -191,6 +191,11 @@ exports.getCreateTaskPermission = (req, res, next) => {
 
         const groupName = results[0].App_permit_Create;
 
+        // ❗ Check if no group assigned at all
+        if (!groupName || groupName.trim() === "") {
+            return res.status(200).json({ success: false, message: "Access denied: No group assigned for task creation." });
+        }
+
         checkGroup(username, groupName, (err, groupString, isMember) => {
             if (err) {
                 return res.status(500).json({ success: false, message: "Server error during group check" });
@@ -203,6 +208,7 @@ exports.getCreateTaskPermission = (req, res, next) => {
                 return res.status(200).json({ success: false, message: "Access denied: User is not in the required group" });
             }
             // Contunue to taskcontroller to create task
+            req.app_permit_create = true;
             next();
         });
     });

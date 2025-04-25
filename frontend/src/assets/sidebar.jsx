@@ -185,8 +185,6 @@ const Sidebar = ( props ) => {
 
     const formattedStartDate =  App_startDate && !isNaN(new Date(App_startDate).getTime()) ? new Date(App_startDate).toISOString().split('T')[0] : null;
     const formattedEndDate =  App_endDate && !isNaN(new Date(App_endDate).getTime()) ? new Date(App_endDate).toISOString().split('T')[0] : null;
-
-    console.log("date:",formattedStartDate, formattedEndDate)
   
     try {
       const updateapplication = await updateApplication(App_Acronym, App_Description, App_Rnumber, formattedStartDate, formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create);
@@ -195,7 +193,6 @@ const Sidebar = ( props ) => {
         setError(updateapplication.error);
       } else {
         handleCloseAppDetails();
-        console.log(updateapplication)
         setApplications((prevApps) => prevApps.map((app) => app.App_Acronym === App_Acronym && app.App_Rnumber === App_Rnumber 
         ? { ...app, App_Description, App_startDate: formattedStartDate, App_endDate: formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }: app
           )
@@ -261,7 +258,6 @@ const Sidebar = ( props ) => {
           setMVPName('');
           setPlanStartDate('');
           setPlanEndDate('');
-          setPlanAppName('');
           setError('');
         }
       }

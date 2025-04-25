@@ -187,7 +187,10 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
       return;
     }
 
-    if (selectedTask?.Task_plan !== taskPlan) {
+    const existingPlan = (selectedTask?.Task_plan || "").trim();
+    const currentPlan = (taskPlan || "").trim();
+
+    if (existingPlan !== currentPlan) {
       setModalError("Changing the task plan during approval is not allowed.");
       return;
     }
