@@ -20,7 +20,6 @@ const TmsHome = () => {
   const [userGroup, setUserGroup] = useState('');
   const [plans, setPlans] = useState([]);
 
-
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskNotes, setTaskNotes] = useState('');
@@ -29,12 +28,16 @@ const TmsHome = () => {
   const [tasks, setTasks] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
   const [hasPermission, setHasPermission] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
 
   const handleAppSelect = async (app) => {
-    setSelectedApp(app);
+    setSelectedApp(app); // Step 1: update app
+    setRefreshTrigger(prev => prev + 1); // 🔁 causes TaskSection to refetch
+
     try {
-      const tasksData = await fetchTasks();
-      setTasks(tasksData);
+      const tasksData = await fetchTasks(app.App_Acronym); // Pass app acronym if needed
+      setTasks(tasksData); // Step 2: update tasks
     } catch (err) {
       setError("Failed to fetch tasks.");
     }
@@ -52,10 +55,14 @@ const TmsHome = () => {
     try {
       const fetchedTasks = await fetchTaskByAppAcronym(selectedApp.App_Acronym);
       setTasks(fetchedTasks);
+    
+      return fetchedTasks;
     } catch (err) {
       setError(err.message);
+      return [];
     }
   };
+
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -68,6 +75,7 @@ const TmsHome = () => {
   }, [error, success]);
 
   useEffect (() => {
+    
     if (selectedApp) {
       fetchTasks();
     }
@@ -160,6 +168,7 @@ const TmsHome = () => {
         setError(err.message);
       }
     }
+    
 
   return (
     <Layout onSuccess={handleSuccess}>
@@ -188,7 +197,7 @@ const TmsHome = () => {
                 </Col>
               )}
               </div>
-            <TaskSection selectedApp={selectedApp} tasks={tasks} refetchTasks={fetchTasks} onUpdateSuccess={handleSuccess}/>
+            <TaskSection selectedApp={selectedApp} tasks={tasks} refreshTrigger={refreshTrigger} refetchTasks={fetchTasks} onUpdateSuccess={handleSuccess}/>
             </Row>
           </Col>
         </Row>

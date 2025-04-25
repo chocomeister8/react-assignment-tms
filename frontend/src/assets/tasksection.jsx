@@ -3,9 +3,9 @@ import React , { useEffect, useState } from 'react';
 import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel, Alert } from 'react-bootstrap';
 
 // Import backend API calls
-import { fetchUsername, fetchPlans, updateTask, checkUpdateTaskPermission, approveTask, rejectTask } from '../assets/apiCalls';
+import { fetchUsername, fetchPlans, updateTask, checkUpdateTaskPermission, approveTask, rejectTask, fetchTaskByTaskID } from '../assets/apiCalls';
 
-const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
+const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refreshTrigger }) => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [Modalerror, setModalError] = useState(null);
@@ -79,6 +79,12 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
     }
   }, [selectedTask]);
 
+  useEffect(() => {
+    if (selectedApp) {
+      refetchTasks(selectedApp.App_Acronym);
+    }
+  }, [refreshTrigger]);
+
 
   const getTasksByStatus = (status) => {
     if (!selectedApp || !Array.isArray(taskArray)) {
@@ -90,9 +96,21 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess }) => {
     return filteredTasks;
   };
 
-  const handleTaskClick = (task) => {
-    setSelectedTask(task);
-    setShowTaskDetailsModal(true);
+  const handleTaskClick = async (selectedTask) => {
+    try {
+      const result = await fetchTaskByTaskID(selectedTask.Task_id);
+      console.log(result); // Debugging
+      if (result.success && result.Task) {
+        setSelectedTask(result.Task);  // Set the selected task data
+        setShowTaskDetailsModal(true);            // Open the modal
+      } else {
+        setError("Task not found.");
+      }
+      refetchTasks(); // Optional, if you want to refresh tasks
+    } catch (err) {
+      console.error(err);
+      setError("Could not fetch task details.");
+    }
   };
 
   const handleClose = () => {

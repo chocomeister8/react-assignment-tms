@@ -39,6 +39,7 @@ const Sidebar = ( props ) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [filteredPlans, setFilteredPlans] = useState([]);
   const [isEditingPlan, setIsEditingPlan] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const loadData = async () => {
     try {
@@ -96,6 +97,7 @@ const Sidebar = ( props ) => {
   const handleShowAppPlans = (app) => {
     setSelectedApp(app);
     setPlanAppName(app.App_Acronym);
+    setRefreshTrigger(prev => prev + 1); // Force a refresh every app click
     const appPlans = plans.filter(plan => plan.Plan_app_Acronym === app.App_Acronym);
     setFilteredPlans(appPlans);
     if (props.onAppSelect) {
@@ -319,7 +321,7 @@ const Sidebar = ( props ) => {
           {applications.map((app, index) => { const isSelected = selectedApp?.App_Acronym === app.App_Acronym;
           return (
             <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
-              <ListGroup.Item action onClick={() => !isSelected && handleShowAppPlans(app)} style={{flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px', backgroundColor: isSelected ? '#d3d3d3' : '',pointerEvents: isSelected ? 'none' : 'auto',}}>
+              <ListGroup.Item action onClick={() => handleShowAppPlans(app)} style={{flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', borderRadius: '8px', backgroundColor: isSelected ? '#d3d3d3' : '',}}>
                 {app.App_Acronym}
               </ListGroup.Item>
               <i className="bi bi-info-circle-fill ms-2" style={{ color: '#000', cursor: 'pointer' }} onClick={(e) => {e.stopPropagation(); handleShowAppDetails(app)}}/>

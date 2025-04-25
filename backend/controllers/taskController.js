@@ -59,6 +59,26 @@ exports.getTaskByAppAcronym = (req, res) => {
     })
 }
 
+exports.getTaskByTaskID = (req, res) => {
+
+    if (!req.decoded) {
+        return res.status(200).json({ error: "Token is missing or invalid." });
+    }
+
+    const { Task_id } = req.params;
+    console.log("Received Task_id:", Task_id);
+    db.query('SELECT Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate FROM task WHERE Task_id = ?', [Task_id], (err, results) =>{
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (results.length === 0){
+            return res.status(200).json([{ message: 'Task not found!' }]);
+        }
+        console.log(results);
+        res.status(200).json({ success: true, Task: results[0] });
+    })
+}
+
 exports.createTask = (req, res) => {
 
     let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;

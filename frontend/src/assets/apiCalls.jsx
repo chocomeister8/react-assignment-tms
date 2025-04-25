@@ -192,6 +192,18 @@ export const fetchTaskByAppAcronym = async (Task_app_Acronym) => {
     }
 };
 
+
+export const fetchTaskByTaskID = async (Task_id) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/taskid/${Task_id}`, {headers: { "Content-Type": "application/json" }, withCredentials: true });
+        if (response.data.success) {
+            return response.data; 
+        }
+    } catch (error) {
+        throw new Error("Failed to fetch tasks.");
+    }
+};
+
 export const updateTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/task/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
