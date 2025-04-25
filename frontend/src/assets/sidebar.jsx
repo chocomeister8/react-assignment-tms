@@ -10,10 +10,8 @@ const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);
   const [showDetails, setShowDetailsModal] = useState(false);
   const handleShowAppModal = () => setShowModal(true);
-  const handleCloseAppModal = () => setShowModal(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const handleShowPlanModal = () => setShowPlanModal(true);
-  const handleClosePlanModal = () => setShowPlanModal(false);
   const [showPlanDetailsModal, setShowPlanDetailsModal] = useState(false);
   const handleClosePlanDetailsModal = () => setShowPlanDetailsModal(false);
   const [error, setError] = useState(null);
@@ -75,6 +73,11 @@ const Sidebar = ( props ) => {
   };
   const handleCloseAppDetails = () => {
     setShowDetailsModal(false);
+    setAppAcronym(""); // Reset app acronym
+    setAppRNumber(null); // Reset RNumber
+    setAppStartDate(""); // Reset start date
+    setAppEndDate(""); // Reset end date
+    setAppDescription(""); // Reset description
     setSelectedApp({
       App_permit_Create: "",
       App_permit_Open: "",
@@ -85,6 +88,34 @@ const Sidebar = ( props ) => {
       App_endDate: "",
       App_Description: ""
     });
+  };
+
+  const handleCloseAppModal = () => {
+    setShowModal(false);
+    setAppAcronym(""); // Reset app acronym
+    setAppRNumber(null); // Reset RNumber
+    setAppStartDate(""); // Reset start date
+    setAppEndDate(""); // Reset end date
+    setAppDescription(""); // Reset description
+    setDropdowns({
+      App_permit_Create: "",
+      App_permit_Open: "",
+      App_permit_toDoList: "",
+      App_permit_Doing: "",
+      App_permit_Done: "",
+      App_startDate: "",
+      App_endDate: "",
+      App_Description: ""
+    }); // Reset all dropdown values
+  };
+
+  const handleClosePlanModal = () => {
+    // Reset the state fields when closing the app modal
+    setShowPlanModal(false);
+    setMVPName("");
+    setPlanStartDate("");
+    setPlanEndDate("");
+    setError("");
   };
 
   const handleDropdownChange = (dropdownName) => (e) => {
@@ -122,11 +153,11 @@ const Sidebar = ( props ) => {
     const app_description = appDescription.trim();
     const app_startdate = appStartDate;
     const app_enddate = appEndDate;
-    const app_permit_create = dropdowns.appPermitCreate.trim();
-    const app_permit_open = dropdowns.appPermitOpen.trim(); 
-    const app_permit_todo = dropdowns.appPermitToDo.trim(); 
-    const app_permit_doing = dropdowns.appPermitDoing.trim(); 
-    const app_permit_done = dropdowns.appPermitDone.trim(); 
+    const app_permit_create = (dropdowns.appPermitCreate || "").trim();
+    const app_permit_open = (dropdowns.appPermitOpen || "").trim(); 
+    const app_permit_todo = (dropdowns.appPermitToDo || "").trim(); 
+    const app_permit_doing = (dropdowns.appPermitDoing || "").trim(); 
+    const app_permit_done = (dropdowns.appPermitDone || "").trim();
     
     if(!app_acronym || !app_rnumber ){
       setError("Please fill in all fields!");
@@ -200,6 +231,7 @@ const Sidebar = ( props ) => {
           )
         );
         props.onUpdateDone?.(updateapplication.success);
+        setIsEditMode(false);
       }
     } catch (err) {
       setError(err.message);
@@ -222,8 +254,6 @@ const Sidebar = ( props ) => {
     const plan_startDate = PlanStartDate;
     const plan_endDate = PlanEndDate;
     const plan_appName = PlanAppName.trim().toLowerCase();
-
-    console.log(plan_mvp_name, plan_startDate, plan_endDate, plan_appName)
 
     if(!plan_mvp_name || !plan_startDate || !plan_endDate || !plan_appName){
       setError("Please fill in all fields!");
@@ -370,7 +400,7 @@ const Sidebar = ( props ) => {
           )}
         </Col>
       </Row>
-      <Modal show={showModal} onHide={handleCloseAppModal}>
+      <Modal show={showModal} onHide={handleCloseAppModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Create App form</Modal.Title>
         </Modal.Header>
@@ -498,7 +528,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal show={showDetails} onHide={handleCloseAppDetails}>
+      <Modal show={showDetails} onHide={handleCloseAppDetails} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Application Information</Modal.Title>
         </Modal.Header>
@@ -635,7 +665,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal show={showPlanModal} onHide={handleClosePlanModal}>
+      <Modal show={showPlanModal} onHide={handleClosePlanModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Create Plan form</Modal.Title>
         </Modal.Header>
@@ -647,7 +677,7 @@ const Sidebar = ( props ) => {
               <Col md={12}>
                 <Form.Group controlId="formPlanName" className='mb-1'>
                   <FloatingLabel controlId="floatingPlanName" label="MVP Name">
-                    <Form.Control type="text" placeholder="Enter app name" required onChange={(e) => setMVPName(e.target.value)}/>
+                    <Form.Control type="text" placeholder="Enter plan name" required onChange={(e) => setMVPName(e.target.value)}/>
                   </FloatingLabel>
                 </Form.Group>
               </Col>
@@ -675,7 +705,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal}>
+      <Modal show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Plan Information</Modal.Title>
         </Modal.Header>

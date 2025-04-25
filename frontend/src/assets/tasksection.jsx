@@ -72,6 +72,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     if (error || success) {
       const timer = setTimeout(() => {
         setError('');
+        setModalError('');
         setSuccess('');
       }, 2000);
   
@@ -227,8 +228,9 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         setIsEditingTask(false);
         setShowTaskDetailsModal(false);
         await refetchTasks();
+        setModalError('');
         onUpdateSuccess("Task approved successfully!");
-        }
+      }
     }
     catch (err) {
       setModalError(err.message);
@@ -266,6 +268,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         setIsEditingTask(false);
         setShowTaskDetailsModal(false);
         await refetchTasks();
+        setModalError('');
         onUpdateSuccess("Task rejected successfully!");
         }
     }
@@ -350,7 +353,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         );
       })}
     </Row>
-    <Modal show={showTaskDetailsModal} onHide={handleClose} centered>
+    <Modal show={showTaskDetailsModal} onHide={handleClose} centered backdrop="static">
         <Modal.Header closeButton >
           <Modal.Title>Task Name: {selectedTask?.Task_Name}</Modal.Title>
         </Modal.Header>

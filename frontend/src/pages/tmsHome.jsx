@@ -201,7 +201,7 @@ const TmsHome = () => {
             </Row>
           </Col>
         </Row>
-        <Modal show={showTaskModal} onHide={handleCloseTaskModal}>
+        <Modal show={showTaskModal} onHide={handleCloseTaskModal} centered backdrop="static">
           <Modal.Header closeButton>
             <Modal.Title>Create Task form</Modal.Title>
           </Modal.Header>

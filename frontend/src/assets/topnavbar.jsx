@@ -150,7 +150,7 @@ const Layout = ({ children, onSuccess }) => {
       <div style={{ marginTop: '50px' }}>
         {children}
       </div>
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal show={showModal} onHide={handleCloseModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Edit Details</Modal.Title>
         </Modal.Header>
