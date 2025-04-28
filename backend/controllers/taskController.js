@@ -20,12 +20,15 @@ const sendStatusChangeEmail = async (taskId, taskName, updatedBy, recipientEmail
       text: `Task ID :${taskId} , Task Name: ${taskName} was sent for approval by ${updatedBy}.`
     };
   
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log('Email sent!');
-    } catch (error) {
-      console.error('Error sending email:', error);
-    }
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error('Error sending email to', recipientEmail, error);
+            reject(error);
+        } else {
+            console.log('Email sent to', recipientEmail, info.response);
+            resolve(info);
+        }
+    });
 };
 
 // Get all task method
@@ -332,23 +335,32 @@ exports.updateTask = (req, res) => {
                                 const shouldSendEmail = currentState === "Doing" && Task_state === "Done";
 
                                 if (shouldSendEmail) {
-                                    db.query('SELECT Task_creator FROM task WHERE Task_id = ?', [Task_id], (err, taskResult) => {
-                                        if (err || taskResult.length === 0) {
-                                          console.error('Error fetching task creator:', err);
-                                          return;
+                                    db.query('SELECT App_permit_Done FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, permResult) => {
+                                        if (err || permResult.length === 0){
+                                            console.error('Error fetching group:', err);
+                                            return;
                                         }
-                                      
-                                        const taskCreator = taskResult[0].Task_creator;
-                                        db.query('SELECT email FROM user WHERE username = ?', [taskCreator], (err, userResult) => {
-                                            if (err || userResult.length === 0) {
-                                              console.error('Error fetching email for creator:', err);
-                                              return;
+                                        const permAppPermitDone = permResult[0].App_permit_Done;
+                                        console.log("permAppPermitDone:", permAppPermitDone);
+    
+                                        const likeValue = `%,${permAppPermitDone},%`;
+                                        console.log("Generated LIKE value:", likeValue); // Debug
+
+                                        db.query('SELECT email FROM user WHERE REPLACE(user_groupName, " ", "") LIKE ?', [likeValue], (err, usersResults) => {
+                                            if (err) {
+                                                console.error('Error fetching emails:', err);
+                                                return;
                                             }
-                                        
-                                            const recipientEmail = userResult[0].email;
-                                            sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
-                                          });
-                                    });
+                                            if (usersResults.length === 0) {
+                                                console.error('No users found in group:', permAppPermitDone);
+                                                return;
+                                            }
+                                            usersResults.forEach(user => {
+                                                const recipientEmail = user.email;
+                                                sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
+                                            });
+                                        });
+                                    })
                                 }
                                 return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
                             });
@@ -435,23 +447,30 @@ exports.updateTask = (req, res) => {
                             const shouldSendEmail = currentState === "Doing" && Task_state === "Done";
 
                             if (shouldSendEmail) {
-                                db.query('SELECT Task_creator FROM task WHERE Task_id = ?', [Task_id], (err, taskResult) => {
-                                    if (err || taskResult.length === 0) {
-                                      console.error('Error fetching task creator:', err);
-                                      return;
+                                db.query('SELECT App_permit_Done FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, permResult) => {
+                                    if (err || permResult.length === 0){
+                                        console.error('Error fetching group:', err);
+                                        return;
                                     }
-                                  
-                                    const taskCreator = taskResult[0].Task_creator;
-                                    db.query('SELECT email FROM user WHERE username = ?', [taskCreator], (err, userResult) => {
-                                        if (err || userResult.length === 0) {
-                                          console.error('Error fetching email for creator:', err);
-                                          return;
+                                    const permAppPermitDone = permResult[0].App_permit_Done;
+                                    const likeValue = `%,${permAppPermitDone},%`;
+                                    console.log("Generated LIKE value:", likeValue); // Debug
+
+                                    db.query('SELECT email FROM user WHERE REPLACE(user_groupName, " ", "") LIKE ?', [likeValue], (err, usersResults) => {
+                                        if (err) {
+                                            console.error('Error fetching emails:', err);
+                                            return;
                                         }
-                                    
-                                        const recipientEmail = userResult[0].email;
-                                        sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
-                                      });
-                                });
+                                        if (usersResults.length === 0) {
+                                            console.error('No users found in group:', permAppPermitDone);
+                                            return;
+                                        }
+                                        usersResults.forEach(user => {
+                                            const recipientEmail = user.email;
+                                            sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
+                                        });
+                                    });
+                                })
                             }
                             return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
                         });
