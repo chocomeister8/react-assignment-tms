@@ -1,8 +1,9 @@
-// Import Databae component
+// Import Database component
 const db = require("../config/database");
 // Import nodemailer component
 const nodemailer = require('nodemailer');
 
+// Send Email method
 const sendStatusChangeEmail = async (taskId, taskName, updatedBy, recipientEmail) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail', 
@@ -25,13 +26,15 @@ const sendStatusChangeEmail = async (taskId, taskName, updatedBy, recipientEmail
     } catch (error) {
       console.error('Error sending email:', error);
     }
-  };
+};
 
+// Get all task method
 exports.getAllTasks = (req, res) => {
+    // If token does not exist
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
-    db.query('SELECT Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate FROM task', (err, results) => {
+    db.query('SELECT Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate FROM task ORDER BY Task_createDate DESC', (err, results) => {
         if (err) {
         return res.status(500).json({ error : err.message });
         }
@@ -39,8 +42,9 @@ exports.getAllTasks = (req, res) => {
     });
 };
 
+// Get task by app acornym method
 exports.getTaskByAppAcronym = (req, res) => {
-
+    // If token does not exist
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
@@ -57,16 +61,16 @@ exports.getTaskByAppAcronym = (req, res) => {
         console.log(results);
         res.status(200).json({ tasks: results });
     })
-}
+};
 
+// Get task by task_id method
 exports.getTaskByTaskID = (req, res) => {
-
+    // If token does not exist
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
     }
 
     const { Task_id } = req.params;
-    console.log("Received Task_id:", Task_id);
     db.query('SELECT Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate FROM task WHERE Task_id = ?', [Task_id], (err, results) =>{
         if (err) {
             return res.status(500).json({ error: err.message });
@@ -77,8 +81,9 @@ exports.getTaskByTaskID = (req, res) => {
         console.log(results);
         res.status(200).json({ success: true, Task: results[0] });
     })
-}
+};
 
+// Get create task method
 exports.createTask = (req, res) => {
 
     let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;
@@ -101,11 +106,13 @@ exports.createTask = (req, res) => {
     }
     ]);
 
+    // If token does not exist
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
-
+    // If task plan exists
     if (Task_plan) {
+        // Check if plan with the same plan_mvp_name and plan_app_acronym exists
         db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?',[Task_plan, Task_app_Acronym], (err, planResults) => {
             if (err) {
                 return res.status(500).json({ error: 'Database error during plan check.'});
@@ -114,7 +121,7 @@ exports.createTask = (req, res) => {
             if(planResults.length === 0) {
                 return res.status(200).json({ error: 'Plan does not exist.' });
             }
-        
+            // Check if app with the same app Rnumber exists
             db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
                 if (err){
                     return res.status(500).json({ error: 'Database error during app check.' });
@@ -126,7 +133,7 @@ exports.createTask = (req, res) => {
                 const task_number = appResults[0].App_Rnumber;
                 const Task_id = `${Task_app_Acronym}_${task_number}`;
                 
-        
+                // Check if task with the same task_id exists
                 db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                     if (err) {
                         return res.status(500).json({ error: 'Database error occurred.' });
@@ -134,18 +141,19 @@ exports.createTask = (req, res) => {
                     if (results.length > 0) {
                         return res.status(200).json({ error: 'Task_id already exists!'});
                     }
-        
+                    // Start of transaction
                     db.beginTransaction((err) => {
                         if (err) {
                             return res.status(500).json({ error: "Failed to start transaction." });
                         }
-                    
+                        // Insert task statement
                         db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
                             if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
                                 });
                             }
 
+                            // Increase task RNumber after successfully inserting task
                             db.query('UPDATE application SET App_Rnumber = App_Rnumber + 1 WHERE App_Acronym = ?', [Task_app_Acronym], (err, results) => {
                                 if (err) {
                                     return db.rollback(() => {
@@ -166,7 +174,9 @@ exports.createTask = (req, res) => {
             });
         });
     }
+    // When plan does not exists
     else {
+        // Check if app with the same app Rnumber exists
         db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
             if (err){
                 return res.status(500).json({ error: 'Database error during app check.' });
@@ -181,7 +191,8 @@ exports.createTask = (req, res) => {
 
             const task_number = appResults[0].App_Rnumber;
             const Task_id = `${Task_app_Acronym}_${task_number}`;
-    
+            
+            // Check if task with the same task_id exists
             db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                 if (err) {
                     return res.status(500).json({ error: 'Database error occurred.' });
@@ -194,13 +205,15 @@ exports.createTask = (req, res) => {
                     if (err) {
                         return res.status(500).json({ error: "Failed to start transaction." });
                     }
-                
+                    
+                    // Insert task statement
                     db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
                         if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
                             });
                         }
-
+                        
+                        // Increase task RNumber after successfully inserting task
                         db.query('UPDATE application SET App_Rnumber = App_Rnumber + 1 WHERE App_Acronym = ?', [Task_app_Acronym], (err, results) => {
                             if (err) {
                                 return db.rollback(() => {
@@ -222,18 +235,21 @@ exports.createTask = (req, res) => {
     };
 };
 
+// Get update task method
 exports.updateTask = (req, res) => {
     let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner} = req.body;
-
+    
+    // If token does not exist
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
-
+    // Field validation
     if(!Task_Name || !Task_state || !Task_owner){
         return res.status(200).json({ error: "All fields must be filled." });
     }
-
+    // If task plan exists
     if (Task_plan) {
+        // Check if plan with the same plan_mvp_name and plan_app_acronym exists 
         db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ? ',[Task_plan, Task_app_Acronym], (err, planResults) => {
             if (err) {
                 return res.status(500).json({ error: 'Database error during plan check.'});
@@ -242,7 +258,7 @@ exports.updateTask = (req, res) => {
             if(planResults.length === 0) {
                 return res.status(200).json({ error: 'Plan does not exist.' });
             }
-        
+            // Check if app with the same app Rnumber exists
             db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
                 if (err){
                     return res.status(500).json({ error: 'Database error during app check.' });
@@ -251,6 +267,7 @@ exports.updateTask = (req, res) => {
                     return res.status(200).json({ error: 'Application does not exist.' });
                 }
 
+                // Select the task_plan, state and notes based on task_id
                 db.query("SELECT Task_plan, Task_state, Task_notes FROM task WHERE Task_id = ? ", [Task_id], (err, results) => {
                     if (err || results.length === 0){
                         return res.status(500).json({ error: "Failed to fetch task state."});
@@ -258,6 +275,7 @@ exports.updateTask = (req, res) => {
 
                     const currentState = results[0].Task_state;
 
+                    // Defining valid change of states
                     const validTransitions = {
                         "Open" : ["Open", "To Do"],
                         "To Do" : ["To Do", "Doing"],
@@ -295,7 +313,7 @@ exports.updateTask = (req, res) => {
                         if(err) {
                             return res.status(500).json({ error: "Failed to start transaction." });
                         }
-
+                        // Update task method
                         db.query(`UPDATE task SET Task_Name = ?, Task_description = ?, Task_notes = ?, Task_plan = ?, Task_state = ? , Task_owner = ? WHERE Task_id = ?`, 
                             [Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner, Task_id], (err, result) => {
                             if (err) {
@@ -442,8 +460,9 @@ exports.updateTask = (req, res) => {
             });
         });
     }
-}
+};
 
+// Approve task method
 exports.approveTask = (req, res) => {
 
     let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner } = req.body;
@@ -542,6 +561,7 @@ exports.approveTask = (req, res) => {
     });
 };
 
+// Reject task method
 exports.rejectTask = (req, res) => {
     let { Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner } = req.body;
 

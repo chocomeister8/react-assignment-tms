@@ -1,3 +1,4 @@
+// Import Database component
 const db = require("../config/database");
 
 exports.getAllPlan = (req, res) => {

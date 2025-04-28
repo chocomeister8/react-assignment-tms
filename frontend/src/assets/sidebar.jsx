@@ -97,6 +97,7 @@ const Sidebar = ( props ) => {
     setAppStartDate(""); // Reset start date
     setAppEndDate(""); // Reset end date
     setAppDescription(""); // Reset description
+    setError("");
     setDropdowns({
       App_permit_Create: "",
       App_permit_Open: "",

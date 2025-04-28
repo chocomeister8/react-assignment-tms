@@ -9,6 +9,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [Modalerror, setModalError] = useState(null);
+
   const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [userGroup, setUserGroup] = useState('');
@@ -27,7 +28,8 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
   const statusList = ['Open', 'To Do', 'Doing', 'Done', 'Closed'];
   const taskArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
 
-  useEffect (() => {  
+  useEffect (() => {
+    // Setting the task details upon loading
     if (selectedTask) {
       setTaskName(selectedTask.Task_Name || '');
       setTaskDescription(selectedTask.Task_description || '');
@@ -41,7 +43,8 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         if (!selectedApp) {
           return;
         }
-    
+        
+        // check for update permissions of the current user
         const response = await checkUpdateTaskPermission(selectedTask.Task_id); 
         if (response.success) {
           setHasUpdatePermission(true);
@@ -81,12 +84,13 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
   }, [selectedTask]);
 
   useEffect(() => {
+    // Ensure that the task will refetch upon reclicking app in sidebar
     if (selectedApp) {
       refetchTasks(selectedApp.App_Acronym);
     }
   }, [refreshTrigger]);
 
-
+  // FIltering task to the states
   const getTasksByStatus = (status) => {
     if (!selectedApp || !Array.isArray(taskArray)) {
       return [];
@@ -97,13 +101,14 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     return filteredTasks;
   };
 
+  // Select task method
   const handleTaskClick = async (selectedTask) => {
     try {
-      const result = await fetchTaskByTaskID(selectedTask.Task_id);
+      const result = await fetchTaskByTaskID(selectedTask.Task_id); // Fetch task details based on selected task_id
       console.log(result); // Debugging
       if (result.success && result.Task) {
         setSelectedTask(result.Task);  // Set the selected task data
-        setShowTaskDetailsModal(true);            // Open the modal
+        setShowTaskDetailsModal(true); // Open the details modal
       } else {
         setError("Task not found.");
       }
@@ -114,11 +119,13 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     }
   };
 
+  // Close modal
   const handleClose = () => {
     setShowTaskDetailsModal(false);
     setSelectedTask(null);
   };
 
+  // Set edit mode
   const handleEditClick = () => {
     setIsEditingTask(true);
   };
@@ -141,6 +148,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     setPreviousState(selectedTask?.Task_state);
   };
 
+  // Update task method
   const handleUpdateTask = async () => {
     setModalError(null);
 
@@ -184,6 +192,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     }
   }
 
+  // Approve task method
   const handleApproveTask = async () => {
     setModalError(null);
 
@@ -237,6 +246,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     }
   }
 
+  // Reject task method
   const handleRejectTask = async () => {
     setModalError(null);
 
@@ -277,6 +287,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     }
   }
 
+  // Setting task background color based on state
   const getVariantClass = (status) => {
     switch (status) {
       case 'To Do':
@@ -292,6 +303,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     }
   };
 
+  // Displaying the dropdownlist values based on the current task state
   const getStatusOptions = (taskStatus) => {
     switch (taskStatus) {
       case 'Open':
@@ -407,21 +419,14 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
               {/* Check if the task is in 'Open' state, if not, disable the select field */}
               {(isEditingTask && selectedTask?.Task_state === "Open") || 
               (selectedTask?.Task_state === "Done" && hasUpdatePermission) ? (
-                <Form.Select 
-                  required 
-                  value={taskPlan} 
-                  onChange={(e) => setTaskPlan(e.target.value)}>
+                <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
                   <option value="">Select a Plan</option>
                   {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
                     <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
                   ))}
                 </Form.Select>
               ) : (
-                <Form.Control 
-                  type="text" 
-                  value={selectedTask?.Task_plan || ""} 
-                  disabled 
-                />
+                <Form.Control type="text" value={selectedTask?.Task_plan || ""} disabled />
               )}
             </FloatingLabel>
           </Form.Group>
@@ -497,27 +502,24 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         {Modalerror && <Alert variant="danger" className="mb-2">{Modalerror}</Alert>}
         </Modal.Body>
         <Modal.Footer>
-          <div className="w-100 d-flex justify-content-center gap-2">
+         <div className="w-100 d-flex justify-content-center gap-2">
+          {/* Displays buttons only if user has update permssions and the task state is done */}
             {(hasUpdatePermission && selectedTask?.Task_state === "Done") ? (
-              <><Button variant="success" onClick={handleApproveTask}>Approve</Button>
+              <><Button variant="success" onClick={handleApproveTask} disabled={taskPlan !== selectedTask?.Task_plan}>Approve</Button>
                 <Button variant="danger" onClick={handleRejectTask}>Reject</Button></>
             ) : (
-              hasUpdatePermission && (
-                !isEditingTask ? (
-                  <Button variant="success" onClick={handleEditClick}>Edit</Button>
-                ) : (
-                  <Button variant="success" onClick={handleUpdateTask}>Update Task</Button>
-                )
+              hasUpdatePermission && (!isEditingTask ? (
+                <Button variant="success" onClick={handleEditClick}>Edit</Button>
+              ) : (
+                <Button variant="success" onClick={handleUpdateTask}>Update Task</Button>
               )
-            )}
-
-            <Button variant="secondary" onClick={() => {
-              setIsEditingTask(false);
-              setModalError('');
-              setShowTaskDetailsModal(false);
-            }}>
-              Close
-            </Button>
+            )
+          )}
+          <Button variant="secondary" onClick={() => {
+            setIsEditingTask(false);
+            setModalError('');
+            setShowTaskDetailsModal(false);
+          }}>Close</Button>
           </div>
         </Modal.Footer>
       </Modal>

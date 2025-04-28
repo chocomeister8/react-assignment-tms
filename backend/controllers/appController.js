@@ -1,5 +1,6 @@
 const db = require("../config/database"); // Import MySQL connection
 
+// Get all applications method
 exports.getAllApplications = (req, res) => {
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
@@ -47,12 +48,12 @@ exports.createApp = (req, res) => {
       setError("App Rnumber must be a whole number between 1 and 9999 and cannot start with 0.");
       return;
     }
-    db.query('SELECT App_Acronym FROM application WHERE App_Acronym = ? AND App_Rnumber = ?', [App_Acronym, App_Rnumber], (err, results) => {
+    db.query('SELECT App_Acronym, App_Rnumber FROM application WHERE App_Acronym = ?', [App_Acronym], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database error occurred.' });
         }
         if (results.length > 0) {
-            return res.status(200).json({ error: 'An application with this acronym and Rnumber already exists!'});
+            return res.status(200).json({ error: 'An application with this acronym already exists!'});
         }
         db.beginTransaction((err) => {
             if(err) {

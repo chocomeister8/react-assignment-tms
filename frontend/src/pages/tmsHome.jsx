@@ -74,8 +74,8 @@ const TmsHome = () => {
     }
   }, [error, success]);
 
+
   useEffect (() => {
-    
     if (selectedApp) {
       fetchTasks();
     }
@@ -85,8 +85,8 @@ const TmsHome = () => {
         if (!selectedApp) {
           return;
         } 
-  
-        const response = await checkcreateTaskPermission(selectedApp.App_Acronym); // your axios call
+
+        const response = await checkcreateTaskPermission(selectedApp.App_Acronym); // check create task permissions
         if (response.success) {
           setHasPermission(true);
         } else {

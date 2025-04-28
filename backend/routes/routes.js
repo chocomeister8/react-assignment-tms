@@ -36,9 +36,11 @@ router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAl
 router.get('/task/:Task_app_Acronym', isAuthenticatedUser, validateAccess(), taskController.getTaskByAppAcronym);
 router.get('/taskid/:Task_id', isAuthenticatedUser, validateAccess(), taskController.getTaskByTaskID);
 router.post('/create-task', isAuthenticatedUser, getCreateTaskPermission, taskController.createTask);
+// Check Create task permissions
 router.post('/check-create-task-permission', isAuthenticatedUser, getCreateTaskPermission, (req, res) => {res.status(200).json({ success: true });});
 
 router.put('/task/:task', isAuthenticatedUser, getUpdateTaskPermission, taskController.updateTask);
+// Check Update task permissions
 router.post('/check-update-task-permission', isAuthenticatedUser, getUpdateTaskPermission, (req, res) => {res.status(200).json({ success: true });});
 
 router.put('/approvetask/:task', isAuthenticatedUser, getUpdateTaskPermission, taskController.approveTask)
