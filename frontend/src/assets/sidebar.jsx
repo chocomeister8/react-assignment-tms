@@ -4,7 +4,7 @@ import { Col, ListGroup, Row, Button, Modal, Form, FloatingLabel, Alert } from '
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // Backend API calls
-import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication, updatePlan } from "../assets/apiCalls";
+import { createApplication, fetchApplications, fetchGroups, createPlan, fetchPlans, fetchUsername, updateApplication, updatePlan} from "../assets/apiCalls";
 
 const Sidebar = ( props ) => {
   const [showModal, setShowModal] = useState(false);
@@ -13,7 +13,6 @@ const Sidebar = ( props ) => {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const handleShowPlanModal = () => setShowPlanModal(true);
   const [showPlanDetailsModal, setShowPlanDetailsModal] = useState(false);
-  const handleClosePlanDetailsModal = () => setShowPlanDetailsModal(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null); 
   const [applications, setApplications] = useState([]);
@@ -33,6 +32,8 @@ const Sidebar = ( props ) => {
   const [PlanStartDate, setPlanStartDate] = useState('');
   const [PlanEndDate, setPlanEndDate] = useState('');
   const [PlanAppName, setPlanAppName] = useState('');
+  const [PlanColor, setPlanColor] = useState('');
+
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [filteredPlans, setFilteredPlans] = useState([]);
@@ -116,6 +117,17 @@ const Sidebar = ( props ) => {
     setMVPName("");
     setPlanStartDate("");
     setPlanEndDate("");
+    setPlanColor("");
+    setError("");
+  };
+
+  const handleClosePlanDetailsModal = () => {
+    // Reset the state fields when closing the app modal
+    setShowPlanDetailsModal(false);
+    setMVPName("");
+    setPlanStartDate("");
+    setPlanEndDate("");
+    setPlanColor("");
     setError("");
   };
 
@@ -255,8 +267,9 @@ const Sidebar = ( props ) => {
     const plan_startDate = PlanStartDate;
     const plan_endDate = PlanEndDate;
     const plan_appName = PlanAppName.trim().toLowerCase();
+    const plan_color = PlanColor;
 
-    if(!plan_mvp_name || !plan_startDate || !plan_endDate || !plan_appName){
+    if(!plan_mvp_name || !plan_startDate || !plan_endDate || !plan_appName || !plan_color){
       setError("Please fill in all fields!");
       return;
     }
@@ -266,7 +279,7 @@ const Sidebar = ( props ) => {
       return;
     }
     try{
-      const newPlan = await createPlan(plan_mvp_name, plan_startDate, plan_endDate, plan_appName);
+      const newPlan = await createPlan(plan_mvp_name, plan_startDate, plan_endDate, plan_appName, plan_color);
       if(newPlan.error) {
         setError(newPlan.error);
       }
@@ -291,6 +304,7 @@ const Sidebar = ( props ) => {
           setMVPName('');
           setPlanStartDate('');
           setPlanEndDate('');
+          setPlanColor('');
           setError('');
         }
       }
@@ -304,8 +318,8 @@ const Sidebar = ( props ) => {
     setMVPName(plan.Plan_MVP_name);
     setPlanStartDate(plan.Plan_startDate); 
     setPlanEndDate(plan.Plan_endDate);
+    setPlanColor(plan.Plan_color);
     setShowPlanDetailsModal(true); // Show the modal
-
   };
 
   const handleUpdatePlan = async () => {
@@ -316,10 +330,8 @@ const Sidebar = ( props ) => {
     const formattedEndDate = formatDate(PlanEndDate);
 
     try {
-      const updateplan = await updatePlan(Plan_MVP_name, formattedStartDate, formattedEndDate , PlanAppName);
+      const updateplan = await updatePlan(Plan_MVP_name, formattedStartDate, formattedEndDate, PlanAppName, PlanColor);
   
-      console.log('API Response:', updateplan);
-
       if (updateplan.error) {
         setError(updateplan.error);
       } else {
@@ -329,9 +341,11 @@ const Sidebar = ( props ) => {
         setIsEditingPlan(false);
         const updatedFilteredPlans = refreshedPlans.filter( plan => plan.Plan_app_Acronym === PlanAppName);
         setFilteredPlans(updatedFilteredPlans);
+        
+        console.log("Calling refetchTasks after plan update...");
+        props.refetchTasks();
         props.onUpdateDone?.(updateplan.success);
-        }
-        fetchPlans();
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -376,9 +390,9 @@ const Sidebar = ( props ) => {
                     return (
                       <div key={index} className="rounded d-flex align-items-center justify-content-between mb-1">
                         <ListGroup.Item onClick={() => !isPlanSelected && handleShowPlanDetailsModal(plan)}
-                          style={{flexGrow: 1,whiteSpace: 'nowrap',overflowX: 'auto',textOverflow: 'ellipsis',borderRadius: '8px',backgroundColor: isPlanSelected ? '#d3d3d3' : '',pointerEvents: isPlanSelected ? 'none' : 'auto',}}>
+                          style={{flexGrow: 1,whiteSpace: 'nowrap',overflowX: 'auto',textOverflow: 'ellipsis',borderRadius: '8px', backgroundColor: plan.Plan_color ? plan.Plan_color.trim().toLowerCase() : 'white',pointerEvents: isPlanSelected ? 'none' : 'auto',}}>
                           <div className="d-flex flex-column">
-                            <span className="mb-2">{plan.Plan_MVP_name}</span>
+                            <strong className="mb-2">{plan.Plan_MVP_name}</strong>
                             <small className="text-muted" style={{ fontSize: '0.6rem' }}>
                               Start Date: {formatDate(plan.Plan_startDate)}
                             </small>
@@ -675,10 +689,27 @@ const Sidebar = ( props ) => {
           <Form>
             {/* Row 1: App Name and Description */}
             <Row>
-              <Col md={12}>
+              <Col md={6}>
                 <Form.Group controlId="formPlanName" className='mb-1'>
                   <FloatingLabel controlId="floatingPlanName" label="MVP Name">
                     <Form.Control type="text" placeholder="Enter plan name" required onChange={(e) => setMVPName(e.target.value)}/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="formPlanColor" className='mb-1'>
+                  <FloatingLabel controlId="floatingPlanColor" label="Plan Color">
+                    <Form.Select required value={PlanColor} onChange={(e) => setPlanColor(e.target.value)} style={{ background:"transparent", color: PlanColor }}>
+                      <option value="">Select a color</option>
+                      <option value="lightcyan" >lightcyan</option>
+                      <option value="lightyellow" >lightyellow</option>
+                      <option value="lightgreen" >lightgreen</option>
+                      <option value="lightgray" >lightgray</option>
+                      <option value="lightblue" >lightblue</option>
+                      <option value="lightpink" >lightpink</option>
+                      <option value="peachpuff" >peachpuff</option>
+                      <option value="lightsalmon" >lightsalmon</option>
+                    </Form.Select>
                   </FloatingLabel>
                 </Form.Group>
               </Col>
@@ -715,10 +746,27 @@ const Sidebar = ( props ) => {
           <Form>
             {/* Row 1: App Name and Description */}
             <Row>
-              <Col md={12}>
+              <Col md={6}>
                 <Form.Group controlId="formEditPlanName" className='mb-1'>
                   <FloatingLabel controlId="floatingEditPlanName" label="MVP Name">
                     <Form.Control type="text" placeholder="Enter app name" value= {Plan_MVP_name} required onChange={(e) => setMVPName(e.target.value)} disabled/>
+                  </FloatingLabel>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="formPlanColor" className='mb-1'>
+                  <FloatingLabel controlId="floatingPlanColor" label="Plan Color">
+                    <Form.Select required value={PlanColor} onChange={(e) => setPlanColor(e.target.value)} disabled={!isEditingPlan}>
+                      <option value="">Select a color</option>
+                      <option value="lightcyan">lightcyan</option>
+                      <option value="lightyellow">lightyellow</option>
+                      <option value="lightgreen">lightgreen</option>
+                      <option value="lightgray">lightgray</option>
+                      <option value="lightblue">lightblue</option>
+                      <option value="lightpink">lightpink</option>
+                      <option value="peachpuff">peachpuff</option>
+                      <option value="lightsalmon">lightsalmon</option>
+                    </Form.Select>
                   </FloatingLabel>
                 </Form.Group>
               </Col>
@@ -741,7 +789,7 @@ const Sidebar = ( props ) => {
         </Modal.Body>
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
-            {userGroup.includes(",pl,") ? (
+            {userGroup.includes(",pm,") ? (
               !isEditingPlan ? (
                 <Button variant="success" onClick={() => setIsEditingPlan(true)}>Edit</Button>
               ) : (

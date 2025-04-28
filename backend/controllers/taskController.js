@@ -91,6 +91,10 @@ exports.createTask = (req, res) => {
 
     let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;
 
+    if(!Task_Name.length > 300) {
+        return res.status(200).json({ error: "Task Name cannot be more than 300 characters!"});
+    }
+
     if (!Task_notes || Task_notes.trim() === "") {
         Task_notes = "Task created.";
     }
@@ -336,32 +340,34 @@ exports.updateTask = (req, res) => {
 
                                 if (shouldSendEmail) {
                                     db.query('SELECT App_permit_Done FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, permResult) => {
-                                        if (err || permResult.length === 0){
-                                            console.error('Error fetching group:', err);
-                                            return;
+                                        if (err || permResult.length === 0 || !permResult[0].App_permit_Done) {
+                                            console.error('Error fetching group or no group assigned:', err || 'No group assigned');
+                                            return; // just stop email sending, DO NOT send response here
                                         }
+                                    
                                         const permAppPermitDone = permResult[0].App_permit_Done;
                                         console.log("permAppPermitDone:", permAppPermitDone);
-    
+                                    
                                         const likeValue = `%,${permAppPermitDone},%`;
-                                        console.log("Generated LIKE value:", likeValue); // Debug
-
+                                        console.log("Generated LIKE value:", likeValue);
+                                    
                                         db.query('SELECT email FROM user WHERE REPLACE(user_groupName, " ", "") LIKE ?', [likeValue], (err, usersResults) => {
                                             if (err) {
                                                 console.error('Error fetching emails:', err);
-                                                return;
+                                                return; // again, only log error, no response
                                             }
                                             if (usersResults.length === 0) {
                                                 console.error('No users found in group:', permAppPermitDone);
                                                 return;
                                             }
+                                    
                                             usersResults.forEach(user => {
                                                 const recipientEmail = user.email;
                                                 sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
-                                            });
+                                            });                                    
                                         });
-                                    })
-                                }
+                                    });
+                                }                                
                                 return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
                             });
                         });
@@ -448,30 +454,34 @@ exports.updateTask = (req, res) => {
 
                             if (shouldSendEmail) {
                                 db.query('SELECT App_permit_Done FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, permResult) => {
-                                    if (err || permResult.length === 0){
-                                        console.error('Error fetching group:', err);
-                                        return;
+                                    if (err || permResult.length === 0 || !permResult[0].App_permit_Done) {
+                                        console.error('Error fetching group or no group assigned:', err || 'No group assigned');
+                                        return; // just stop email sending, DO NOT send response here
                                     }
+                                
                                     const permAppPermitDone = permResult[0].App_permit_Done;
+                                    console.log("permAppPermitDone:", permAppPermitDone);
+                                
                                     const likeValue = `%,${permAppPermitDone},%`;
-                                    console.log("Generated LIKE value:", likeValue); // Debug
-
+                                    console.log("Generated LIKE value:", likeValue);
+                                
                                     db.query('SELECT email FROM user WHERE REPLACE(user_groupName, " ", "") LIKE ?', [likeValue], (err, usersResults) => {
                                         if (err) {
                                             console.error('Error fetching emails:', err);
-                                            return;
+                                            return; // again, only log error, no response
                                         }
                                         if (usersResults.length === 0) {
                                             console.error('No users found in group:', permAppPermitDone);
                                             return;
                                         }
+                                
                                         usersResults.forEach(user => {
                                             const recipientEmail = user.email;
                                             sendStatusChangeEmail(Task_id, Task_Name, Task_owner, recipientEmail);
-                                        });
+                                        });                                
                                     });
-                                })
-                            }
+                                });
+                            }      
                             return res.status(200).json({ message: "Task updated successfully.", task: {Task_id, Task_Name, Task_description, updatedNotesJSON, Task_plan, Task_state, Task_owner} });
                         });
                     });

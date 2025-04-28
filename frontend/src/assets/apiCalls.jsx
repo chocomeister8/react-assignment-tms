@@ -114,9 +114,9 @@ export const fetchPlans = async () => {
     }
 };
 
-export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym) => {
+export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/create-plan`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.post(`${API_BASE_URL}/create-plan`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {
@@ -125,9 +125,9 @@ export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Pl
     }
 };
 
-export const updatePlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym) => {
+export const updatePlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color) => {
     try {
-        const response = await axios.put(`${API_BASE_URL}/plan/${Plan_MVP_name}`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
+        const response = await axios.put(`${API_BASE_URL}/plan/${Plan_MVP_name}`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
         return response.data;
     } catch (error) {
@@ -211,6 +211,7 @@ export const updateTask = async (Task_id, Task_Name, Task_description, Task_note
         return response.data;
     } catch (error) {
         console.error("Error updating task", error);
+        console.error("Error Response:", error.response); // Log the error response fully
         throw new Error(error.response?.data?.message || "Failed to update task.");
     }
 }

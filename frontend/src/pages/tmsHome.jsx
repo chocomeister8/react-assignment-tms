@@ -50,15 +50,17 @@ const TmsHome = () => {
 
   const fetchTasks = async () => {
     if(!selectedApp) {
+      console.log("No selected app, skipping task fetch.");
       return;
     }
     try {
       const fetchedTasks = await fetchTaskByAppAcronym(selectedApp.App_Acronym);
       setTasks(fetchedTasks);
-    
+      console.log("Tasks fetched:", fetchedTasks);
       return fetchedTasks;
     } catch (err) {
       setError(err.message);
+      console.log("Error fetching tasks:", err.message);
       return [];
     }
   };
@@ -138,6 +140,10 @@ const TmsHome = () => {
         setError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
         return;
       }
+      if(task_description.length > 255) {
+        setError("Task description cannot be more than 255 characters!");
+        return;
+      }
       try{
         const newTask = await createTask(task_name,task_description ,task_notes ,task_plan , task_appAcronym , task_creator);
         if(newTask.error) {
@@ -175,9 +181,8 @@ const TmsHome = () => {
       <Container fluid style={{ height: '100vh' }}>
         <Row style={{ height: '100%' }}>
           <Col md={2} className="bg-light p-0">
-            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} onUpdateDone={handleSuccess} onAppSelect={handleAppSelect} />
+            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} refetchTasks={fetchTasks} onUpdateDone={handleSuccess} onAppSelect={handleAppSelect}  />
           </Col>
-
           <Col md={10} className="p-3">
             <Row className="align-items-center">
               <Col md={12}>
@@ -197,7 +202,7 @@ const TmsHome = () => {
                 </Col>
               )}
               </div>
-            <TaskSection selectedApp={selectedApp} tasks={tasks} refreshTrigger={refreshTrigger} refetchTasks={fetchTasks} onUpdateSuccess={handleSuccess}/>
+            <TaskSection selectedApp={selectedApp} tasks={tasks} allplans={plans} refreshTrigger={refreshTrigger} refetchTasks={fetchTasks} onUpdateSuccess={handleSuccess}/>
             </Row>
           </Col>
         </Row>

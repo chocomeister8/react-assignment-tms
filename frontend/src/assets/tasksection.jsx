@@ -5,7 +5,7 @@ import { Row, Col, Card, ListGroup, Modal, Button, Form, FloatingLabel, Alert } 
 // Import backend API calls
 import { fetchUsername, fetchPlans, updateTask, checkUpdateTaskPermission, approveTask, rejectTask, fetchTaskByTaskID } from '../assets/apiCalls';
 
-const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refreshTrigger }) => {
+const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSuccess, refreshTrigger }) => {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [Modalerror, setModalError] = useState(null);
@@ -125,11 +125,6 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     setSelectedTask(null);
   };
 
-  // Set edit mode
-  const handleEditClick = () => {
-    setIsEditingTask(true);
-  };
-
   const parseTaskNotes = (notes) => {
     if (!notes) return [];
     try {
@@ -149,7 +144,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
   };
 
   // Update task method
-  const handleUpdateTask = async () => {
+  const handleUpdateTask = async (task_state) => {
     setModalError(null);
 
     const task_id = selectedTask?.Task_id.trim();
@@ -158,10 +153,9 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     const task_notes = taskNotes;
     const task_plan = taskPlan && taskPlan.trim() !== "" ? taskPlan.trim() : null;
     const task_app_acronym = selectedTask?.Task_app_Acronym;
-    const task_state = taskState.trim();
     const task_owner = username.trim();
 
-    if(!task_name || !task_state){
+    if(!task_name){
       setModalError("Please fill in all fields!");
       return;
     }
@@ -170,6 +164,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
       setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
       return;
     }
+
     try {
       const updatetask = await updateTask(task_id, task_name, task_description, task_notes, task_plan, task_app_acronym, task_state, task_owner);
       if(updatetask.error) {
@@ -188,7 +183,15 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         }
     }
     catch (err) {
-      setModalError(err.message);
+      console.error('Caught error:', err);  // <-- log it first to see what's inside
+    
+      if (err?.response?.data?.error) {
+        setModalError(err.response.data.error); 
+      } else if (err?.message) {
+        setModalError(err.message); // maybe it's just a simple error with message
+      } else {
+        setModalError('Something went wrong.');
+      }
     }
   }
 
@@ -287,20 +290,12 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
     }
   }
 
-  // Setting task background color based on state
-  const getVariantClass = (status) => {
-    switch (status) {
-      case 'To Do':
-        return 'bg-info-subtle';
-      case 'Doing':
-        return 'bg-warning-subtle';
-      case 'Done':
-        return 'bg-success-subtle';
-      case 'Closed':
-        return 'bg-secondary-subtle';
-      default:
-        return '';
+  const getPlanColor = (planName) => {
+    if (!planName) {
+      return 'white'; // Return a default color if planName is invalid or undefined
     }
+    const plan = allplans.find(p => p.Plan_MVP_name.toLowerCase() === planName.toLowerCase());
+    return plan ? plan.Plan_color : 'white';
   };
 
   // Displaying the dropdownlist values based on the current task state
@@ -335,29 +330,33 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
                 <strong>{status}</strong>
               </Card.Header>
               <ListGroup variant="flush" style={{ overflowY: 'auto', flexGrow: 1 }}>
-                {filteredTasks.length > 0 ? (filteredTasks.map((task, itemIdx) => (
-                <ListGroup.Item key={itemIdx} className="px-1 border-0" style = {{ padding: '0.25rem', cursor: 'pointer'}} onClick={() => handleTaskClick(task)}>
-                  <Card className={`shadow-sm ${getVariantClass(task.Task_state)} `}>
-                    <Card.Body className="p-2" style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis' }}>
-                      <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>
-                        {task.Task_Name}
-                      </Card.Title>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>
-                          Plan: {task.Task_plan || 'N/A'}
-                        </span>
-                        <span className="text-muted" style={{ fontSize: '0.6rem' }}>
-                          Task owner: {task.Task_owner || 'Unassigned'}
-                        </span>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </ListGroup.Item>
-                ))
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map((task, itemIdx) => {
+                  const planColor = getPlanColor(task.Task_plan);
+                  return (
+                    <ListGroup.Item key={itemIdx} className="px-1 border-0" style={{ padding: '0.25rem', cursor: 'pointer'}} onClick={() => handleTaskClick(task)}>
+                      <Card className="shadow-sm">
+                        <Card.Body className="p-2" style={{ flexGrow: 1, whiteSpace: 'nowrap', overflowX: 'auto', textOverflow: 'ellipsis', backgroundColor: planColor, borderRadius: '4px'}}>
+                          <Card.Title as="h6" className="mb-2" style={{ fontSize: '1rem' }}>
+                            {task.Task_Name}
+                          </Card.Title>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>
+                              Plan: {task.Task_plan || 'N/A'}
+                            </span>
+                            <span className="text-muted" style={{ fontSize: '0.6rem' }}>
+                              Task owner: {task.Task_owner || 'Unassigned'}
+                            </span>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </ListGroup.Item>
+                  );
+                })
               ) : (
-              <ListGroup.Item className="text-center text-muted" style={{ fontSize: '0.8rem' }}>
-                No task.
-              </ListGroup.Item>
+                <ListGroup.Item className="text-center text-muted" style={{ fontSize: '0.8rem' }}>
+                  No task.
+                </ListGroup.Item>
               )}
               </ListGroup>
             </Card>
@@ -374,7 +373,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
           <Col md={6}>
             <Form.Group controlId="taskName" className="mb-2">
               <FloatingLabel controlId="floatingTaskName" label="Task Name:">
-                <Form.Control type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)} disabled={!isEditingTask} />
+                <Form.Control type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)} disabled={!hasUpdatePermission} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -391,7 +390,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
           <Form.Group controlId="taskState" className="mb-2">
             <FloatingLabel controlId="floatingTaskState" label="Task State:">
               {isEditingTask ? (
-                <Form.Select required value={taskState} onChange={(e) => setTaskState(e.target.value)}>
+                <Form.Select required value={taskState} onChange={(e) => setTaskState(e.target.value)} >
                   <option value="">Select a State</option>{getStatusOptions(selectedTask?.Task_state).map((status, index) => (
                     <option key={index} value={status}>
                       {status}
@@ -417,9 +416,9 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
           <Form.Group controlId="taskPlan" className="mb-2">
             <FloatingLabel label="Task Plan:">
               {/* Check if the task is in 'Open' state, if not, disable the select field */}
-              {(isEditingTask && selectedTask?.Task_state === "Open") || 
+              {(selectedTask?.Task_state === "Open") || 
               (selectedTask?.Task_state === "Done" && hasUpdatePermission) ? (
-                <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)}>
+                <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)} disabled={!hasUpdatePermission} >
                   <option value="">Select a Plan</option>
                   {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
                     <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
@@ -459,7 +458,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
           <Col md={12}>
             <Form.Group controlId="taskDesc" className="mb-2">
               <FloatingLabel controlId="floatingTaskDesc" label="Description:">
-                <Form.Control as="textarea" value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)}  disabled={!isEditingTask}/>
+                <Form.Control as="textarea" value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} disabled={!hasUpdatePermission} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -494,7 +493,7 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
           <Col md={12}>
             <Form.Group controlId="editTaskNotes" className="mb-2">
               <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(isEditingTask|| (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
+                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(hasUpdatePermission || (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -503,23 +502,37 @@ const TaskSection = ({ selectedApp, tasks, refetchTasks, onUpdateSuccess, refres
         </Modal.Body>
         <Modal.Footer>
          <div className="w-100 d-flex justify-content-center gap-2">
-          {/* Displays buttons only if user has update permssions and the task state is done */}
-            {(hasUpdatePermission && selectedTask?.Task_state === "Done") ? (
-              <><Button variant="success" onClick={handleApproveTask} disabled={taskPlan !== selectedTask?.Task_plan}>Approve</Button>
-                <Button variant="danger" onClick={handleRejectTask}>Reject</Button></>
-            ) : (
-              hasUpdatePermission && (!isEditingTask ? (
-                <Button variant="success" onClick={handleEditClick}>Edit</Button>
-              ) : (
-                <Button variant="success" onClick={handleUpdateTask}>Update Task</Button>
-              )
-            )
-          )}
-          <Button variant="secondary" onClick={() => {
-            setIsEditingTask(false);
-            setModalError('');
-            setShowTaskDetailsModal(false);
-          }}>Close</Button>
+            {/* Displays buttons only if user has update permissions */}
+            {hasUpdatePermission ? (
+              <>
+                {selectedTask?.Task_state === "Done" ? (
+                  <>
+                    <Button variant="primary" onClick={handleApproveTask} disabled={taskPlan !== selectedTask?.Task_plan}>
+                      Approve
+                    </Button>
+                    <Button variant="danger" onClick={handleRejectTask}>
+                      Reject
+                    </Button>
+                  </>
+                ) : selectedTask?.Task_state === "Open" ? (
+                  // If task is in Open state, show Release button
+                  <Button variant="primary" onClick={() => handleUpdateTask("To Do")}>Release</Button>
+
+                ) : selectedTask?.Task_state === "To Do" ? (
+                  // If task is in To Do state, show Assign button
+                  <Button variant="primary" onClick={() => handleUpdateTask("Doing")}>Assign</Button>
+
+                ) : selectedTask?.Task_state === "Doing" ? (
+                  <>
+                  <Button variant="primary" onClick={() => handleUpdateTask("Done")}>Send for Review</Button>
+                  <Button variant="danger" onClick={() => handleUpdateTask("To Do")}>Reassign</Button>
+                  </>
+                ) : null}
+                
+                <Button variant="success" onClick={() => handleUpdateTask(selectedTask.Task_state)}>Update</Button>
+
+              </>
+            ) : null}
           </div>
         </Modal.Footer>
       </Modal>

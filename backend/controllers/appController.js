@@ -34,13 +34,9 @@ exports.createApp = (req, res) => {
         return res.status(200).json({ error: "All fields must be filled." });
     }
 
-    const acronymRegex = /^[a-zA-Z0-9]{1,50}$/;
+    const acronymRegex = /^[a-zA-Z0-9]{1,300}$/;
     if (!acronymRegex.test(app_acronym)) {
-        return res.status(200).json({ error: 'App Acronym can only consist of alphanumeric characters and not exceed 50 characters.' });
-    }
-
-    if (App_Description.length > 255){
-        return res.status(200).json({ error: 'App description cannot be more than 255 characters.'})
+        return res.status(200).json({ error: 'App Acronym can only consist of alphanumeric characters and not exceed 300 characters.' });
     }
 
     const appRNumberRegex = /^[1-9][0-9]{0,3}$/;
