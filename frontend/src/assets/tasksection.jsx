@@ -72,7 +72,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
     checkUpdatePermission();
     loadData();
   
-    if (error || success) {
+    if (error || success || Modalerror) {
       const timer = setTimeout(() => {
         setError('');
         setModalError('');
@@ -106,7 +106,6 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
   const handleTaskClick = async (selectedTask) => {
     try {
       const result = await fetchTaskByTaskID(selectedTask.Task_id); // Fetch task details based on selected task_id
-      console.log(result); // Debugging
       if (result.success && result.Task) {
         setSelectedTask(result.Task);  // Set the selected task data
         setShowTaskDetailsModal(true); // Open the details modal
@@ -341,119 +340,106 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
         );
       })}
     </Row>
-    <Modal size="lg" scrollable show={showTaskDetailsModal} onHide={handleClose} centered backdrop="static">
+    <Modal size="xl" show={showTaskDetailsModal} onHide={handleClose} centered backdrop="static">
         <Modal.Header closeButton >
           <Modal.Title>Task Name: {selectedTask?.Task_Name}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-        <Row className="align-items-end">
-          <Col md={6}>
-            <Form.Group controlId="taskName" className="mb-2">
-              <FloatingLabel controlId="floatingTaskName" label="Task Name:">
-                <Form.Control type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)} disabled={!hasUpdatePermission} />
-              </FloatingLabel>
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group controlId="taskid" className="mb-2">
+        <Row >
+          <Col>
+            <Form.Group controlId="taskid" className="mb-1">
               <FloatingLabel controlId="floatingTaskid" label="Task ID:">
                 <Form.Control type="text" value={selectedTask?.Task_id || ""} disabled/>
               </FloatingLabel>
             </Form.Group>
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={6}>
-          <Form.Group controlId="taskState" className="mb-2">
-            <FloatingLabel controlId="floatingTaskState" label="Task State:">
-              {isEditingTask ? (
-                <Form.Select required value={taskState} onChange={(e) => setTaskState(e.target.value)} >
-                  <option value="">Select a State</option>{getStatusOptions(selectedTask?.Task_state).map((status, index) => (
-                    <option key={index} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </Form.Select>
-              ) : (
-                <Form.Control type="text" value={selectedTask?.Task_state || "No state assigned"} disabled readOnly/>
-              )}
-            </FloatingLabel>
-          </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group controlId="taskcreateDate" className="mb-2">
-              <FloatingLabel controlId="floatingTaskDate" label="Date Created:">
-                <Form.Control type="text" value={selectedTask?.Task_createDate ? new Date(selectedTask.Task_createDate).toISOString().split('T')[0] : ''} disabled />
-              </FloatingLabel>
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={6}>
-          <Form.Group controlId="taskPlan" className="mb-2">
-            <FloatingLabel label="Task Plan:">
-              {/* Check if the task is in 'Open' state, if not, disable the select field */}
-              {(selectedTask?.Task_state === "Open") || 
-              (selectedTask?.Task_state === "Done" && hasUpdatePermission) ? (
-                <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)} disabled={!hasUpdatePermission} >
-                  <option value="">Select a Plan</option>
-                  {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
-                    <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
-                  ))}
-                </Form.Select>
-              ) : (
-                <Form.Control type="text" value={selectedTask?.Task_plan || ""} disabled />
-              )}
-            </FloatingLabel>
-          </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group controlId="taskcreator" className="mb-2">
-              <FloatingLabel controlId="floatingTaskCreator" label="Creator:">
-                <Form.Control type="text" value={selectedTask?.Task_creator || ""} disabled />
-              </FloatingLabel>
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={6}>
-            <Form.Group controlId="taskAppAcronym" className="mb-2">
+
+            <Form.Group controlId="taskAppAcronym" className="mb-1">
               <FloatingLabel controlId="floatingTaskAppAcronym" label="Task App Acronym:">
                 <Form.Control type="text" value={selectedTask?.Task_app_Acronym || ""} disabled />
               </FloatingLabel>
             </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group controlId="taskOwner" className="mb-2">
+
+            <Form.Group controlId="taskState" className="mb-1">
+              <FloatingLabel controlId="floatingTaskState" label="Task State:">
+                {isEditingTask ? (
+                  <Form.Select required value={taskState} onChange={(e) => setTaskState(e.target.value)} >
+                    <option value="">Select a State</option>{getStatusOptions(selectedTask?.Task_state).map((status, index) => (
+                      <option key={index} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </Form.Select>
+                ) : (
+                  <Form.Control type="text" value={selectedTask?.Task_state || "No state assigned"} disabled readOnly/>
+                )}
+              </FloatingLabel>
+            </Form.Group>
+
+            <Form.Group controlId="taskcreateDate" className="mb-1">
+              <FloatingLabel controlId="floatingTaskDate" label="Date Created:">
+                <Form.Control type="text" value={selectedTask?.Task_createDate ? new Date(selectedTask.Task_createDate).toISOString().split('T')[0] : ''} disabled />
+              </FloatingLabel>
+            </Form.Group>
+
+            <Form.Group controlId="taskcreator" className="mb-1">
+              <FloatingLabel controlId="floatingTaskCreator" label="Creator:">
+                <Form.Control type="text" value={selectedTask?.Task_creator || ""} disabled />
+              </FloatingLabel>
+            </Form.Group>
+
+            <Form.Group controlId="taskOwner">
               <FloatingLabel controlId="floatingOwner" label="Task Owner:">
                 <Form.Control type="text" value={selectedTask?.Task_owner || ""} disabled />
               </FloatingLabel>
             </Form.Group>
           </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={12}>
-            <Form.Group controlId="taskDesc" className="mb-2">
+         
+          <Col>
+            <Form.Group controlId="taskName" className="mb-1">
+              <FloatingLabel controlId="floatingTaskName" label="Task Name:">
+                <Form.Control type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)} disabled={!hasUpdatePermission} />
+              </FloatingLabel>
+            </Form.Group>
+            <Form.Group controlId="taskPlan" className="mb-1">
+              <FloatingLabel label="Task Plan:">
+                {/* Check if the task is in 'Open' state, if not, disable the select field */}
+                {(selectedTask?.Task_state === "Open") || 
+                (selectedTask?.Task_state === "Done" && hasUpdatePermission) ? (
+                  <Form.Select required value={taskPlan} onChange={(e) => setTaskPlan(e.target.value)} disabled={!hasUpdatePermission} >
+                    <option value="">Select a Plan</option>
+                    {plans.filter(plan => plan.Plan_app_Acronym === selectedApp?.App_Acronym).map((plan, index) => (
+                      <option key={index} value={plan.Plan_MVP_name}>{plan.Plan_MVP_name}</option>
+                    ))}
+                  </Form.Select>
+                ) : (
+                  <Form.Control type="text" value={selectedTask?.Task_plan || ""} disabled />
+                )}
+              </FloatingLabel>
+            </Form.Group>
+            <Form.Group controlId="taskDesc" className="mb-1">
               <FloatingLabel controlId="floatingTaskDesc" label="Description:">
-                <Form.Control as="textarea" style={{ height: "100px"}} value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} disabled={!hasUpdatePermission} />
+                <Form.Control as="textarea" style={{ height: "120px"}} value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} disabled={!hasUpdatePermission} />
+              </FloatingLabel>
+            </Form.Group>
+            <Form.Group controlId="editTaskNotes" className="mb-1">
+              <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
+                <Form.Control type="textarea" style={{ height: "120px"}} onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(hasUpdatePermission || (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
               </FloatingLabel>
             </Form.Group>
           </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={12}>
-            <Form.Group controlId="taskNotes" className="mb-2" style={{ position: 'relative' }}>
+          <Col>
+            <Form.Group controlId="taskNotes" style={{ position: 'relative' }}>
               <Form.Label 
-                style={{position: 'absolute',top: '-0.75rem',left: '1rem',backgroundColor: '#fff',padding: '0 0.25rem',fontSize: '0.85rem',color: '#6c757d',zIndex: 1}}>
+                style={{position: 'absolute', top:'-0.75rem',left: '1rem',backgroundColor: '#fff',padding: '0 0.25rem',fontSize: '0.85rem',color: '#6c757d',zIndex: 1}}>
                 Task Notes
               </Form.Label>
-              <Card className="mt-3" >
-                <Card.Body style={{ maxHeight: '200px', overflowY: 'auto', padding: '0.75rem' }}>
+              <Card >
+                <Card.Body style={{ maxHeight: '365px', overflowY: 'auto', padding: '0.75rem' }}>
                   {parseTaskNotes(selectedTask?.Task_notes).map((note, index) => (
-                    <div key={index} className="mb-3 p-2 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
+                    <div key={index} className="mb-2 p-2 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
                       {/* First row: formatted with | separator */}
                       <div className="mb-1">
-                        <strong className="text-muted">{note.username}</strong> 
+                        <strong className="text-muted" style={{ fontSize: '0.9rem' }}>{note.username}</strong> 
                         <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | {note.timestamp}</strong>
                         <strong className="text-muted" style={{ fontSize: '0.9rem' }}> | State: {note.currentState}</strong>
                       </div>
@@ -463,15 +449,6 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                   ))}
                 </Card.Body>
               </Card>
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row className="align-items-end">
-          <Col md={12}>
-            <Form.Group controlId="editTaskNotes" className="mb-2">
-              <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(hasUpdatePermission || (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
-              </FloatingLabel>
             </Form.Group>
           </Col>
         </Row>

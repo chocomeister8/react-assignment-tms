@@ -663,7 +663,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal size="lg" show={showPlanModal} onHide={handleClosePlanModal} centered backdrop="static">
+      <Modal size="md" show={showPlanModal} onHide={handleClosePlanModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Create Plan form</Modal.Title>
         </Modal.Header>
@@ -720,7 +720,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal size="lg" show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal} centered backdrop="static">
+      <Modal size="md" show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Plan Information</Modal.Title>
         </Modal.Header>
