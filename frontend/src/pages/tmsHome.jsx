@@ -12,7 +12,6 @@ import { fetchUsername, fetchPlans, createTask, fetchTaskByAppAcronym, checkcrea
 
 const TmsHome = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const handleShowTaskModal = () => setShowTaskModal(true);
   const handleCloseTaskModal = () => setShowTaskModal(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -30,6 +29,7 @@ const TmsHome = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // refresh when there is a click on app
   const handleAppSelect = async (app) => {
     setSelectedApp(app); // Step 1: update app
     setRefreshTrigger(prev => prev + 1); // 🔁 causes TaskSection to refetch
@@ -42,11 +42,13 @@ const TmsHome = () => {
     }
   };
 
+  // success message
   const handleSuccess = (message) => {
     setSuccess(message);
     setTimeout(() => setSuccess(''), 3000);
   };
 
+  // fetch task by app acronym only if there is a selected app
   const fetchTasks = async () => {
     if(!selectedApp) {
       console.log("No selected app, skipping task fetch.");
@@ -63,12 +65,23 @@ const TmsHome = () => {
     }
   };
 
+  const handleShowTaskModal = async () => {
+    try {
+      const plansData = await fetchPlans();
+      setPlans(Array.isArray(plansData) ? plansData : []);
+      setShowTaskModal(true);
+    } catch (err) {
+      console.error('Failed to fetch plans:', err.message);
+      setError(err.message);
+    }
+  };
+
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
         setError('');
         setSuccess('');
-      }, 2000);
+      }, 3000);
   
       return () => clearTimeout(timer);
     }
@@ -80,6 +93,7 @@ const TmsHome = () => {
       fetchTasks();
     }
 
+    // check permission of current user for create task
     const checkPermission = async () => {
       try {
         if (!selectedApp) {
@@ -106,7 +120,6 @@ const TmsHome = () => {
         });
         setUsername(username);
         setUserGroup(group);
-        fetchPlans();
   
       } catch (err) {
         setError(err.message);
@@ -118,6 +131,7 @@ const TmsHome = () => {
 
   }, [selectedApp])
 
+  // Create task method
   const handleCreateTask = async () => {
       setError(null);
       setSuccess(null);
@@ -188,9 +202,7 @@ const TmsHome = () => {
               </Col>
               {selectedApp && hasPermission && (
                 <Col md={2} className="d-flex justify-content-end">
-                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>
-                    Create Task
-                  </Button>
+                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>Create Task</Button>
                 </Col>
               )}
               </div>

@@ -682,7 +682,7 @@ const Sidebar = ( props ) => {
               <Col md={6}>
                 <Form.Group controlId="formPlanColor" className='mb-1'>
                   <FloatingLabel controlId="floatingPlanColor" label="Plan Color">
-                    <Form.Select required value={PlanColor} onChange={(e) => setPlanColor(e.target.value)} style={{ background:"transparent", color: PlanColor }}>
+                    <Form.Select required value={PlanColor} onChange={(e) => setPlanColor(e.target.value)}>
                       <option value="">Select a color</option>
                       <option value="lightcyan" >lightcyan</option>
                       <option value="lightyellow" >lightyellow</option>

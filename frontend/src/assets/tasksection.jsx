@@ -136,14 +136,6 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
     }
   };
 
-  const handleTaskStateChange = (e) => {
-    const newState = e.target.value;
-    setTaskState(newState);
-  
-    // Store the previous state
-    setPreviousState(selectedTask?.Task_state);
-  };
-
   // Update task method
   const handleUpdateTask = async (task_state) => {
     setModalError(null);
@@ -443,7 +435,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
           <Col md={12}>
             <Form.Group controlId="taskDesc" className="mb-2">
               <FloatingLabel controlId="floatingTaskDesc" label="Description:">
-                <Form.Control as="textarea" value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} disabled={!hasUpdatePermission} />
+                <Form.Control as="textarea" style={{ height: "100px"}} value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} disabled={!hasUpdatePermission} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -455,7 +447,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                 style={{position: 'absolute',top: '-0.75rem',left: '1rem',backgroundColor: '#fff',padding: '0 0.25rem',fontSize: '0.85rem',color: '#6c757d',zIndex: 1}}>
                 Task Notes
               </Form.Label>
-              <Card className="mt-3">
+              <Card className="mt-3" >
                 <Card.Body style={{ maxHeight: '200px', overflowY: 'auto', padding: '0.75rem' }}>
                   {parseTaskNotes(selectedTask?.Task_notes).map((note, index) => (
                     <div key={index} className="mb-3 p-2 border rounded" style={{ backgroundColor: "#f8f9fa" }}>
