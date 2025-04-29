@@ -174,9 +174,9 @@ const Sidebar = ( props ) => {
       setError("Please fill in all fields!");
       return;
     }
-    const appAcronymRegex = /^[a-zA-Z0-9]{1,50}$/;
+    const appAcronymRegex = /^[a-zA-Z0-9]{1,300}$/;
     if(!appAcronymRegex.test(app_acronym)) {
-      setError("App Acronym can only consists of alphanumeric, no special characters and not more than 50 characters!");
+      setError("App Acronym can only consists of alphanumeric, no special characters and not more than 300 characters!");
       return;
     }
 
@@ -185,12 +185,7 @@ const Sidebar = ( props ) => {
       setError("App Rnumber must be a whole number between 1 and 9999 and cannot start with 0.");
       return;
     }
-
-    if(app_description.length > 255){
-      setError("App description cannot exceed 255 characters!");
-      return;
-    }
-
+    
     try{
       const newApplication = await createApplication(app_acronym, app_description, app_rnumber, app_startdate, app_enddate, app_permit_open, app_permit_todo, app_permit_doing, app_permit_done, app_permit_create);
       if(newApplication.error) {
@@ -221,11 +216,7 @@ const Sidebar = ( props ) => {
     setSuccess(null);
   
     const { App_Acronym, App_Rnumber, App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create} = selectedApp;
-  
-    if (App_Description.length > 255) {
-      setError("App description cannot exceed 255 characters.");
-      return;
-    }
+
 
     const formattedStartDate =  App_startDate && !isNaN(new Date(App_startDate).getTime()) ? new Date(App_startDate).toISOString().split('T')[0] : null;
     const formattedEndDate =  App_endDate && !isNaN(new Date(App_endDate).getTime()) ? new Date(App_endDate).toISOString().split('T')[0] : null;
@@ -270,9 +261,9 @@ const Sidebar = ( props ) => {
       setError("Please fill in all fields!");
       return;
     }
-    const planMVPNameRegex = /^[a-zA-Z0-9]{1,50}$/;
+    const planMVPNameRegex = /^[a-zA-Z0-9]{1,300}$/;
     if(!planMVPNameRegex.test(plan_mvp_name)) {
-      setError("MVP Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
+      setError("MVP Name can only consists of alphanumeric, no special characters and not more than 300 characters!");
       return;
     }
     try{
@@ -410,7 +401,7 @@ const Sidebar = ( props ) => {
           )}
         </Col>
       </Row>
-      <Modal show={showModal} onHide={handleCloseAppModal} centered backdrop="static">
+      <Modal size="lg" show={showModal} onHide={handleCloseAppModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Create App form</Modal.Title>
         </Modal.Header>
@@ -538,7 +529,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal show={showDetails} onHide={handleCloseAppDetails} centered backdrop="static">
+      <Modal size="lg" show={showDetails} onHide={handleCloseAppDetails} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Application Information</Modal.Title>
         </Modal.Header>
@@ -672,7 +663,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal show={showPlanModal} onHide={handleClosePlanModal} centered backdrop="static">
+      <Modal size="lg" show={showPlanModal} onHide={handleClosePlanModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Create Plan form</Modal.Title>
         </Modal.Header>
@@ -729,7 +720,7 @@ const Sidebar = ( props ) => {
           </div>
         </Modal.Footer>
       </Modal>
-      <Modal show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal} centered backdrop="static">
+      <Modal size="lg" show={showPlanDetailsModal} onHide={handleClosePlanDetailsModal} centered backdrop="static">
         <Modal.Header closeButton>
           <Modal.Title>Plan Information</Modal.Title>
         </Modal.Header>

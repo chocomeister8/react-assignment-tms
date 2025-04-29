@@ -157,12 +157,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
     const task_owner = username.trim();
 
     if(!task_name){
-      setModalError("Please fill in all fields!");
-      return;
-    }
-    const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
-    if(!taskNameRegex.test(task_name)) {
-      setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
+      setModalError("Task Name cannot be empty!");
       return;
     }
 
@@ -211,11 +206,6 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
 
     if(!task_state){
       setModalError("Please fill in all fields!");
-      return;
-    }
-    const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
-    if(!taskNameRegex.test(task_name)) {
-      setModalError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
       return;
     }
 
@@ -342,12 +332,8 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                             {task.Task_Name}
                           </Card.Title>
                           <div className="d-flex justify-content-between align-items-center">
-                            <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>
-                              Plan: {task.Task_plan || 'N/A'}
-                            </span>
-                            <span className="text-muted" style={{ fontSize: '0.6rem' }}>
-                              Task owner: {task.Task_owner || 'Unassigned'}
-                            </span>
+                            <span className="text-muted" style={{ fontSize: '0.6rem', marginRight: '10px' }}>Plan: {task.Task_plan || 'N/A'}</span>
+                            <span className="text-muted" style={{ fontSize: '0.6rem' }}>Task owner: {task.Task_owner || 'Unassigned'}</span>
                           </div>
                         </Card.Body>
                       </Card>
@@ -355,9 +341,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                   );
                 })
               ) : (
-                <ListGroup.Item className="text-center text-muted" style={{ fontSize: '0.8rem' }}>
-                  No task.
-                </ListGroup.Item>
+                <ListGroup.Item className="text-center text-muted" style={{ fontSize: '0.8rem' }}>No task.</ListGroup.Item>
               )}
               </ListGroup>
             </Card>
@@ -365,7 +349,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
         );
       })}
     </Row>
-    <Modal show={showTaskDetailsModal} onHide={handleClose} centered backdrop="static">
+    <Modal size="lg" scrollable show={showTaskDetailsModal} onHide={handleClose} centered backdrop="static">
         <Modal.Header closeButton >
           <Modal.Title>Task Name: {selectedTask?.Task_Name}</Modal.Title>
         </Modal.Header>
@@ -507,7 +491,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
               <>
                 {selectedTask?.Task_state === "Done" ? (
                   <>
-                    <Button variant="success" onClick={handleApproveTask} disabled={taskPlan !== selectedTask?.Task_plan}>
+                    <Button variant="success" onClick={handleApproveTask} hidden={taskPlan !== selectedTask?.Task_plan}>
                       Approve
                     </Button>
                     <Button variant="danger" onClick={handleRejectTask}>
@@ -528,7 +512,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                   <Button variant="danger" onClick={() => handleUpdateTask("To Do")}>Re-Prioritise</Button>
                   </>
                 ) : null}
-                <Button variant="primary" onClick={() => handleUpdateTask(selectedTask.Task_state)} disabled={selectedTask?.Task_state === "Done" && taskPlan !== selectedTask?.Task_plan}>Update</Button>
+                <Button variant="primary" onClick={() => handleUpdateTask(selectedTask.Task_state)} hidden={selectedTask?.Task_state === "Done" && taskPlan !== selectedTask?.Task_plan}>Update</Button>
               </>
             ) : null}
           </div>

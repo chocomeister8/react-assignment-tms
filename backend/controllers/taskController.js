@@ -91,6 +91,10 @@ exports.createTask = (req, res) => {
 
     let { Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator } = req.body;
 
+    if(!Task_Name.length === 0) {
+        return res.status(200).json({ error: "Task Name cannot be empty!"});
+    }
+
     if(!Task_Name.length > 300) {
         return res.status(200).json({ error: "Task Name cannot be more than 300 characters!"});
     }

@@ -89,9 +89,6 @@ exports.updateApp = (req, res) => {
         return res.status(200).json({ error: "Token is missing or invalid."});
     }
 
-    if (App_Description.length > 255){
-        return res.status(200).json({ error: 'App description cannot be more than 255 characters.'})
-    }
     db.beginTransaction((err) => {
         if(err) {
             return res.status(500).json({ error: "Failed to start transaction." });

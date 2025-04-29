@@ -133,13 +133,8 @@ const TmsHome = () => {
         setError("Please fill in all fields!");
         return;
       }
-      const taskNameRegex = /^[a-zA-Z0-9]{1,50}$/;
-      if(!taskNameRegex.test(task_name)) {
-        setError("Task Name can only consists of alphanumeric, no special characters and not more than 50 characters!");
-        return;
-      }
-      if(task_description.length > 255) {
-        setError("Task description cannot be more than 255 characters!");
+      if (task_name.length > 300) {
+        setError("Task Name must not exceed 300 characters!");
         return;
       }
       try{
