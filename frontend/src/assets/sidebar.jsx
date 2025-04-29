@@ -19,7 +19,6 @@ const Sidebar = ( props ) => {
   const [allGroups, setGroups] = useState([]);
   const [selectedApp, setSelectedApp] = useState([]);
   const [userGroup, setUserGroup] = useState('');
-  const [isEditMode, setIsEditMode] = useState(false);
   
   const [appAcronym, setAppAcronym] = useState('');
   const [appRnumber, setAppRNumber] = useState('');
@@ -37,7 +36,6 @@ const Sidebar = ( props ) => {
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [filteredPlans, setFilteredPlans] = useState([]);
-  const [isEditingPlan, setIsEditingPlan] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const loadData = async () => {
@@ -244,7 +242,6 @@ const Sidebar = ( props ) => {
           )
         );
         props.onUpdateDone?.(updateapplication.success);
-        setIsEditMode(false);
       }
     } catch (err) {
       setError(err.message);
@@ -336,14 +333,12 @@ const Sidebar = ( props ) => {
         setError(updateplan.error);
       } else {
         handleClosePlanDetailsModal();
+
         const refreshedPlans = await fetchPlans();
         setPlans(refreshedPlans);
-        setIsEditingPlan(false);
         const updatedFilteredPlans = refreshedPlans.filter( plan => plan.Plan_app_Acronym === PlanAppName);
         setFilteredPlans(updatedFilteredPlans);
-        
-        console.log("Calling refetchTasks after plan update...");
-        props.refetchTasks();
+        props.setPlans(refreshedPlans);
         props.onUpdateDone?.(updateplan.success);
       }
     } catch (err) {
@@ -539,7 +534,7 @@ const Sidebar = ( props ) => {
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
             <Button variant="success" onClick={handleCreateApplication}>Create App</Button>
-            <Button variant="secondary" onClick={handleCloseAppModal}>Close</Button>
+            <Button variant="danger" onClick={handleCloseAppModal}>Close</Button>
           </div>
         </Modal.Footer>
       </Modal>
@@ -559,7 +554,7 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="detailsApp_permit_create" className='mb-1'>
                     <FloatingLabel controlId="selectedC" label="App Permit Create">
-                    <Form.Select required onChange={handleAppChange('App_permit_Create')} value={selectedApp.App_permit_Create} disabled={!isEditMode}>
+                    <Form.Select required onChange={handleAppChange('App_permit_Create')} value={selectedApp.App_permit_Create} disabled={!userGroup.includes(",pl,")}>
                       <option value="">-- Select an option --</option>
                       {Array.isArray(allGroups) && allGroups.length > 0 ? (
                         allGroups.map((group, index) => (
@@ -575,7 +570,7 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="detailsApp_permit_Open" className="mb-1">
                     <FloatingLabel controlId="selectedO" label="App Permit Open">
-                      <Form.Select required onChange={handleAppChange('App_permit_Open')} value={selectedApp.App_permit_Open} disabled={!isEditMode}>
+                      <Form.Select required onChange={handleAppChange('App_permit_Open')} value={selectedApp.App_permit_Open} disabled={!userGroup.includes(",pl,")}>
                       <option value="">-- Select an option --</option>
                         {Array.isArray(allGroups) && allGroups.length > 0 ? (
                           allGroups.map((group, index) => (
@@ -591,7 +586,7 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="detailsApp_toDoList" className="mb-1">
                     <FloatingLabel controlId="selectedtoDo" label="App Permit toDoList">
-                      <Form.Select required onChange={handleAppChange('App_permit_toDoList')}  value={selectedApp.App_permit_toDoList} disabled={!isEditMode}>
+                      <Form.Select required onChange={handleAppChange('App_permit_toDoList')}  value={selectedApp.App_permit_toDoList} disabled={!userGroup.includes(",pl,")}>
                       <option value="">-- Select an option --</option>
                         {Array.isArray(allGroups) && allGroups.length > 0 ? (
                           allGroups.map((group, index) => (
@@ -607,7 +602,7 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="detailsApp_Doing" className="mb-1">
                     <FloatingLabel controlId="selectedDoing" label="App Permit Doing">
-                      <Form.Select required onChange={handleAppChange('App_permit_Doing')} value={selectedApp.App_permit_Doing} disabled={!isEditMode}>
+                      <Form.Select required onChange={handleAppChange('App_permit_Doing')} value={selectedApp.App_permit_Doing} disabled={!userGroup.includes(",pl,")}>
                       <option value="">-- Select an option --</option>
                         {Array.isArray(allGroups) && allGroups.length > 0 ? (
                           allGroups.map((group, index) => (
@@ -623,7 +618,7 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="detailsApp_Done" className="mb-1">
                     <FloatingLabel controlId="selectedDone" label="App Permit Done">
-                    <Form.Select required onChange={handleAppChange('App_permit_Done')} value={selectedApp.App_permit_Done} disabled={!isEditMode}>
+                    <Form.Select required onChange={handleAppChange('App_permit_Done')} value={selectedApp.App_permit_Done} disabled={!userGroup.includes(",pl,")}>
                     <option value="">-- Select an option --</option>
                       {Array.isArray(allGroups) && allGroups.length > 0 ? (
                         allGroups.map((group, index) => (
@@ -646,17 +641,17 @@ const Sidebar = ( props ) => {
                   </Form.Group>
                   <Form.Group controlId="StartDate" className="mb-1">
                     <FloatingLabel controlId="selectedStartDate" label="Start Date (YYYY-MM-DD)">
-                      <Form.Control type="date" placeholder="Choose start date" required onChange={handleAppChange('App_startDate')} value={selectedApp.App_startDate ? new Date(selectedApp.App_startDate).toISOString().split('T')[0]: ''} disabled={!isEditMode}/>
+                      <Form.Control type="date" placeholder="Choose start date" required onChange={handleAppChange('App_startDate')} value={selectedApp.App_startDate ? new Date(selectedApp.App_startDate).toISOString().split('T')[0]: ''} disabled={!userGroup.includes(",pl,")}/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="EndDate" className="mb-2">
                     <FloatingLabel controlId="selectedEndDate" label="End Date (YYYY-MM-DD)">
-                    <Form.Control type="date" placeholder="Choose End date" required onChange={handleAppChange('App_endDate')} value={selectedApp.App_endDate ? new Date(selectedApp.App_endDate).toISOString().split('T')[0]: '' } disabled={!isEditMode}/>
+                    <Form.Control type="date" placeholder="Choose End date" required onChange={handleAppChange('App_endDate')} value={selectedApp.App_endDate ? new Date(selectedApp.App_endDate).toISOString().split('T')[0]: '' } disabled={!userGroup.includes(",pl,")}/>
                     </FloatingLabel>
                   </Form.Group>
                   <Form.Group controlId="Description" >
                     <FloatingLabel controlId="selecteddescription" label="Description">
-                      <Form.Control as="textarea" rows={6} value={selectedApp.App_Description || '' } onChange={handleAppChange('App_Description')} style={{ height: '180px'}} disabled={!isEditMode}/>
+                      <Form.Control as="textarea" rows={6} value={selectedApp.App_Description || '' } onChange={handleAppChange('App_Description')} style={{ height: '180px'}} disabled={!userGroup.includes(",pl,")}/>
                     </FloatingLabel>
                   </Form.Group>
                 </Col>
@@ -668,13 +663,10 @@ const Sidebar = ( props ) => {
         </Modal.Body>
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
-            {!isEditMode && userGroup.includes(",pl,") && (
-              <Button variant="success" onClick={() => setIsEditMode(true)}>Edit</Button>
-            )}
-            {isEditMode && userGroup.includes(",pl,") && (
+            {userGroup.includes(",pl,") && (
               <Button variant="success" onClick={handleUpdateApplication}>Update Application</Button>
             )}
-            <Button variant="secondary" onClick={() => {handleCloseAppDetails(); setIsEditMode(false); // Reset edit mode on close
+            <Button variant="danger" onClick={() => {handleCloseAppDetails(); 
             }}> Close
             </Button>
           </div>
@@ -733,7 +725,7 @@ const Sidebar = ( props ) => {
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
             <Button variant="success" onClick={handleCreatePlan}>Create Plan</Button>
-            <Button variant="secondary" onClick={handleClosePlanModal}>Close</Button>
+            <Button variant="danger" onClick={handleClosePlanModal}>Close</Button>
           </div>
         </Modal.Footer>
       </Modal>
@@ -756,7 +748,7 @@ const Sidebar = ( props ) => {
               <Col md={6}>
                 <Form.Group controlId="formPlanColor" className='mb-1'>
                   <FloatingLabel controlId="floatingPlanColor" label="Plan Color">
-                    <Form.Select required value={PlanColor} onChange={(e) => setPlanColor(e.target.value)} disabled={!isEditingPlan}>
+                    <Form.Select required value={PlanColor} onChange={(e) => setPlanColor(e.target.value)} disabled={!userGroup.includes(",pm,")}>
                       <option value="">Select a color</option>
                       <option value="lightcyan">lightcyan</option>
                       <option value="lightyellow">lightyellow</option>
@@ -773,14 +765,14 @@ const Sidebar = ( props ) => {
               <Col md={6}>
               <Form.Group controlId="formEditStartDate" className="mb-1">
                 <FloatingLabel controlId="floatingStartDate" label="Start Date">
-                    <Form.Control type="date" placeholder="Choose start date" value= {formatDate(PlanStartDate)} required onChange={(e) => setPlanStartDate(e.target.value)}  disabled={!isEditingPlan}/>
+                    <Form.Control type="date" placeholder="Choose start date" value= {PlanStartDate ? formatDate(PlanStartDate) : ''} required onChange={(e) => setPlanStartDate(e.target.value)}  disabled={!userGroup.includes(",pm,")}/>
                   </FloatingLabel>
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group controlId="formEditEndDate" className="mb-1">
                   <FloatingLabel controlId="floatingEditEndDate" label="End Date">
-                    <Form.Control type="date" placeholder="Choose end date" value= {formatDate(PlanEndDate)} required onChange={(e) => setPlanEndDate(e.target.value)}  disabled={!isEditingPlan}/>
+                    <Form.Control type="date" placeholder="Choose end date" value={PlanEndDate ? formatDate(PlanEndDate) : ''} required onChange={(e) => setPlanEndDate(e.target.value)}  disabled={!userGroup.includes(",pm,")}/>
                   </FloatingLabel>
                 </Form.Group>
               </Col>
@@ -789,20 +781,12 @@ const Sidebar = ( props ) => {
         </Modal.Body>
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-center gap-2">
-            {userGroup.includes(",pm,") ? (
-              !isEditingPlan ? (
-                <Button variant="success" onClick={() => setIsEditingPlan(true)}>Edit</Button>
-              ) : (
-                <Button variant="success" onClick={handleUpdatePlan}>Update Plan</Button>
-              )
-            ) : null}
-            
-            <Button variant="secondary" onClick={() => {
-              setIsEditingPlan(false);
-              handleClosePlanDetailsModal();
-            }}>
-              Close
-            </Button>
+          {userGroup.includes(",pm,") && (
+            <Button variant="success" onClick={handleUpdatePlan}>Update Plan</Button>
+          )}
+          <Button variant="danger" onClick={() => {
+            handleClosePlanDetailsModal();
+          }}>Close</Button>
           </div>
         </Modal.Footer>
       </Modal>

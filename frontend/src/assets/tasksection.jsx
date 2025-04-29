@@ -84,6 +84,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
   }, [selectedTask]);
 
   useEffect(() => {
+    console.log("refreshTrigger changed, re-fetching tasks");
     // Ensure that the task will refetch upon reclicking app in sidebar
     if (selectedApp) {
       refetchTasks(selectedApp.App_Acronym);
@@ -502,12 +503,11 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
         </Modal.Body>
         <Modal.Footer>
          <div className="w-100 d-flex justify-content-center gap-2">
-            {/* Displays buttons only if user has update permissions */}
             {hasUpdatePermission ? (
               <>
                 {selectedTask?.Task_state === "Done" ? (
                   <>
-                    <Button variant="primary" onClick={handleApproveTask} disabled={taskPlan !== selectedTask?.Task_plan}>
+                    <Button variant="success" onClick={handleApproveTask} disabled={taskPlan !== selectedTask?.Task_plan}>
                       Approve
                     </Button>
                     <Button variant="danger" onClick={handleRejectTask}>
@@ -516,21 +516,19 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                   </>
                 ) : selectedTask?.Task_state === "Open" ? (
                   // If task is in Open state, show Release button
-                  <Button variant="primary" onClick={() => handleUpdateTask("To Do")}>Release</Button>
+                  <Button variant="success" onClick={() => handleUpdateTask("To Do")}>Release</Button>
 
                 ) : selectedTask?.Task_state === "To Do" ? (
                   // If task is in To Do state, show Assign button
-                  <Button variant="primary" onClick={() => handleUpdateTask("Doing")}>Assign</Button>
+                  <Button variant="success" onClick={() => handleUpdateTask("Doing")}>Assign</Button>
 
                 ) : selectedTask?.Task_state === "Doing" ? (
                   <>
-                  <Button variant="primary" onClick={() => handleUpdateTask("Done")}>Send for Review</Button>
-                  <Button variant="danger" onClick={() => handleUpdateTask("To Do")}>Reassign</Button>
+                  <Button variant="success" onClick={() => handleUpdateTask("Done")}>Send for Review</Button>
+                  <Button variant="danger" onClick={() => handleUpdateTask("To Do")}>Re-Prioritise</Button>
                   </>
                 ) : null}
-                
-                <Button variant="success" onClick={() => handleUpdateTask(selectedTask.Task_state)}>Update</Button>
-
+                <Button variant="primary" onClick={() => handleUpdateTask(selectedTask.Task_state)} disabled={selectedTask?.Task_state === "Done" && taskPlan !== selectedTask?.Task_plan}>Update</Button>
               </>
             ) : null}
           </div>

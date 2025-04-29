@@ -30,7 +30,6 @@ const TmsHome = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-
   const handleAppSelect = async (app) => {
     setSelectedApp(app); // Step 1: update app
     setRefreshTrigger(prev => prev + 1); // 🔁 causes TaskSection to refetch
@@ -56,7 +55,6 @@ const TmsHome = () => {
     try {
       const fetchedTasks = await fetchTaskByAppAcronym(selectedApp.App_Acronym);
       setTasks(fetchedTasks);
-      console.log("Tasks fetched:", fetchedTasks);
       return fetchedTasks;
     } catch (err) {
       setError(err.message);
@@ -175,13 +173,12 @@ const TmsHome = () => {
       }
     }
     
-
   return (
     <Layout onSuccess={handleSuccess}>
       <Container fluid style={{ height: '100vh' }}>
         <Row style={{ height: '100%' }}>
           <Col md={2} className="bg-light p-0">
-            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} refetchTasks={fetchTasks} onUpdateDone={handleSuccess} onAppSelect={handleAppSelect}  />
+            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} refetchTasks={fetchTasks} onUpdateDone={handleSuccess} onAppSelect={handleAppSelect} plans={plans} setPlans={setPlans} refreshTrigger={refreshTrigger} />
           </Col>
           <Col md={10} className="p-3">
             <Row className="align-items-center">
