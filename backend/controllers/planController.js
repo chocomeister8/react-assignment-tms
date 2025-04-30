@@ -1,6 +1,7 @@
 // Import Database component
 const db = require("../config/database");
 
+// Get all plans method
 exports.getAllPlan = (req, res) => {
     if (!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid." });
@@ -13,6 +14,7 @@ exports.getAllPlan = (req, res) => {
     });
 };
 
+// Create plan method
 exports.createPlan = (req, res) => {
     let { Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color } = req.body;
 
@@ -59,6 +61,7 @@ exports.createPlan = (req, res) => {
     });
 };
 
+// Update plan method
 exports.updatePlan = (req, res) => {
     let { Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color } = req.body;
 

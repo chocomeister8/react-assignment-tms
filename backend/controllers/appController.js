@@ -14,6 +14,7 @@ exports.getAllApplications = (req, res) => {
     });
 };
 
+// Create application method
 exports.createApp = (req, res) => {
 
     let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
@@ -73,6 +74,7 @@ exports.createApp = (req, res) => {
     });
 }
 
+// Update application method
 exports.updateApp = (req, res) => {
     let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
     const startDate = App_startDate === '' ? null : App_startDate;
@@ -83,7 +85,7 @@ exports.updateApp = (req, res) => {
     const permitDoingValue = App_permit_Doing === '' ? null : App_permit_Doing;
     const permitDoneValue = App_permit_Done === '' ? null : App_permit_Done;
 
-    console.log(startDate,endDate,permitCreateValue)
+    console.log("BACKED", permitOpenValue);
 
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
@@ -93,8 +95,8 @@ exports.updateApp = (req, res) => {
         if(err) {
             return res.status(500).json({ error: "Failed to start transaction." });
         }
-        db.query('UPDATE application SET App_Description = ?, App_startDate = ?, App_endDate = ?, App_permit_Open = ?, App_permit_toDoList = ?, App_permit_Doing = ?, App_permit_Done = ?, App_permit_Create = ? WHERE App_Acronym = ? AND App_Rnumber = ?', 
-            [App_Description, startDate, endDate, permitOpenValue, permittoDoListValue, permitDoingValue, permitDoneValue, permitCreateValue, App_Acronym, App_Rnumber], (err, results) => {
+        db.query('UPDATE application SET App_Description = ?, App_startDate = ?, App_endDate = ?, App_permit_Open = ?, App_permit_toDoList = ?, App_permit_Doing = ?, App_permit_Done = ?, App_permit_Create = ? WHERE App_Acronym = ?', 
+            [App_Description, startDate, endDate, permitOpenValue, permittoDoListValue, permitDoingValue, permitDoneValue, permitCreateValue, App_Acronym], (err, results) => {
             if(err){
                 return db.rollback(() => {
                     console.error('Database error:', err);
@@ -107,7 +109,7 @@ exports.updateApp = (req, res) => {
                     return res.status(500).json({ error: "Transaction commit failed." });
                 });
             }
-            res.status(200).json({ success: 'Application updated successfully!', application:{ App_Acronym, App_Description, App_Rnumber, startDate, endDate, permitOpenValue, permittoDoListValue, permitDoingValue, permitDoneValue, permitCreateValue }});
+            res.status(200).json({ success: 'Application updated successfully!', application:{results }});
             });
         });
     });

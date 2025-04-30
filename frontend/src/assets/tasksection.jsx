@@ -58,10 +58,12 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
   
     const loadData = async () => {
       try {
-        const { username, group } = await fetchUsername();        
+        const { username, group } = await fetchUsername();
+        // Fetch plans     
         await fetchPlans().then(data => {
           setPlans(Array.isArray(data) ? data : []);
         });
+        // set the user and group state
         setUsername(username);
         setUserGroup(group);
   
@@ -72,6 +74,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
     checkUpdatePermission();
     loadData();
   
+    // Error message duration
     if (error || success || Modalerror) {
       const timer = setTimeout(() => {
         setError('');
@@ -105,14 +108,16 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
   // Select task method
   const handleTaskClick = async (selectedTask) => {
     try {
-      const result = await fetchTaskByTaskID(selectedTask.Task_id); // Fetch task details based on selected task_id
+      // Fetch task details based on selected task_id
+      const result = await fetchTaskByTaskID(selectedTask.Task_id);
       if (result.success && result.Task) {
-        setSelectedTask(result.Task);  // Set the selected task data
-        setShowTaskDetailsModal(true); // Open the details modal
+        // Set the selected task data
+        setSelectedTask(result.Task); 
+        setShowTaskDetailsModal(true);
       } else {
         setError("Task not found.");
       }
-      refetchTasks(); // Optional, if you want to refresh tasks
+      refetchTasks();
     } catch (err) {
       console.error(err);
       setError("Could not fetch task details.");
@@ -298,7 +303,6 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
     }
   };
 
-
   return (
     <div>
     {error && <div className="alert alert-danger">{error}</div>}
@@ -352,13 +356,11 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                 <Form.Control type="text" value={selectedTask?.Task_id || ""} disabled/>
               </FloatingLabel>
             </Form.Group>
-
             <Form.Group controlId="taskAppAcronym" className="mb-1">
               <FloatingLabel controlId="floatingTaskAppAcronym" label="Task App Acronym:">
                 <Form.Control type="text" value={selectedTask?.Task_app_Acronym || ""} disabled />
               </FloatingLabel>
             </Form.Group>
-
             <Form.Group controlId="taskState" className="mb-1">
               <FloatingLabel controlId="floatingTaskState" label="Task State:">
                 {isEditingTask ? (
@@ -374,26 +376,22 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                 )}
               </FloatingLabel>
             </Form.Group>
-
             <Form.Group controlId="taskcreateDate" className="mb-1">
               <FloatingLabel controlId="floatingTaskDate" label="Date Created:">
                 <Form.Control type="text" value={selectedTask?.Task_createDate ? new Date(selectedTask.Task_createDate).toISOString().split('T')[0] : ''} disabled />
               </FloatingLabel>
             </Form.Group>
-
             <Form.Group controlId="taskcreator" className="mb-1">
               <FloatingLabel controlId="floatingTaskCreator" label="Creator:">
                 <Form.Control type="text" value={selectedTask?.Task_creator || ""} disabled />
               </FloatingLabel>
             </Form.Group>
-
             <Form.Group controlId="taskOwner">
               <FloatingLabel controlId="floatingOwner" label="Task Owner:">
                 <Form.Control type="text" value={selectedTask?.Task_owner || ""} disabled />
               </FloatingLabel>
             </Form.Group>
           </Col>
-         
           <Col>
             <Form.Group controlId="taskName" className="mb-1">
               <FloatingLabel controlId="floatingTaskName" label="Task Name:">
@@ -460,12 +458,8 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
               <>
                 {selectedTask?.Task_state === "Done" ? (
                   <>
-                    <Button variant="success" onClick={handleApproveTask} hidden={taskPlan !== selectedTask?.Task_plan}>
-                      Approve
-                    </Button>
-                    <Button variant="danger" onClick={handleRejectTask}>
-                      Reject
-                    </Button>
+                    <Button variant="success" onClick={handleApproveTask} hidden={taskPlan !== selectedTask?.Task_plan}>Approve</Button>
+                    <Button variant="danger" onClick={handleRejectTask}>Reject</Button>
                   </>
                 ) : selectedTask?.Task_state === "Open" ? (
                   // If task is in Open state, show Release button

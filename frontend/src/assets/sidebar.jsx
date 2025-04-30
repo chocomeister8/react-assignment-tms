@@ -40,11 +40,13 @@ const Sidebar = ( props ) => {
 
   const loadData = async () => {
     try {
+      // fetch the data
       const applicationsData = await fetchApplications();
       const groupData = await fetchGroups();
       const plansData = await fetchPlans();
       const group = await fetchUsername();
   
+      // set it to the usetstate
       setApplications(applicationsData);
       setGroups(groupData);
       setPlans(plansData);
@@ -54,6 +56,7 @@ const Sidebar = ( props ) => {
     }
   };
   
+  // success and error message duration
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -65,18 +68,20 @@ const Sidebar = ( props ) => {
   
     loadData();
   }, [])
-
+  // Open app details modal
   const handleShowAppDetails = (app) => {
     setSelectedApp(app);
     setShowDetailsModal(true);
   };
+  // Close app details modal
   const handleCloseAppDetails = () => {
+    // Sets all fields to empty
     setShowDetailsModal(false);
-    setAppAcronym(""); // Reset app acronym
-    setAppRNumber(null); // Reset RNumber
-    setAppStartDate(""); // Reset start date
-    setAppEndDate(""); // Reset end date
-    setAppDescription(""); // Reset description
+    setAppAcronym("");
+    setAppRNumber(null);
+    setAppStartDate("");
+    setAppEndDate("");
+    setAppDescription(""); 
     setSelectedApp({
       App_permit_Create: "",
       App_permit_Open: "",
@@ -88,14 +93,14 @@ const Sidebar = ( props ) => {
       App_Description: ""
     });
   };
-
+  // Close create app modal
   const handleCloseAppModal = () => {
     setShowModal(false);
-    setAppAcronym(""); // Reset app acronym
-    setAppRNumber(null); // Reset RNumber
-    setAppStartDate(""); // Reset start date
-    setAppEndDate(""); // Reset end date
-    setAppDescription(""); // Reset description
+    setAppAcronym("");
+    setAppRNumber(null);
+    setAppStartDate("");
+    setAppEndDate("");
+    setAppDescription("");
     setError("");
     setDropdowns({
       App_permit_Create: "",
@@ -106,9 +111,9 @@ const Sidebar = ( props ) => {
       App_startDate: "",
       App_endDate: "",
       App_Description: ""
-    }); // Reset all dropdown values
+    }); 
   };
-
+  // Close create plan modal
   const handleClosePlanModal = () => {
     // Reset the state fields when closing the app modal
     setShowPlanModal(false);
@@ -118,7 +123,7 @@ const Sidebar = ( props ) => {
     setPlanColor("");
     setError("");
   };
-
+  // Close plan details modal
   const handleClosePlanDetailsModal = () => {
     // Reset the state fields when closing the app modal
     setShowPlanDetailsModal(false);
@@ -135,7 +140,7 @@ const Sidebar = ( props ) => {
       [dropdownName]: e.target.value,  // Update the specific dropdown value
     }));
   };
-
+  // Upon clicking an app display the plans associated to the plan
   const handleShowAppPlans = (app) => {
     setSelectedApp(app);
     setPlanAppName(app.App_Acronym);
@@ -146,7 +151,7 @@ const Sidebar = ( props ) => {
       props.onAppSelect(app);
     }
   }
-
+  // Format date 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const year = date.getFullYear();
@@ -154,7 +159,7 @@ const Sidebar = ( props ) => {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-
+  // Create application method
   const handleCreateApplication = async () => {
     setError(null);
     setSuccess(null);
@@ -170,16 +175,18 @@ const Sidebar = ( props ) => {
     const app_permit_doing = (dropdowns.appPermitDoing || "").trim(); 
     const app_permit_done = (dropdowns.appPermitDone || "").trim();
     
+    // Empty Field validations
     if(!app_acronym || !app_rnumber ){
       setError("Please fill in all fields!");
       return;
     }
+    // App acronym validation
     const appAcronymRegex = /^[a-zA-Z0-9]{1,300}$/;
     if(!appAcronymRegex.test(app_acronym)) {
       setError("App Acronym can only consists of alphanumeric, no special characters and not more than 300 characters!");
       return;
     }
-
+    // App Rnumber validation
     const appRNumberRegex = /^[1-9][0-9]{0,3}$/;
     if (!appRNumberRegex.test(app_rnumber)){
       setError("App Rnumber must be a whole number between 1 and 9999 and cannot start with 0.");
@@ -192,8 +199,8 @@ const Sidebar = ( props ) => {
         setError(newApplication.error);
       }
       else{
-        setSuccess(newApplication.success);
-        setApplications((prevApps) => [...prevApps, newApplication.application]);
+        setSuccess(newApplication.success); // success message
+        setApplications((prevApps) => [...prevApps, newApplication.application]); // upon app creation, it updates the use state and shows in the UI
         props.onAppCreated?.(newApplication.success);
         setShowModal(false);
 
@@ -211,26 +218,25 @@ const Sidebar = ( props ) => {
     }
   }
 
+  // Update application method
   const handleUpdateApplication = async () => {
     setError(null);
     setSuccess(null);
   
     const { App_Acronym, App_Rnumber, App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create} = selectedApp;
-
-
     const formattedStartDate =  App_startDate && !isNaN(new Date(App_startDate).getTime()) ? new Date(App_startDate).toISOString().split('T')[0] : null;
     const formattedEndDate =  App_endDate && !isNaN(new Date(App_endDate).getTime()) ? new Date(App_endDate).toISOString().split('T')[0] : null;
   
     try {
       const updateapplication = await updateApplication(App_Acronym, App_Description, App_Rnumber, formattedStartDate, formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create);
   
+      console.log("apppermitOpen", App_permit_Open);
       if (updateapplication.error) {
         setError(updateapplication.error);
       } else {
         handleCloseAppDetails();
-        setApplications((prevApps) => prevApps.map((app) => app.App_Acronym === App_Acronym && app.App_Rnumber === App_Rnumber 
-        ? { ...app, App_Description, App_startDate: formattedStartDate, App_endDate: formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }: app
-          )
+        // successfully creating application dynamically updates the UI
+        setApplications((prevApps) => prevApps.map((app) => app.App_Acronym === App_Acronym && app.App_Rnumber === App_Rnumber ? { ...app, App_Description, App_startDate: formattedStartDate, App_endDate: formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }: app)
         );
         props.onUpdateDone?.(updateapplication.success);
       }
@@ -247,6 +253,7 @@ const Sidebar = ( props ) => {
     }));
   };
 
+  // Create plan method
   const handleCreatePlan = async () => {
     setError(null);
     setSuccess(null);
@@ -257,15 +264,18 @@ const Sidebar = ( props ) => {
     const plan_appName = PlanAppName.trim().toLowerCase();
     const plan_color = PlanColor;
 
+    // Empty field validation
     if(!plan_mvp_name || !plan_startDate || !plan_endDate || !plan_appName || !plan_color){
       setError("Please fill in all fields!");
       return;
     }
+    // Plan mvp name validation
     const planMVPNameRegex = /^[a-zA-Z0-9]{1,300}$/;
     if(!planMVPNameRegex.test(plan_mvp_name)) {
       setError("MVP Name can only consists of alphanumeric, no special characters and not more than 300 characters!");
       return;
     }
+
     try{
       const newPlan = await createPlan(plan_mvp_name, plan_startDate, plan_endDate, plan_appName, plan_color);
       if(newPlan.error) {
@@ -302,14 +312,16 @@ const Sidebar = ( props ) => {
     }
   };
 
+  // Show the plan details modal
   const handleShowPlanDetailsModal = (plan) => {
     setMVPName(plan.Plan_MVP_name);
     setPlanStartDate(plan.Plan_startDate); 
     setPlanEndDate(plan.Plan_endDate);
     setPlanColor(plan.Plan_color);
-    setShowPlanDetailsModal(true); // Show the modal
+    setShowPlanDetailsModal(true);
   };
 
+  // Update plan method
   const handleUpdatePlan = async () => {
     setError(null);
     setSuccess(null);
@@ -324,13 +336,12 @@ const Sidebar = ( props ) => {
         setError(updateplan.error);
       } else {
         handleClosePlanDetailsModal();
-
-        const refreshedPlans = await fetchPlans();
+        const refreshedPlans = await fetchPlans(); // fetch plans method
         setPlans(refreshedPlans);
         const updatedFilteredPlans = refreshedPlans.filter( plan => plan.Plan_app_Acronym === PlanAppName);
-        setFilteredPlans(updatedFilteredPlans);
-        props.setPlans(refreshedPlans);
-        props.onUpdateDone?.(updateplan.success);
+        setFilteredPlans(updatedFilteredPlans); // Set the filtered plans
+        props.setPlans(refreshedPlans); // Show the updated plan details after plan succesfully updates
+        props.onUpdateDone?.(updateplan.success); // Show the success update message
       }
     } catch (err) {
       setError(err.message);

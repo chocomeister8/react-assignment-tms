@@ -94,6 +94,7 @@ export const createApplication = async (App_Acronym, App_Description, App_Rnumbe
 };
 
 export const updateApplication = async (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) => {
+    console.log(App_permit_Open);
     try {
         const response = await axios.put(`${API_BASE_URL}/applications/${App_Acronym}`,{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );

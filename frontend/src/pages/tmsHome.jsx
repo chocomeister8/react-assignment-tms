@@ -55,8 +55,9 @@ const TmsHome = () => {
       return;
     }
     try {
+      // fetch task by app acronym
       const fetchedTasks = await fetchTaskByAppAcronym(selectedApp.App_Acronym);
-      setTasks(fetchedTasks);
+      setTasks(fetchedTasks); // set tasks data to the use state
       return fetchedTasks;
     } catch (err) {
       setError(err.message);
@@ -65,10 +66,12 @@ const TmsHome = () => {
     }
   };
 
+  // show task modal
   const handleShowTaskModal = async () => {
     try {
+      // fetch plans
       const plansData = await fetchPlans();
-      setPlans(Array.isArray(plansData) ? plansData : []);
+      setPlans(Array.isArray(plansData) ? plansData : []); // set plan results to the use state
       setShowTaskModal(true);
     } catch (err) {
       console.error('Failed to fetch plans:', err.message);
@@ -76,6 +79,7 @@ const TmsHome = () => {
     }
   };
 
+  // success and error message duration
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -87,10 +91,10 @@ const TmsHome = () => {
     }
   }, [error, success]);
 
-
+  // Fetch data
   useEffect (() => {
     if (selectedApp) {
-      fetchTasks();
+      fetchTasks(); // fetch tasks when there is a selected app
     }
 
     // check permission of current user for create task
@@ -114,11 +118,11 @@ const TmsHome = () => {
 
     const loadData = async () => {
       try {
-        const { username, group } = await fetchUsername();        
+        const { username, group } = await fetchUsername(); // fetch username and group
         await fetchPlans().then(data => {
-          setPlans(Array.isArray(data) ? data : []);
+          setPlans(Array.isArray(data) ? data : []); // set the fetched plan data to the use state
         });
-        setUsername(username);
+        setUsername(username); // to set as the task creator
         setUserGroup(group);
   
       } catch (err) {
@@ -143,6 +147,7 @@ const TmsHome = () => {
       const task_plan = taskPlan.trim();
       const task_appAcronym = selectedApp.App_Acronym;
 
+      // Field validation
       if(!task_name|| !task_creator || !task_appAcronym){
         setError("Please fill in all fields!");
         return;
@@ -151,6 +156,7 @@ const TmsHome = () => {
         setError("Task Name must not exceed 300 characters!");
         return;
       }
+
       try{
         const newTask = await createTask(task_name,task_description ,task_notes ,task_plan , task_appAcronym , task_creator);
         if(newTask.error) {
@@ -187,7 +193,8 @@ const TmsHome = () => {
       <Container fluid style={{ height: '100vh' }}>
         <Row style={{ height: '100%' }}>
           <Col md={2} className="bg-light p-0">
-            <Sidebar onAppCreated={handleSuccess} onPlanCreated={handleSuccess} refetchTasks={fetchTasks} onUpdateDone={handleSuccess} onAppSelect={handleAppSelect} plans={plans} setPlans={setPlans} refreshTrigger={refreshTrigger} />
+            {/* Sidebar component with props */}
+            <Sidebar onAppSelect={handleAppSelect} onAppCreated={handleSuccess} onUpdateDone={handleSuccess} onPlanCreated={handleSuccess} setPlans={setPlans} setTasks={setTasks}/>
           </Col>
           <Col md={10} className="p-3">
             <Row className="align-items-center">
