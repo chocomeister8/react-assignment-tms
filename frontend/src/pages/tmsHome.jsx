@@ -43,8 +43,9 @@ const TmsHome = () => {
   };
 
   // success message
-  const handleSuccess = (message) => {
+  const handleSuccess = async (message) => {
     setSuccess(message);
+    setRefreshTrigger(prev => prev + 1); // 🔁 causes TaskSection to refetch
     setTimeout(() => setSuccess(''), 3000);
   };
 
@@ -103,7 +104,6 @@ const TmsHome = () => {
         if (!selectedApp) {
           return;
         } 
-
         const response = await checkcreateTaskPermission(selectedApp.App_Acronym); // check create task permissions
         if (response.success) {
           setHasPermission(true);
@@ -133,7 +133,7 @@ const TmsHome = () => {
     checkPermission();
     loadData();
 
-  }, [selectedApp])
+  }, [selectedApp, refreshTrigger])
 
   // Create task method
   const handleCreateTask = async () => {
@@ -209,7 +209,7 @@ const TmsHome = () => {
               </Col>
               {selectedApp && hasPermission && (
                 <Col md={2} className="d-flex justify-content-end">
-                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal}>Create Task</Button>
+                  <Button className="success" variant="outline-success" onClick={handleShowTaskModal} hidden={!hasPermission}>Create Task</Button>
                 </Col>
               )}
               </div>

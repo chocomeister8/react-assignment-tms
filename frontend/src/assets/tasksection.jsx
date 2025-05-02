@@ -22,8 +22,8 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
   const [taskNotes, setTaskNotes] = useState('');
   const [taskPlan, setTaskPlan] = useState('');
   const [taskState, setTaskState] = useState('');
+
   const [hasUpdatePermission, setHasUpdatePermission] = useState(false);
-  const [previousState, setPreviousState] = useState("");
 
   const statusList = ['Open', 'To Do', 'Doing', 'Done', 'Closed'];
   const taskArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
@@ -35,6 +35,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
       setTaskDescription(selectedTask.Task_description || '');
       setTaskNotes("");
       setTaskPlan(selectedTask.Task_plan || '');
+      console.log("RUBBISH", selectedTask.Task_plan)
       setTaskState(selectedTask.Task_state || '');
     }
 
@@ -421,7 +422,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
             </Form.Group>
             <Form.Group controlId="editTaskNotes" className="mb-1">
               <FloatingLabel controlId="floatingEditTaskNotes" label="Task Notes:">
-                <Form.Control type="textarea" style={{ height: "120px"}} onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(hasUpdatePermission || (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
+                <Form.Control as="textarea" style={{ height: "120px"}} onChange={(e) => setTaskNotes(e.target.value)} placeholder="Enter note (optional)" disabled={!(hasUpdatePermission || (selectedTask?.Task_state === "Done" && hasUpdatePermission))} />
               </FloatingLabel>
             </Form.Group>
           </Col>
@@ -458,7 +459,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
               <>
                 {selectedTask?.Task_state === "Done" ? (
                   <>
-                    <Button variant="success" onClick={handleApproveTask} hidden={taskPlan !== selectedTask?.Task_plan}>Approve</Button>
+                    <Button variant="success" onClick={handleApproveTask} hidden={ (taskPlan || "") !== (selectedTask?.Task_plan || "")}>Approve</Button>
                     <Button variant="danger" onClick={handleRejectTask}>Reject</Button>
                   </>
                 ) : selectedTask?.Task_state === "Open" ? (
@@ -475,7 +476,7 @@ const TaskSection = ({ selectedApp, tasks, allplans, refetchTasks, onUpdateSucce
                   <Button variant="danger" onClick={() => handleUpdateTask("To Do")}>Re-Prioritise</Button>
                   </>
                 ) : null}
-                <Button variant="primary" onClick={() => handleUpdateTask(selectedTask.Task_state)} hidden={selectedTask?.Task_state === "Done" && taskPlan !== selectedTask?.Task_plan}>Update</Button>
+                <Button variant="primary" onClick={() => handleUpdateTask(selectedTask.Task_state)} hidden={selectedTask?.Task_state === "Done" && (taskPlan || "") !== (selectedTask?.Task_plan || "")}>Update</Button>
               </>
             ) : null}
           </div>

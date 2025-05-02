@@ -10,7 +10,7 @@ exports.getAllGroups = (req, res) => {
         if(err){
             return res.status(500).json({ error : err.message });
         }
-        res.json(results);
+        return res.status(200).json({ success: true, results: results});
     });
 };
 

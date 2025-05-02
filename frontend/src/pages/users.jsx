@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from '../assets/topnavbar'; 
 
 // Backend component calls
-import { fetchGroups, fetchUsers, createGroup , createUser, updateUser} from "../assets/apiCalls";
+import { fetchGroups, fetchUsers, createGroup , createUser, updateUser, fetchUsername} from "../assets/apiCalls";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const UserManagement = () => {
@@ -30,7 +30,42 @@ const UserManagement = () => {
   const [editedGroups, setEditedGroups] = useState([]); 
   const [editedIsActive, setEditedIsActive] = useState(true);
 
-  const [isGroupOpen, setIsGroupOpen] = useState(false); 
+  const [isGroupOpen, setIsGroupOpen] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState('');
+
+  useEffect(() => {
+    const loadData = async () => {
+        try {
+            const groupsData = await fetchGroups();
+            const usersData = await fetchUsers();
+
+            if (!groupsData.success || !usersData.success) {
+              navigate("/login");
+              return;
+            }
+            setUsers(usersData.results);
+            setGroups(groupsData.results);
+
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+    const loadUsername = async () => {
+      try {
+        const usernameData = await fetchUsername();
+        if( usernameData.success === true){
+          setCurrentUsername(usernameData.username);
+        }
+        else {
+          console.log("User authentication failed:", usernameData.message);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    loadUsername();
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (error || success) {
@@ -41,17 +76,7 @@ const UserManagement = () => {
   
       return () => clearTimeout(timer);
     }
-    const loadData = async () => {
-        try {
-            const groupsData = await fetchGroups();
-            setGroups(groupsData);
-            const usersData = await fetchUsers();
-            setUsers(usersData);
-        } catch (err) {
-            setError(err.message);
-        }
-    };
-    loadData();
+   
   }, [error,success]);
 
   const handleCreateGroup = async () => {
@@ -71,7 +96,7 @@ const UserManagement = () => {
       }
   
       if (response.message === "Access denied: User is not in the required group") {
-        alert("Access denied: User is not in the required group");
+        console.log("Access denied: User is not in the required group");
         navigate('/login');
         return;
       }
@@ -100,7 +125,7 @@ const UserManagement = () => {
         setSuccess(response.message);
         setGroupName("");
         const updatedGroups = await fetchGroups();
-        setGroups(updatedGroups);
+        setGroups(updatedGroups.results);
       }
   
     } catch (err) {
@@ -182,7 +207,7 @@ const UserManagement = () => {
       }
   
       const updatedUser = await fetchUsers();
-      setUsers(updatedUser);
+      setUsers(updatedUser.results);
   
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -235,25 +260,40 @@ const UserManagement = () => {
     const user_groupName = editedGroups.join(',');
     
     try {
+      const update = await updateUser(editUser.username, editedEmail, editedPassword, user_groupName, editedIsActive);
+      console.log(update);
 
-      const update = await updateUser(editUser.username,editedEmail,editedPassword,user_groupName, editedIsActive);
-      if(update.error) {
-        setError(update.error);
+      if (!update.success) {
+          navigate("/login");
+          setError(update.error);
+          return;
       } else {
-        if(update.message == "Unauthorized User."){
-          navigate('/login');
-        }
-        if(update.message == "Access denied: User is not in the required group")
-        {
-          alert("Access denied: User is not in the required group");
-          navigate('/login');
-        }
-        setSuccess(update.success);
-        setEditUser(null); // exit edit mode
+          if (update.message === "Unauthorized User.") {
+              navigate('/login');
+              return;
+          }
+          if (update.message === "Access denied: User is not in the required group") {
+              alert("Access denied: User is not in the required group");
+              navigate('/login');
+              return;
+          }
+
+          // ✅ Check if the currently logged-in user just lost admin rights
+          if (editUser.username === currentUsername && !editedGroups.includes('admin')) {
+              alert("You have removed your own admin rights. Redirecting to home.");
+              navigate('/login'); // or navigate('/login')
+              return; // ⚠ Stop here: do not call fetchUsers()
+          }
+
+          setSuccess(update.success);
+          setEditUser(null); // exit edit mode
       }
-      const updatedUser = await fetchUsers(); 
-      setUsers(updatedUser);
+
+      const updatedUser = await fetchUsers();
+      setUsers(updatedUser.results);
+
     } catch (err) {
+      console.log(err);
       setError(err.message);
     }
   };
@@ -328,7 +368,7 @@ const UserManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map((user, index) => (
+          {users?.map((user, index) => (
             <tr key={index}>
               <td>{user.username}</td>
               <td>

@@ -20,6 +20,7 @@ const Sidebar = ( props ) => {
   const [selectedApp, setSelectedApp] = useState([]);
   const [userGroup, setUserGroup] = useState('');
   
+  // use state for app fields
   const [appAcronym, setAppAcronym] = useState('');
   const [appRnumber, setAppRNumber] = useState('');
   const [appStartDate, setAppStartDate] = useState('');
@@ -27,6 +28,7 @@ const Sidebar = ( props ) => {
   const [appDescription, setAppDescription] = useState('');
   const [dropdowns, setDropdowns] = useState({appPermitCreate: '', appPermitOpen: '', appPermitToDo: '', appPermitDoing: '', appPermitDone: '',});
 
+  // use state for plan fields
   const [Plan_MVP_name, setMVPName] = useState('');
   const [PlanStartDate, setPlanStartDate] = useState('');
   const [PlanEndDate, setPlanEndDate] = useState('');
@@ -48,7 +50,7 @@ const Sidebar = ( props ) => {
   
       // set it to the usetstate
       setApplications(applicationsData);
-      setGroups(groupData);
+      setGroups(groupData.results);
       setPlans(plansData);
       setUserGroup(group.group);
     } catch (err) {
@@ -201,7 +203,7 @@ const Sidebar = ( props ) => {
       else{
         setSuccess(newApplication.success); // success message
         setApplications((prevApps) => [...prevApps, newApplication.application]); // upon app creation, it updates the use state and shows in the UI
-        props.onAppCreated?.(newApplication.success);
+        props.onAppCreated?.(newApplication.success); // send props to tmsHome component
         setShowModal(false);
 
         // Reset form fields
@@ -230,7 +232,6 @@ const Sidebar = ( props ) => {
     try {
       const updateapplication = await updateApplication(App_Acronym, App_Description, App_Rnumber, formattedStartDate, formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create);
   
-      console.log("apppermitOpen", App_permit_Open);
       if (updateapplication.error) {
         setError(updateapplication.error);
       } else {
@@ -238,7 +239,7 @@ const Sidebar = ( props ) => {
         // successfully creating application dynamically updates the UI
         setApplications((prevApps) => prevApps.map((app) => app.App_Acronym === App_Acronym && app.App_Rnumber === App_Rnumber ? { ...app, App_Description, App_startDate: formattedStartDate, App_endDate: formattedEndDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }: app)
         );
-        props.onUpdateDone?.(updateapplication.success);
+        props.onUpdateDone?.(updateapplication.success); // send props to tmsHome component
       }
     } catch (err) {
       setError(err.message);
@@ -698,7 +699,7 @@ const Sidebar = ( props ) => {
                       <option value="lightcyan" >lightcyan</option>
                       <option value="lightyellow" >lightyellow</option>
                       <option value="lightgreen" >lightgreen</option>
-                      <option value="lightgray" >lightgray</option>
+                      <option value="lavender" >lavender</option>
                       <option value="lightblue" >lightblue</option>
                       <option value="lightpink" >lightpink</option>
                       <option value="peachpuff" >peachpuff</option>
@@ -755,7 +756,7 @@ const Sidebar = ( props ) => {
                       <option value="lightcyan">lightcyan</option>
                       <option value="lightyellow">lightyellow</option>
                       <option value="lightgreen">lightgreen</option>
-                      <option value="lightgray">lightgray</option>
+                      <option value="lavender" >lavender</option>
                       <option value="lightblue">lightblue</option>
                       <option value="lightpink">lightpink</option>
                       <option value="peachpuff">peachpuff</option>

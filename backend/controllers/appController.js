@@ -45,6 +45,7 @@ exports.createApp = (req, res) => {
       setError("App Rnumber must be a whole number between 1 and 9999 and cannot start with 0.");
       return;
     }
+    // check if app with the same app acronym and Rnumber exists
     db.query('SELECT App_Acronym, App_Rnumber FROM application WHERE App_Acronym = ?', [App_Acronym], (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database error occurred.' });
@@ -76,7 +77,7 @@ exports.createApp = (req, res) => {
 
 // Update application method
 exports.updateApp = (req, res) => {
-    let { App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
+    let { App_Acronym, App_Description, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create } = req.body;
     const startDate = App_startDate === '' ? null : App_startDate;
     const endDate = App_endDate === '' ? null : App_endDate;
     const permitCreateValue = App_permit_Create === '' ? null : App_permit_Create;
@@ -84,8 +85,6 @@ exports.updateApp = (req, res) => {
     const permittoDoListValue = App_permit_toDoList === '' ? null : App_permit_toDoList;
     const permitDoingValue = App_permit_Doing === '' ? null : App_permit_Doing;
     const permitDoneValue = App_permit_Done === '' ? null : App_permit_Done;
-
-    console.log("BACKED", permitOpenValue);
 
     if(!req.decoded) {
         return res.status(200).json({ error: "Token is missing or invalid."});
@@ -109,7 +108,7 @@ exports.updateApp = (req, res) => {
                     return res.status(500).json({ error: "Transaction commit failed." });
                 });
             }
-            res.status(200).json({ success: 'Application updated successfully!', application:{results }});
+            res.status(200).json({ success: 'Application updated successfully!', application:{results}});
             });
         });
     });

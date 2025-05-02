@@ -41,7 +41,7 @@ exports.getAllTasks = (req, res) => {
         if (err) {
         return res.status(500).json({ error : err.message });
         }
-        res.json(results);
+        res.status(200).json({ success : "Fetched all tasks!"});
     });
 };
 
@@ -61,8 +61,7 @@ exports.getTaskByAppAcronym = (req, res) => {
         if (results.length === 0){
             return res.status(200).json([{ message: 'Task not found!' }]);
         }
-        console.log(results);
-        res.status(200).json({ tasks: results });
+        res.status(200).json({ success : `Fetched all tasks from app: ${Task_app_Acronym}`, tasks: results});
     })
 };
 
@@ -81,7 +80,6 @@ exports.getTaskByTaskID = (req, res) => {
         if (results.length === 0){
             return res.status(200).json([{ message: 'Task not found!' }]);
         }
-        console.log(results);
         res.status(200).json({ success: true, Task: results[0] });
     })
 };
@@ -123,44 +121,59 @@ exports.createTask = (req, res) => {
     }
     // If task plan exists
     if (Task_plan) {
-        // Check if plan with the same plan_mvp_name and plan_app_acronym exists
-        db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?',[Task_plan, Task_app_Acronym], (err, planResults) => {
+        db.beginTransaction((err) => {
             if (err) {
-                return res.status(500).json({ error: 'Database error during plan check.'});
+                return db.rollback(() => {
+                    res.status(500).json({ error: "Failed to start transaction." });
+                });
             }
-
-            if(planResults.length === 0) {
-                return res.status(200).json({ error: 'Plan does not exist.' });
-            }
-            // Check if app with the same app Rnumber exists
-            db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
-                if (err){
-                    return res.status(500).json({ error: 'Database error during app check.' });
-                } 
-                if (appResults.length === 0) {
-                    return res.status(200).json({ error: 'Application does not exist.' });
+            // Check if plan with the same plan_mvp_name and plan_app_acronym exists
+            db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?',[Task_plan, Task_app_Acronym], (err, planResults) => {
+                if (err) {
+                    return db.rollback(() => {
+                        res.status(500).json({ error: 'Database error during plan check.' });
+                    });
                 }
-        
-                const task_number = appResults[0].App_Rnumber;
-                const Task_id = `${Task_app_Acronym}_${task_number}`;
-                
-                // Check if task with the same task_id exists
-                db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
-                    if (err) {
-                        return res.status(500).json({ error: 'Database error occurred.' });
+
+                if(planResults.length === 0) {
+                    return db.rollback(() => {
+                        res.status(200).json({ error: 'Plan does not exist.' });
+                    });
+                }
+                // Check if app with the same app Rnumber exists
+                db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
+                    if (err){
+                        return db.rollback(() => {
+                            res.status(500).json({ error: 'Database error during app check.' });
+                        });
+                    } 
+                    if (appResults.length === 0) {
+                        return db.rollback(() => {
+                            res.status(200).json({  error: 'Application does not exist.' });
+                        });
                     }
-                    if (results.length > 0) {
-                        return res.status(200).json({ error: 'Task_id already exists!'});
-                    }
-                    // Start of transaction
-                    db.beginTransaction((err) => {
+                    const task_number = appResults[0].App_Rnumber;
+                    const Task_id = `${Task_app_Acronym}_${task_number}`;
+                    
+                    // Check if task with the same task_id exists
+                    db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                         if (err) {
-                            return res.status(500).json({ error: "Failed to start transaction." });
+                            return db.rollback(() => {
+                                res.status(500).json({ error: 'Database error occurred.' });
+                            });
                         }
+                        if (results.length > 0) {
+                            return db.rollback(() => {
+                                res.status(200).json({  error: 'Task with the same ID already exist.' });
+                            });
+                        }
+
                         // Insert task statement
                         db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
-                            if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
+                            if (err) {
+                                return db.rollback(() => {
+                                    res.status(500).json({ error: 'Failed to create task.' });
                                 });
                             }
 
@@ -172,7 +185,9 @@ exports.createTask = (req, res) => {
                                     });
                                 }
                                 db.commit((err) => {
-                                    if (err) {return db.rollback(() => {res.status(500).json({ error: "Transaction commit failed." });
+                                    if (err) {
+                                        return db.rollback(() => {
+                                            res.status(500).json({ error: "Transaction commit failed." });
                                         });
                                     }
                                     res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime}
@@ -187,40 +202,50 @@ exports.createTask = (req, res) => {
     }
     // When plan does not exists
     else {
-        // Check if app with the same app Rnumber exists
-        db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
-            if (err){
-                return res.status(500).json({ error: 'Database error during app check.' });
-            } 
-            if (appResults.length === 0) {
-                return res.status(200).json({ error: 'Application does not exist.' });
+        db.beginTransaction((err) => {
+            if (err) {
+                return db.rollback(() => {
+                    res.status(500).json({ error: "Failed to start transaction." });
+                });
             }
-            
-            if (!Task_plan || Task_plan.trim() === "") {
-                Task_plan = null;
-            }
+            // Check if app with the same app Rnumber exists
+            db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
+                if (err){
+                    return db.rollback(() => {
+                        res.status(500).json({ error: 'Database error during app check.' });
+                    });
+                } 
+                if (appResults.length === 0) {
+                    return db.rollback(() => {
+                        res.status(200).json({ error: 'Application does not exist.' });
+                    });
+                }
+                
+                if (!Task_plan || Task_plan.trim() === "") {
+                    Task_plan = null;
+                }
 
-            const task_number = appResults[0].App_Rnumber;
-            const Task_id = `${Task_app_Acronym}_${task_number}`;
-            
-            // Check if task with the same task_id exists
-            db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
-                if (err) {
-                    return res.status(500).json({ error: 'Database error occurred.' });
-                }
-                if (results.length > 0) {
-                    return res.status(200).json({ error: 'Task_id already exists!'});
-                }
-    
-                db.beginTransaction((err) => {
+                const task_number = appResults[0].App_Rnumber;
+                const Task_id = `${Task_app_Acronym}_${task_number}`;
+
+                // Check if task with the same task_id exists
+                db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                     if (err) {
-                        return res.status(500).json({ error: "Failed to start transaction." });
+                        return db.rollback(() => {
+                            res.status(500).json({ error: 'Database error occurred.' });
+                        });
                     }
-                    
+                    if (results.length > 0) {
+                        return db.rollback(() => {
+                            res.status(200).json({ error: 'Task_id already exists!'});
+                        });
+                    }
                     // Insert task statement
                     db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
-                        if (err) {return db.rollback(() => {res.status(500).json({ error: 'Failed to create task.' });
+                        if (err) {
+                            return db.rollback(() => {
+                                res.status(500).json({ error: 'Failed to create task.' });
                             });
                         }
                         
@@ -232,7 +257,9 @@ exports.createTask = (req, res) => {
                                 });
                             }
                             db.commit((err) => {
-                                if (err) {return db.rollback(() => {res.status(500).json({ error: "Transaction commit failed." });
+                                if (err) {
+                                    return db.rollback(() => {
+                                        res.status(500).json({ error: "Transaction commit failed." });
                                     });
                                 }
                                 res.status(200).json({success: 'Task created successfully!', task: {Task_id, Task_Name, Task_description, Task_notes_json, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner,formattedDatetime}

@@ -122,11 +122,11 @@ exports.validateAccess = (groupName) => {
     return (req, res, next) => {
         const { username } =  req.decoded;
         if(!username) {
-            return res.status(200).json({ message: " User not authenticated."});
+            return res.status(200).json({success: false, message: " User not authenticated."});
         }
         checkGroup(username, groupName, (err, groupString, isMember) => {
             if (err) {
-                return res.status(500).json({ message: "Server error during group check" });
+                return res.status(500).json({success: false, message: "Server error during group check" });
             }
 
             req.userGroup = groupString;

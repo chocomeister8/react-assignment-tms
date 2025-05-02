@@ -1,6 +1,8 @@
 import axios from "axios";
 const API_BASE_URL = "http://localhost:3000";
 
+
+// fetch all group axios call
 export const fetchGroups = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/groups`, { withCredentials: true });
@@ -11,6 +13,7 @@ export const fetchGroups = async () => {
     }
 };
 
+// fetch all users axios call
 export const fetchUsers = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/users`, { withCredentials: true });
@@ -21,6 +24,7 @@ export const fetchUsers = async () => {
     }
 };
 
+// create group axios call
 export const createGroup = async (groupName) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/create-group`,{ groupName: groupName.trim().toLowerCase() }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
@@ -32,6 +36,7 @@ export const createGroup = async (groupName) => {
     }
 };
 
+// create user axios call
 export const createUser = async (username, email, password, user_groupName) => {
     
     try {
@@ -44,6 +49,7 @@ export const createUser = async (username, email, password, user_groupName) => {
     }
 };
 
+// logout axios call
 export const handleLogout = async () => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/logout`, {}, {});
@@ -61,6 +67,7 @@ export const handleLogout = async () => {
     }
 };
 
+// update user axios call
 export const updateUser = async (username, email, password, user_groupName, isActive) => {
     const response = await axios.put(`${API_BASE_URL}/users/${username}`,
         {email, password, user_groupName,isActive,
@@ -72,6 +79,7 @@ export const updateUser = async (username, email, password, user_groupName, isAc
     return response.data;
 };
 
+// fetch all applications axios call
 export const fetchApplications = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/applications`, { withCredentials: true });
@@ -82,6 +90,7 @@ export const fetchApplications = async () => {
     }
 };
 
+// create application axios call
 export const createApplication = async (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/create-app`,{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
@@ -93,8 +102,8 @@ export const createApplication = async (App_Acronym, App_Description, App_Rnumbe
     }
 };
 
+// update application axios call
 export const updateApplication = async (App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create) => {
-    console.log(App_permit_Open);
     try {
         const response = await axios.put(`${API_BASE_URL}/applications/${App_Acronym}`,{ App_Acronym, App_Description, App_Rnumber, App_startDate, App_endDate, App_permit_Open, App_permit_toDoList, App_permit_Doing, App_permit_Done, App_permit_Create }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );
@@ -105,6 +114,7 @@ export const updateApplication = async (App_Acronym, App_Description, App_Rnumbe
     }
 };
 
+// fetch plans axios call
 export const fetchPlans = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/plans`, { withCredentials: true });
@@ -115,6 +125,7 @@ export const fetchPlans = async () => {
     }
 };
 
+// create plan axios call
 export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/create-plan`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
@@ -126,6 +137,7 @@ export const createPlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Pl
     }
 };
 
+// update plan axios call
 export const updatePlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/plan/${Plan_MVP_name}`,{ Plan_MVP_name, Plan_startDate, Plan_endDate, Plan_app_Acronym, Plan_color }, { headers: { "Content-Type": "application/json" }, withCredentials: true }
@@ -137,6 +149,7 @@ export const updatePlan = async (Plan_MVP_name, Plan_startDate, Plan_endDate, Pl
     }
 };
 
+// validate access axios call
 export const fetchUsername = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/auth/validateAccess`, { withCredentials: true });
@@ -146,6 +159,7 @@ export const fetchUsername = async () => {
     }
 };
 
+// validate admin axios call
 export const validateAdmin = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/auth/validateAdmin`, { withCredentials: true });
@@ -155,6 +169,7 @@ export const validateAdmin = async () => {
     }
 };
 
+// create task axios call
 export const createTask = async (Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/create-task`, {Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator}, { headers: { "Content-Type": "application/json" }, withCredentials: true});
@@ -165,6 +180,7 @@ export const createTask = async (Task_Name, Task_description, Task_notes, Task_p
     }
 };
 
+// check create task permission axios call
 export const checkcreateTaskPermission = async (Task_app_Acronym) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/check-create-task-permission`, { Task_app_Acronym }, { withCredentials: true });
@@ -174,6 +190,7 @@ export const checkcreateTaskPermission = async (Task_app_Acronym) => {
     }
 };
 
+// fetch all tasks axios call
 export const fetchTasks = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/tasks`, { withCredentials: true });
@@ -183,6 +200,7 @@ export const fetchTasks = async () => {
     }
 };
 
+// fetch task by app acronym axios call
 export const fetchTaskByAppAcronym = async (Task_app_Acronym) => {
     try {
         const response = await axios.get(`${API_BASE_URL}/task/${Task_app_Acronym}`,
@@ -193,7 +211,7 @@ export const fetchTaskByAppAcronym = async (Task_app_Acronym) => {
     }
 };
 
-
+// fetch task by task ID axios call
 export const fetchTaskByTaskID = async (Task_id) => {
     try {
         const response = await axios.get(`${API_BASE_URL}/taskid/${Task_id}`, {headers: { "Content-Type": "application/json" }, withCredentials: true });
@@ -205,6 +223,7 @@ export const fetchTaskByTaskID = async (Task_id) => {
     }
 };
 
+// update task axios call
 export const updateTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/task/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
@@ -217,6 +236,7 @@ export const updateTask = async (Task_id, Task_Name, Task_description, Task_note
     }
 }
 
+// check update task permission axios call
 export const checkUpdateTaskPermission = async (Task_id) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/check-update-task-permission`, { Task_id }, { withCredentials: true });
@@ -226,6 +246,7 @@ export const checkUpdateTaskPermission = async (Task_id) => {
     }
 };
 
+// update email axios call
 export const updateEmail = async (email) => {
     const response = await axios.put(`${API_BASE_URL}/user/updateEmail`,
         {email},{withCredentials: true,
@@ -235,6 +256,7 @@ export const updateEmail = async (email) => {
     return response.data;
 };
 
+// update password axios call
 export const updatePassword = async (password) => {
     const response = await axios.put(`${API_BASE_URL}/user/updatePw`,
         {password},{withCredentials: true,
@@ -244,6 +266,7 @@ export const updatePassword = async (password) => {
     return response.data;
 };
 
+// approve task axios call
 export const approveTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/approvetask/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
@@ -255,6 +278,7 @@ export const approveTask = async (Task_id, Task_Name, Task_description, Task_not
     }
 }
 
+// reject task axios call
 export const rejectTask = async (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/rejecttask/${Task_id}`,{Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_owner}, { headers: { "Content-Type": "application/json" }, withCredentials: true }
