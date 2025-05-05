@@ -39,17 +39,17 @@ exports.login = async (req, res, next) => {
 
         if (err) {
             console.error(err);
-            return res.status(500).json({ success: false, message: "Internal server error" });
+            return res.status(500).json({ success: false, error: "ET3", message: "Internal server error" });
         }
 
         if (results.length === 0) {
-            return res.status(200).json({ success: false, message: "Invalid Login" });
+            return res.status(200).json({ success: false, error: "EA2", message: "Invalid Login" });
         }
 
         const user = results[0];
 
         if (user.isActive === 0) {
-            return res.status(200).json({ success: false, message: "Invalid Login" });
+            return res.status(200).json({ success: false, error: "EA2", message: "Invalid Login" });
         }
 
         try {
@@ -57,12 +57,12 @@ exports.login = async (req, res, next) => {
             const isPasswordMatched = await bcrypt.compare(password, user.password);
 
             if (!isPasswordMatched) {
-                return res.status(200).json({ success: false, message: "Invalid Login" });
+                return res.status(200).json({ success: false, error: "EA2", message: "Invalid Login" });
             }
             sendToken(user, req, 200, res);
         } catch (error) {
 
-            return res.status(500).json({ success: false, message: "Error verifying password!" });
+            return res.status(500).json({ success: false, error: "EA2", message: "Error verifying password!" });
         }
     });
 }
@@ -74,15 +74,14 @@ exports.logout = (req, res) => {
         // Respond with a success message
         res.status(200).json({ success: true, message: "Logged out successfully!" });
       } catch (error) {
-        console.error("Logout error:", error);
-        res.status(500).json({ success: false, message: "Error logging out!" });
+        res.status(200).json({ success: false, error: "EA2", message: "Error logging out!" });
       }
 };
 
 exports.isAuthenticatedUser = async (req, res, next) => {
     let token = req.cookies.token;
     if (!token) {
-        return res.status(200).json({ success: false, message: "Unauthorized User." });
+        return res.status(200).json({ success: false, error: "EA2", message: "Unauthorized User." });
     }
 
     try {
@@ -91,22 +90,22 @@ exports.isAuthenticatedUser = async (req, res, next) => {
         const currentBrowserType = req.headers["user-agent"];
 
         if (decoded.ipAddress !== currentIpAddress) {
-            return res.status(200).json({ success: false, message: "Unauthorized access: IP address mismatch." });
+            return res.status(200).json({ success: false, error: "EA2", message: "Unauthorized access: IP address mismatch." });
         }
 
         if (decoded.browserType !== currentBrowserType) {
-            return res.status(200).json({ success: false, message: "Unauthorized access: Browser type mismatch." });
+            return res.status(200).json({ success: false, error: "EA2", message: "Unauthorized access: Browser type mismatch." });
         }
 
         // Fetch user from database
         connection.query("SELECT username, email, password, isActive, user_groupName FROM user WHERE username = ?", 
             [decoded.username], (err, results) => {
             if (err) {
-                return res.status(500).json({ success: false, message: "Database error." });
+                return res.status(500).json({ success: false, error: "ET3", message: "Database error." });
             }
 
             if (results.length === 0 || !results[0].isActive) {
-                return res.status(200).json({ success: false, message: "Unauthorized User." });
+                return res.status(200).json({ success: false, error: "EA1", message: "Unauthorized User." });
             }
 
             req.decoded = decoded;
@@ -114,7 +113,7 @@ exports.isAuthenticatedUser = async (req, res, next) => {
         });
                 
     } catch (err) {
-        return res.status(200).json({ success: false, message: "Invalid or expired token." });
+        return res.status(200).json({ success: false, error: "EA2", message: "Invalid or expired token." });
     }
 };
 
@@ -122,18 +121,18 @@ exports.validateAccess = (groupName) => {
     return (req, res, next) => {
         const { username } =  req.decoded;
         if(!username) {
-            return res.status(200).json({success: false, message: " User not authenticated."});
+            return res.status(200).json({success: false, error: "EA1", message: "User not authenticated."});
         }
         checkGroup(username, groupName, (err, groupString, isMember) => {
             if (err) {
-                return res.status(500).json({success: false, message: "Server error during group check" });
+                return res.status(500).json({success: false, error: "ET3", message: "Server error during group check" });
             }
 
             req.userGroup = groupString;
             req.isAdmin = groupString.includes(',admin,');
 
             if (groupName && !isMember) {
-                return res.status(200).json({ success: false, message: "Access denied: User is not in the required group" });
+                return res.status(200).json({ success: false, error: "EA1", message: "Access denied: User is not in the required group" });
             }
             next();
         });
@@ -178,34 +177,34 @@ const checkGroup = (username, groupName, callback) => {
 
 exports.getCreateTaskPermission = (req, res, next) => {
     const { username } =  req.decoded;
-    const { Task_app_Acronym } = req.body;
+    const { appAcronym } = req.body;
 
     // Get groupname assigned to app_permit_create for app
-    return connection.query('SELECT App_permit_Create FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, results) => {
+    return connection.query('SELECT App_permit_Create FROM application WHERE App_Acronym = ?', [appAcronym], (err, results) => {
         if (err) {
-            return res.status(500).json({ success: false, message: "Database error while checking permissions." });
+            return res.status(500).json({ success: false, error: "ET3", message: "Database error while checking permissions." });
         }
         if (results.length === 0){
-            return res.status(200).json({ success: false, message: " User not allowed to perform this action."});
+            return res.status(200).json({ success: false, error: "EA1", message: "User not allowed to perform this action."});
         }
 
         const groupName = results[0].App_permit_Create;
 
         // ❗ Check if no group assigned at all
         if (!groupName || groupName.trim() === "") {
-            return res.status(200).json({ success: false, message: "Access denied: No group assigned for task creation." });
+            return res.status(200).json({ success: false, error: "EA1", message: "Access denied: No group assigned for task creation." });
         }
 
         checkGroup(username, groupName, (err, groupString, isMember) => {
             if (err) {
-                return res.status(500).json({ success: false, message: "Server error during group check" });
+                return res.status(500).json({ success: false, error: "ET3", message: "Server error during group check" });
             }
 
             req.app_permit_create = groupString.includes(groupName);
 
             // if user's group is not part of app_permit_create
             if (groupName && !isMember) {
-                return res.status(200).json({ success: false, message: "Access denied: User is not in the required group" });
+                return res.status(200).json({ success: false, error: "EA1", message: "Access denied: User is not in the required group" });
             }
             // Contunue to taskcontroller to create task
             req.app_permit_create = true;

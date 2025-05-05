@@ -14,8 +14,8 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     const checkAuth = async () => {
       try {
         const response = adminOnly
-          ? "http://localhost:3000/auth/validateAdmin"
-          : "http://localhost:3000/auth/validateAccess";
+          ? "http://localhost:5000/auth/validateAdmin"
+          : "http://localhost:5000/auth/validateAccess";
 
         const res = await axios.get(response, { withCredentials: true });
 

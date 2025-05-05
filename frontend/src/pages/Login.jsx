@@ -18,7 +18,7 @@ function Login() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/auth/validateAccess", {
+        const res = await axios.get("http://localhost:5000/auth/validateAccess", {
           withCredentials: true
         });
 
@@ -36,24 +36,24 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-        // Send login data to the backend
-        const response = await axios.post('http://localhost:3000/auth/login', {username, password,});
+      // Send login data to the backend
+      const response = await axios.post('http://localhost:5000/auth/login', {username, password,});
 
-        if (response.data.success === true) {
-          navigate('/tmshome');
-        } else {
-          setErrorMessage(response.data.message);
-          setShowSnackbar(true);
-        }
-      } catch (error) {
-        if (error.response && error.response.data && error.response.data.message) {
-          setErrorMessage(error.response.data.message);  // Set error message from backend
-          setShowSnackbar(true);
-        } else {
-          // Handle other errors
-          setErrorMessage('An error occurred. Please try again.');
-          setShowSnackbar(true);
-        }
+      if (response.data.success === true) {
+        navigate('/tmshome');
+      } else {
+        setErrorMessage(response.data.message);
+        setShowSnackbar(true);
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);  // Set error message from backend
+        setShowSnackbar(true);
+      } else {
+        // Handle other errors
+        setErrorMessage('An error occurred. Please try again.');
+        setShowSnackbar(true);
+      }
       // Show snackbar with error message
       setShowSnackbar(true);
       }

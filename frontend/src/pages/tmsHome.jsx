@@ -143,12 +143,11 @@ const TmsHome = () => {
       const task_name = taskName.trim().toLowerCase();
       const task_description = taskDescription.trim();
       const task_notes = taskNotes.trim();
-      const task_creator = username;
       const task_plan = taskPlan.trim();
       const task_appAcronym = selectedApp.App_Acronym;
 
       // Field validation
-      if(!task_name|| !task_creator || !task_appAcronym){
+      if(!task_name|| !task_appAcronym){
         setError("Please fill in all fields!");
         return;
       }
@@ -158,7 +157,7 @@ const TmsHome = () => {
       }
 
       try{
-        const newTask = await createTask(task_name,task_description ,task_notes ,task_plan , task_appAcronym , task_creator);
+        const newTask = await createTask(task_name,task_description ,task_notes ,task_plan , task_appAcronym);
         if(newTask.error) {
           setError(newTask.error);
           return;
@@ -168,8 +167,8 @@ const TmsHome = () => {
           return;
         }
         else{
-          if (newTask.success) {
-            setSuccess(newTask.success);
+          if (newTask.success === true) {
+            setSuccess(newTask.message);
             setShowTaskModal(false);
   
             // Reset form fields

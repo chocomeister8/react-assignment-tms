@@ -25,17 +25,18 @@ router.get('/applications', isAuthenticatedUser, validateAccess(), appController
 router.post('/create-app', isAuthenticatedUser, validateAccess("pl"), appController.createApp);
 router.put('/applications/:application', isAuthenticatedUser, validateAccess("pl"), appController.updateApp);
 
-
 // Plan routes
 router.get('/plans', isAuthenticatedUser, validateAccess(), planController.getAllPlan);
 router.post('/create-plan', isAuthenticatedUser, validateAccess("pm"), planController.createPlan);
 router.put('/plan/:plan', isAuthenticatedUser, validateAccess("pm"), planController.updatePlan);
 
 // Task routes
-router.get('/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
+router.get('/task/tasks', isAuthenticatedUser, validateAccess(), taskController.getAllTasks);
 router.get('/task/:Task_app_Acronym', isAuthenticatedUser, validateAccess(), taskController.getTaskByAppAcronym);
 router.get('/taskid/:Task_id', isAuthenticatedUser, validateAccess(), taskController.getTaskByTaskID);
-router.post('/create-task', isAuthenticatedUser, getCreateTaskPermission, taskController.createTask);
+router.get('/api/task/GetTaskByState/:taskState', isAuthenticatedUser, validateAccess(), taskController.getTaskByState);
+router.patch('/api/task/PromoteTask2Done', isAuthenticatedUser, validateAccess(), taskController.PromoteTask2Done);
+router.post('/api/task/CreateTask', isAuthenticatedUser, getCreateTaskPermission, taskController.createTask);
 
 // Check Create task permissions
 router.post('/check-create-task-permission', isAuthenticatedUser, getCreateTaskPermission, (req, res) => {res.status(200).json({ success: true });});

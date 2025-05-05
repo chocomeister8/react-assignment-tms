@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://localhost:5000";
 
 
 // fetch all group axios call
@@ -170,9 +170,9 @@ export const validateAdmin = async () => {
 };
 
 // create task axios call
-export const createTask = async (Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator) => {
+export const createTask = async (taskName, taskDescription, taskNotes, taskPlan, appAcronym) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/create-task`, {Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_creator}, { headers: { "Content-Type": "application/json" }, withCredentials: true});
+        const response = await axios.post(`${API_BASE_URL}/api/task/CreateTask`, {taskName, taskDescription, taskNotes, taskPlan, appAcronym}, { headers: { "Content-Type": "application/json" }, withCredentials: true});
         return response.data;
     } catch (error) {
         console.error("Error creating task", error);
@@ -181,9 +181,9 @@ export const createTask = async (Task_Name, Task_description, Task_notes, Task_p
 };
 
 // check create task permission axios call
-export const checkcreateTaskPermission = async (Task_app_Acronym) => {
+export const checkcreateTaskPermission = async (appAcronym) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/check-create-task-permission`, { Task_app_Acronym }, { withCredentials: true });
+        const response = await axios.post(`${API_BASE_URL}/check-create-task-permission`, { appAcronym }, { withCredentials: true });
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || "Permission check failed");
@@ -193,7 +193,7 @@ export const checkcreateTaskPermission = async (Task_app_Acronym) => {
 // fetch all tasks axios call
 export const fetchTasks = async () => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/tasks`, { withCredentials: true });
+        const response = await axios.get(`${API_BASE_URL}/task/tasks`, { withCredentials: true });
         return response.data;
     } catch (error) {
         throw new Error("Failed to load tasks.");
@@ -204,6 +204,17 @@ export const fetchTasks = async () => {
 export const fetchTaskByAppAcronym = async (Task_app_Acronym) => {
     try {
         const response = await axios.get(`${API_BASE_URL}/task/${Task_app_Acronym}`,
+        {headers: { "Content-Type": "application/json" }, withCredentials: true });
+        return response.data; 
+    } catch (error) {
+        throw new Error("Failed to fetch tasks.");
+    }
+};
+
+// fetch task by app acronym axios call
+export const fetchTaskByState = async (Task_state) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/task/GetTaskByState/${Task_state}`,
         {headers: { "Content-Type": "application/json" }, withCredentials: true });
         return response.data; 
     } catch (error) {
