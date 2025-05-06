@@ -103,7 +103,8 @@ const TmsHome = () => {
       try {
         if (!selectedApp) {
           return;
-        } 
+        }
+        console.log("Selected", selectedApp.App_Acronym);
         const response = await checkcreateTaskPermission(selectedApp.App_Acronym); // check create task permissions
         if (response.success) {
           setHasPermission(true);
@@ -147,7 +148,7 @@ const TmsHome = () => {
       const task_appAcronym = selectedApp.App_Acronym;
 
       // Field validation
-      if(!task_name|| !task_appAcronym){
+      if(!task_name || !task_appAcronym){
         setError("Please fill in all fields!");
         return;
       }

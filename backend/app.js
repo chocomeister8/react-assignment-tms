@@ -6,12 +6,14 @@ const cors = require('cors');
 const app = express();
 const dotenv = require('dotenv');
 const allRoutes = require('./routes/routes');
+app.set('strict routing', true);
+
 
 // Setting up config.env file variables
 dotenv.config({path: './config/.env'})
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:3000',
     credentials: true,
 }));
 
@@ -21,6 +23,13 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.use('/', allRoutes);
+
+app.use((req, res, next) => {
+    res.status(404).json({
+        success: false,
+        error: 'EU1'
+    });
+});
 
 const PORT = process.env.PORT;
 const server = app.listen(PORT, () => {

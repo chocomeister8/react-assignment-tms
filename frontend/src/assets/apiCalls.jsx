@@ -170,9 +170,9 @@ export const validateAdmin = async () => {
 };
 
 // create task axios call
-export const createTask = async (taskName, taskDescription, taskNotes, taskPlan, appAcronym) => {
+export const createTask = async (taskName, taskDescription, taskNotes, taskPlan, taskAppAcronym) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/task/CreateTask`, {taskName, taskDescription, taskNotes, taskPlan, appAcronym}, { headers: { "Content-Type": "application/json" }, withCredentials: true});
+        const response = await axios.post(`${API_BASE_URL}/api/task/CreateTask`, {taskName, taskDescription, taskNotes, taskPlan, taskAppAcronym}, { headers: { "Content-Type": "application/json" }, withCredentials: true});
         return response.data;
     } catch (error) {
         console.error("Error creating task", error);
@@ -181,9 +181,9 @@ export const createTask = async (taskName, taskDescription, taskNotes, taskPlan,
 };
 
 // check create task permission axios call
-export const checkcreateTaskPermission = async (appAcronym) => {
+export const checkcreateTaskPermission = async (taskAppAcronym) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/check-create-task-permission`, { appAcronym }, { withCredentials: true });
+        const response = await axios.post(`${API_BASE_URL}/check-create-task-permission`, { taskAppAcronym }, { withCredentials: true });
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || "Permission check failed");

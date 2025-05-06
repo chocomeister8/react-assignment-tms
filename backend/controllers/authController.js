@@ -24,22 +24,20 @@ const sendToken = (user, req, statusCode, res) => {
     };
 
     res.status(statusCode).cookie('token', token, options).json({
-        success: true,
-        token
+        success: true, message : "Login successful!"
     });
 };
 
 exports.login = async (req, res, next) => {
     const { username, password } = req.body;
     
-
     // Finding user in database
     const sql = "SELECT username, email, password, isActive, user_groupName FROM user WHERE username = ? LIMIT 1";
     connection.query(sql, [username], async (err, results)=> {
 
         if (err) {
             console.error(err);
-            return res.status(500).json({ success: false, error: "ET3", message: "Internal server error" });
+            return res.status(500).json({ success: false, error: "ET3"});
         }
 
         if (results.length === 0) {
@@ -53,7 +51,6 @@ exports.login = async (req, res, next) => {
         }
 
         try {
-
             const isPasswordMatched = await bcrypt.compare(password, user.password);
 
             if (!isPasswordMatched) {
@@ -177,13 +174,15 @@ const checkGroup = (username, groupName, callback) => {
 
 exports.getCreateTaskPermission = (req, res, next) => {
     const { username } =  req.decoded;
-    const { appAcronym } = req.body;
+    const { taskAppAcronym } = req.body;
 
+    console.log(taskAppAcronym);
     // Get groupname assigned to app_permit_create for app
-    return connection.query('SELECT App_permit_Create FROM application WHERE App_Acronym = ?', [appAcronym], (err, results) => {
+    return connection.query('SELECT App_permit_Create FROM application WHERE App_Acronym = ?', [taskAppAcronym], (err, results) => {
         if (err) {
             return res.status(500).json({ success: false, error: "ET3", message: "Database error while checking permissions." });
         }
+        console.log(results);
         if (results.length === 0){
             return res.status(200).json({ success: false, error: "EA1", message: "User not allowed to perform this action."});
         }

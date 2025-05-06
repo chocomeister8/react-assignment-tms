@@ -93,19 +93,27 @@ exports.getTaskByState = (req, res) => {
 
     const { taskState } = req.params;
 
-    if (!taskState){
-        return res.status(200).json({ success: false, error: "EP1" });
+    if (!taskState) {
+        return res.status(200).json({ success: false, error: "EP1", errorMsg: "All fields must be filled." });
     }
 
-    db.query('SELECT * FROM task WHERE Task_state = ?', [taskState], (err, results) =>{
+    // Define allowed states
+    const allowedStates = ["Open", "To Do", "Doing", "Done", "Closed"];
+
+    // Check if taskState is allowed
+    if (!allowedStates.includes(taskState)) {
+        return res.status(400).json({ success: false, error: "EP1", errorMsg: "Invalid task state provided."});
+    }
+
+    db.query('SELECT * FROM task WHERE Task_state = ?', [taskState], (err, results) => {
         if (err) {
             return res.status(500).json({ success: false, error: "ET3" });
         }
-        if (results.length === 0){
-            return res.status(200).json([{ success : true, data: results}]);
+        if (results.length === 0) {
+            return res.status(200).json([{ success: true, data: results }]);
         }
-        res.status(200).json({ success : true, data: results});
-    })
+        res.status(200).json({ success: true, data: results });
+    });
 };
 
 // Get create task method
@@ -113,15 +121,15 @@ exports.createTask = (req, res) => {
 
     // If token does not exist
     if(!req.decoded) {
-        return res.status(200).json({ success: false, error: "EA2", errorMsg: "Token is missing or invalid."});
+        return res.status(200).json({ success: false, error: "EA2"});
     }
 
     const Task_creator = req.decoded.username;
 
-    let { taskName, taskDescription, taskNotes, appAcronym, taskPlan} = req.body;
+    let { taskName, taskDescription, taskNotes, taskAppAcronym, taskPlan} = req.body;
 
     if(taskName.length === 0 || taskName.length > 300 ) {
-        return res.status(200).json({ success: false, error: "EP1", errorMsg: "Task name cannot be empty and cannot have more than 300 characters."});
+        return res.status(200).json({ success: false, error: "EP1", message: "Task name cannot be empty and cannot have more than 300 characters."});
     }
 
     if (!taskNotes || taskNotes.trim() === "") {
@@ -146,70 +154,69 @@ exports.createTask = (req, res) => {
         db.beginTransaction((err) => {
             if (err) {
                 return db.rollback(() => {
-                    res.status(500).json({ success: false, error: "ET2", message: "Failed to start transaction." });
+                    res.status(500).json({ success: false, error: "ET3"});
                 });
             }
             // Check if plan with the same plan_mvp_name and plan_app_acronym exists
-            db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?',[taskPlan, appAcronym], (err, planResults) => {
+            db.query('SELECT * FROM plan WHERE Plan_MVP_name = ? AND Plan_app_Acronym = ?',[taskPlan, taskAppAcronym], (err, planResults) => {
                 if (err) {
                     return db.rollback(() => {
-                        res.status(500).json({ success: false, error: 'ET3', message: "Database error." });
+                        res.status(500).json({ success: false, error: 'ET3'});
                     });
                 }
 
                 if(planResults.length === 0) {
                     return db.rollback(() => {
-                        res.status(200).json({ success: false, error: 'ET2', message: "Plan does not exist!" });
+                        res.status(200).json({ success: false, error: 'ET4'});
                     });
                 }
                 // Check if app with the same app Rnumber exists
-                db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [appAcronym], (err, appResults) => {
+                db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [taskAppAcronym], (err, appResults) => {
                     if (err){
                         return db.rollback(() => {
-                            res.status(500).json({ success: false, error: 'ET3', message: "Database error." });
+                            res.status(500).json({ success: false, error: 'ET3'});
                         });
                     } 
                     if (appResults.length === 0) {
                         return db.rollback(() => {
-                            res.status(200).json({ success: false, error: 'ET2', message: "Application does not exists!" });
+                            res.status(200).json({ success: false, error: 'ET4'});
                         });
                     }
                     const task_number = appResults[0].App_Rnumber;
-                    const Task_id = `${appAcronym}_${task_number}`;
+                    const Task_id = `${taskAppAcronym}_${task_number}`;
                     
                     // Check if task with the same task_id exists
                     db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                         if (err) {
                             return db.rollback(() => {
-                                res.status(500).json({ success: false, error: 'ET3', message: "Database error." });
+                                res.status(500).json({ success: false, error: 'ET3'});
                             });
                         }
                         if (results.length > 0) {
                             return db.rollback(() => {
-                                res.status(200).json({ success: false, error: 'ET2', message: "Task with the same ID already exist." });
+                                res.status(200).json({ success: false, error: 'ET1'});
                             });
                         }
 
                         // Insert task statement
                         db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        [Task_id, taskName, taskDescription, Task_notes_json, taskPlan, appAcronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
+                        [Task_id, taskName, taskDescription, Task_notes_json, taskPlan, taskAppAcronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
                             if (err) {
                                 return db.rollback(() => {
-                                    res.status(500).json({ success: false, error: 'ET3', message: 'Database error.' });
+                                    res.status(200).json({ success: false, error: 'ET1'});
                                 });
                             }
-
                             // Increase task RNumber after successfully inserting task
-                            db.query('UPDATE application SET App_Rnumber = App_Rnumber + 1 WHERE App_Acronym = ?', [appAcronym], (err, results) => {
+                            db.query('UPDATE application SET App_Rnumber = App_Rnumber + 1 WHERE App_Acronym = ?', [taskAppAcronym], (err, results) => {
                                 if (err) {
                                     return db.rollback(() => {
-                                        res.status(500).json({ success: false, error: 'ET3', message: "Database error" });
+                                        res.status(500).json({ success: false, error: 'ET2'});
                                     });
                                 }
                                 db.commit((err) => {
                                     if (err) {
                                         return db.rollback(() => {
-                                            res.status(200).json({ success: false, error: "ET2", message: "Transaction commit failed." });
+                                            res.status(500).json({ success: false, error: "ET3"});
                                         });
                                     }
                                     res.status(200).json({success: true, message: "Task Created Successfully."}
@@ -227,19 +234,19 @@ exports.createTask = (req, res) => {
         db.beginTransaction((err) => {
             if (err) {
                 return db.rollback(() => {
-                    res.status(500).json({ success: false, error: "ET2", message: "Failed to start transaction." });
+                    res.status(500).json({ success: false, error: "ET3"});
                 });
             }
             // Check if app with the same app Rnumber exists
-            db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [appAcronym], (err, appResults) => {
+            db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [taskAppAcronym], (err, appResults) => {
                 if (err){
                     return db.rollback(() => {
-                        res.status(500).json({ success: false, error: 'ET3', message: "Database error" });
+                        res.status(500).json({ success: false, error: 'ET3'});
                     });
                 } 
                 if (appResults.length === 0) {
                     return db.rollback(() => {
-                        res.status(200).json({ success: false, error: 'ET2', message: 'Application does not exist.' });
+                        res.status(200).json({ success: false, error: 'ET4'});
                     });
                 }
                 
@@ -248,40 +255,40 @@ exports.createTask = (req, res) => {
                 }
 
                 const task_number = appResults[0].App_Rnumber;
-                const Task_id = `${appAcronym}_${task_number}`;
+                const Task_id = `${taskAppAcronym}_${task_number}`;
 
                 // Check if task with the same task_id exists
                 db.query('SELECT Task_id FROM task WHERE Task_id = ?', [Task_id], (err, results) => {
                     if (err) {
                         return db.rollback(() => {
-                            res.status(500).json({ success: false, error: 'ET3', message: "Database error." });
+                            res.status(500).json({ success: false, error: 'ET3'});
                         });
                     }
                     if (results.length > 0) {
                         return db.rollback(() => {
-                            res.status(200).json({ success: false, error: 'ET2', message: 'Task_id already exists!'});
+                            res.status(200).json({ success: false, error: 'ET1'});
                         });
                     }
                     // Insert task statement
                     db.query('INSERT INTO task (Task_id, Task_Name, Task_description, Task_notes, Task_plan, Task_app_Acronym, Task_state, Task_creator, Task_owner, Task_createDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [Task_id, taskName, taskDescription, Task_notes_json, taskPlan, appAcronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
+                    [Task_id, taskName, taskDescription, Task_notes_json, taskPlan, taskAppAcronym, Task_state, Task_creator, Task_owner, formattedDatetime], (err, results) => {
                         if (err) {
                             return db.rollback(() => {
-                                res.status(500).json({ success: false, error: 'ET3', message: "Database error." });
+                                res.status(500).json({ success: false, error: 'ET1'});
                             });
                         }
                         
                         // Increase task RNumber after successfully inserting task
-                        db.query('UPDATE application SET App_Rnumber = App_Rnumber + 1 WHERE App_Acronym = ?', [appAcronym], (err, results) => {
+                        db.query('UPDATE application SET App_Rnumber = App_Rnumber + 1 WHERE App_Acronym = ?', [taskAppAcronym], (err, results) => {
                             if (err) {
                                 return db.rollback(() => {
-                                    res.status(500).json({ success: false, error: 'ET3', errorMsg: "Database error" });
+                                    res.status(500).json({ success: false, error: 'ET2'});
                                 });
                             }
                             db.commit((err) => {
                                 if (err) {
                                     return db.rollback(() => {
-                                        res.status(200).json({ success: false, error: "ET2", message: "Transaction commit failed." });
+                                        res.status(500).json({ success: false, error: "ET3"});
                                     });
                                 }
                                 res.status(200).json({success: true, message: "Task Created Successfully."});
@@ -826,77 +833,81 @@ exports.PromoteTask2Done = (req, res) => {
     const Task_state = "Done";
 
     if (!req.decoded) {
-        return res.status(200).json({ success: false, error: "EA2", errorMsg: "Token is missing or invalid." });
+        return res.status(200).json({ success: false, error: "EA2"});
     }
 
     const Task_owner = req.decoded.username;
 
     if (!Task_state || !taskId || !taskName) {
-        return res.status(200).json({ success: false, error: "EA1", errorMsg: "All fields must be filled." });
+        return res.status(200).json({ success: false, error: "EP1", errorMsg: "All fields must be filled." });
     }
 
-    // First: Fetch the existing Task_plan, Task_state, and Task_notes from DB
-    db.query("SELECT Task_plan, Task_app_Acronym, Task_state, Task_notes FROM task WHERE Task_id = ?", [taskId], (err, results) => {
-        if (err || results.length === 0) {
-            return res.status(500).json({ success: false, error: "ET3", errorMsg: "Database error." });
+    db.beginTransaction((err) => {
+        if (err) {
+            return res.status(500).json({ success: false, error: "ET3"});
         }
 
-        const currentState = results[0].Task_state;
-
-        if (currentState !== "Doing") {
-            return res.status(200).json({ success: false, error: "ET2", errorMsg: `Cannot promote task. Current state is "${currentState}", only tasks in "Doing" can be promoted to "Done".` });
-        }
-        const validTransitions = {
-            "Doing": ["Done"],
-        };
-
-        if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
-            return res.status(200).json({ success: false, error: "ET2", errorMsg: `Invalid state transition from "${currentState}" to "${Task_state}".`});
-        }
-
-        const Task_app_Acronym = results[0].Task_app_Acronym;
-
-        // ✅ Task_plan matches, continue with approval logic
-        db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
+        // First: Fetch the existing Task_plan, Task_state, and Task_notes from DB
+        db.query("SELECT Task_plan, Task_app_Acronym, Task_state, Task_notes FROM task WHERE Task_id = ?", [taskId], (err, results) => {
             if (err) {
-                return res.status(500).json({ success: false, error: "ET3", errorMsg: 'Database error during app check.' });
-            }
-            if (appResults.length === 0) {
-                return res.status(200).json({ success: false, error: "ET2", errorMsg: 'Application does not exist.' });
+                return res.status(500).json({ success: false, error: "ET3"});
             }
 
-            const localDatetime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
-            const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
-            const taskNotesString = (taskNotes || "").trim();
-            const noteDescription = taskNotesString === "" ? `Task promoted by ${Task_owner}` : taskNotesString;
-            const newNote = {username: Task_owner, currentState: currentState, timestamp: formattedDatetime, desc: noteDescription};
-
-            let existingNotes = [];
-            try {
-                existingNotes = JSON.parse(results[0].Task_notes || "[]");
-            } catch (e) {
-                existingNotes = [];
+            if(results.length === 0) {
+                return res.status(200).json({ success: false, error: "ET4"});
             }
 
-            existingNotes.unshift(newNote);
-            const updatedNotesJSON = JSON.stringify(existingNotes);
+            const currentState = results[0].Task_state;
 
-            db.beginTransaction((err) => {
+            if (currentState !== "Doing") {
+                return res.status(200).json({ success: false, error: "ET2"});
+            }
+            const validTransitions = {
+                "Doing": ["Done"],
+            };
+
+            if (validTransitions[currentState] && !validTransitions[currentState].includes(Task_state)) {
+                return res.status(200).json({ success: false, error: "ET5"});
+            }
+
+            const Task_app_Acronym = results[0].Task_app_Acronym;
+
+            // ✅ Task_plan matches, continue with approval logic
+            db.query('SELECT App_Rnumber FROM application WHERE App_Acronym = ?', [Task_app_Acronym], (err, appResults) => {
                 if (err) {
-                    return res.status(500).json({ success: false, error: "EP1", errorMsg: "Database error." });
+                    return res.status(500).json({ success: false, error: "ET3"});
                 }
+                if (appResults.length === 0) {
+                    return res.status(200).json({ success: false, error: "ET4"});
+                }
+
+                const localDatetime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" })).toLocaleString('sv-SE');
+                const formattedDatetime = localDatetime.replace("T", " ").slice(0, 19);
+                const taskNotesString = (taskNotes || "").trim();
+                const noteDescription = taskNotesString === "" ? `Task promoted by ${Task_owner}` : taskNotesString;
+                const newNote = {username: Task_owner, currentState: currentState, timestamp: formattedDatetime, desc: noteDescription};
+
+                let existingNotes = [];
+                try {
+                    existingNotes = JSON.parse(results[0].Task_notes || "[]");
+                } catch (e) {
+                    existingNotes = [];
+                }
+
+                existingNotes.unshift(newNote);
+                const updatedNotesJSON = JSON.stringify(existingNotes);
 
                 db.query(`UPDATE task SET Task_Name = ?, Task_description = ?, Task_notes = ?, Task_state = ?, Task_owner = ? WHERE Task_id = ?`,
                 [taskName, taskDescription, updatedNotesJSON, Task_state, Task_owner, taskId], (err, result) => {
                     if (err) {
                         return db.rollback(() => {
-                            return res.status(500).json({ success: false, error: "EP1", errorMsg: "Database error." });
+                            return res.status(200).json({ success: false, error: "ET2"});
                         });
                     }
                     db.commit((err) => {
                         if (err) {
                             return db.rollback(() => {
-                                return res.status(200).json({ success: false, error: "ET2", errorMsg: "Failed to commit transaction." });
+                                return res.status(500).json({ success: false, error: "ET3"});
                             });
                         }
                         const shouldSendEmail = currentState === "Doing" && Task_state === "Done";
@@ -917,11 +928,11 @@ exports.PromoteTask2Done = (req, res) => {
                                 db.query('SELECT email FROM user WHERE REPLACE(user_groupName, " ", "") LIKE ?', [likeValue], (err, usersResults) => {
                                     if (err) {
                                         console.error('Error fetching emails:', err);
-                                        return; // again, only log error, no response
+                                        return res.status(500).json({ success: false, error: "ET3"});
                                     }
                                     if (usersResults.length === 0) {
                                         console.error('No users found in group:', permAppPermitDone);
-                                        return;
+                                        return res.status(200).json({ success: false, error: "ET4"});
                                     }
                             
                                     usersResults.forEach(user => {
@@ -931,8 +942,7 @@ exports.PromoteTask2Done = (req, res) => {
                                 });
                             });
                         }                                
-                        return res.status(200).json({
-                            message: "Task updated to done successfully.", task: {taskId,  taskName, taskDescription, updatedNotesJSON, Task_state, Task_owner}
+                        return res.status(200).json({ success: true, message: "Task updated to done successfully.", task: {taskId,  taskName, taskDescription, updatedNotesJSON, Task_state, Task_owner}
                         });
                     });
                 });
